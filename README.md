@@ -1,3 +1,2 @@
-# Eventia Frontend
-
-Los README dentro de cada carpeta del src seran borrados
+# eventia_frontend
+Sistema full stack de gestión de venta y compra de entradas.
