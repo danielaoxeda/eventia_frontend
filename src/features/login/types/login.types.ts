@@ -1,5 +1,5 @@
 export interface LoginRequest {
-  username: string;
+  email: string;
   password: string;
 }
 
@@ -8,8 +8,7 @@ export interface LoginResponse {
   refreshToken?: string;
   id: number;
   username: string;
-  email: string;
   firstName: string;
   lastName: string;
-  image?: string;
+  email: string;
 }

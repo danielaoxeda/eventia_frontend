@@ -1,5 +1,6 @@
 import { useState } from "react";
 import { Eye, EyeOff, Lock, Mail } from "lucide-react";
+
 import { login } from "../services/loginService";
 import type { LoginRequest } from "../types/login.types";
 
@@ -7,8 +8,8 @@ export default function LoginForm() {
   const [showPassword, setShowPassword] = useState(false);
 
   const [form, setForm] = useState<LoginRequest>({
-    username: "emilys",
-    password: "emilyspass",
+    email: "",
+    password: "",
   });
 
   const [loading, setLoading] = useState(false);
@@ -38,7 +39,10 @@ export default function LoginForm() {
 
       console.log("Usuario autenticado:", data);
 
-      localStorage.setItem("accessToken", data.accessToken);
+      localStorage.setItem(
+        "accessToken",
+        data.accessToken
+      );
 
       alert(`Bienvenido, ${data.firstName}`);
     } catch {
@@ -56,20 +60,22 @@ export default function LoginForm() {
       {/* Correo */}
       <div>
         <label
-          htmlFor="username"
+          htmlFor="email"
           className="mb-2 block text-sm font-bold text-slate-800"
         >
           Correo electrónico
         </label>
 
         <div className="relative">
-          <Mail className="absolute left-3.5 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400" />
+          <Mail
+            className="absolute left-3.5 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400"
+          />
 
           <input
-            id="username"
-            name="username"
-            type="text"
-            value={form.username}
+            id="email"
+            name="email"
+            type="email"
+            value={form.email}
             onChange={handleChange}
             placeholder="ej. usuario@eventia.com"
             required
@@ -80,24 +86,17 @@ export default function LoginForm() {
 
       {/* Contraseña */}
       <div>
-        <div className="mb-2 flex items-center justify-between">
-          <label
-            htmlFor="password"
-            className="text-sm font-bold text-slate-800"
-          >
-            Contraseña
-          </label>
-
-          <button
-            type="button"
-            className="text-xs font-bold text-indigo-600 hover:underline"
-          >
-            ¿Olvidaste tu contraseña?
-          </button>
-        </div>
+        <label
+          htmlFor="password"
+          className="mb-2 block text-sm font-bold text-slate-800"
+        >
+          Contraseña
+        </label>
 
         <div className="relative">
-          <Lock className="absolute left-3.5 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400" />
+          <Lock
+            className="absolute left-3.5 top-1/2 h-5 w-5 -translate-y-1/2 text-slate-400"
+          />
 
           <input
             id="password"
@@ -112,7 +111,9 @@ export default function LoginForm() {
 
           <button
             type="button"
-            onClick={() => setShowPassword((value) => !value)}
+            onClick={() =>
+              setShowPassword((value) => !value)
+            }
             className="absolute right-3.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700"
             aria-label={
               showPassword
@@ -136,17 +137,7 @@ export default function LoginForm() {
         </div>
       )}
 
-      {/* Recordar sesión */}
-      <label className="flex cursor-pointer items-center gap-2 text-sm text-slate-600">
-        <input
-          type="checkbox"
-          className="h-4 w-4 accent-indigo-600"
-        />
-
-        <span>Recordar mi sesión en este dispositivo</span>
-      </label>
-
-      {/* Submit */}
+      {/* Botón */}
       <button
         type="submit"
         disabled={loading}
@@ -154,7 +145,7 @@ export default function LoginForm() {
       >
         {loading
           ? "Iniciando sesión..."
-          : "Iniciar Sesión en Eventia"}
+          : "Iniciar Sesión"}
       </button>
     </form>
   );

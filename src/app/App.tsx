@@ -1,5 +1,8 @@
-function App() {
-  return <div className="text-center text-3xl">Hola App</div>;
-}
+import { BrowserRouter } from "react-router-dom";
+import AppRoutes from "./routes/AppRoutes";
 
-export default App;
+export default function App() {
+  return (
+      <AppRoutes />
+  );
+}
