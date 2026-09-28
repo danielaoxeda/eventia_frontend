@@ -1,61 +1,27 @@
-import type { CatalogEvent, Category } from "../types/event.types";
-// Fuente temporal: luego se reemplaza por el backend real.
-import db from "../../../../db.json";
-
-/** Fila de `categories` en db.json (ver diagrama ER). */
-interface DbCategory {
-  id_category: string;
-  name: string;
-  description: string;
-  active: boolean;
-  created_at: string;
-  updated_at: string;
-}
-
-/** Fila de `events` en db.json (ver diagrama ER). */
-interface DbEvent {
-  id_event: number;
-  title: string;
-  description: string;
-  date: string;
-  start_time: string;
-  end_time: string;
-  location: string;
-  city: string;
-  capacity: number;
-  available_capacity: number;
-  status: string;
-  active: boolean;
-  created_at: string;
-  updated_at: string;
-  id_category: string;
-  id_organizer: number;
-}
-
-/** Fila de `ticket_types` en db.json (ver diagrama ER). */
-interface DbTicketType {
-  id: number;
-  id_event: number;
-  name: string;
-  price: number;
-  stock: number;
-}
-
-interface DbShape {
-  categories?: DbCategory[];
-  events?: DbEvent[];
-  ticket_types?: DbTicketType[];
-}
-
-const dbData = db as DbShape;
-const DB_CATEGORIES = dbData.categories ?? [];
-const DB_EVENTS = dbData.events ?? [];
-const DB_TICKET_TYPES = dbData.ticket_types ?? [];
+import type {
+  CatalogEvent,
+  Category,
+  CategoryRow,
+  EventRow,
+  PriceRange,
+  TicketTypeRow,
+} from "../types/event.types";
+import api from "@/shared/services/api";
 
 /** Mes abreviado para la insignia de fecha (ej. "NOV"). */
 const MONTH_CODES = [
-  "ENE", "FEB", "MAR", "ABR", "MAY", "JUN",
-  "JUL", "AGO", "SET", "OCT", "NOV", "DIC",
+  "ENE",
+  "FEB",
+  "MAR",
+  "ABR",
+  "MAY",
+  "JUN",
+  "JUL",
+  "AGO",
+  "SET",
+  "OCT",
+  "NOV",
+  "DIC",
 ];
 
 /** Etiqueta corta de tarjeta por categoría. */
@@ -67,29 +33,24 @@ const TAG_BY_CATEGORY: Record<string, string> = {
   "Tecnología & Startups": "Tecnología",
 };
 
-/** Insignia según aforo vendido (derivado, sin texto fijo por evento). */
-function badgeFor(soldPct: number): string | undefined {
-  if (soldPct >= 90) return "¡Casi Agotado!";
-  if (soldPct >= 80) return "Últimas entradas";
-  return undefined;
-}
-
-/**
- * Mapea una fila de db.json al modelo del catálogo:
- * categoría por join, fecha descompuesta, precio mínimo de sus
- * tipos de entrada y % vendido desde el aforo disponible.
- */
-function mapEvent(row: DbEvent): CatalogEvent {
+function mapEvent(
+  row: EventRow,
+  tickets: TicketTypeRow[],
+  categories: CategoryRow[],
+): CatalogEvent {
   const date = new Date(`${row.date}T00:00:00`);
-  const tickets = DB_TICKET_TYPES.filter((ticket) => ticket.id_event === row.id_event);
-  const categoryName = (DB_CATEGORIES.find((item) => item.id_category === row.id_category)?.name ??
-    "Conciertos") as Category;
+  const eventId = Number(row.id);
+  const categoryName = (categories.find((item) => item.id === row.id_category)
+    ?.name ?? "Conciertos") as Category;
+  const eventTickets = tickets.filter((ticket) => ticket.id_event === eventId);
   const soldPct =
     row.capacity > 0
-      ? Math.round(((row.capacity - row.available_capacity) / row.capacity) * 100)
+      ? Math.round(
+          ((row.capacity - row.available_capacity) / row.capacity) * 100,
+        )
       : 0;
   return {
-    id: row.id_event,
+    id: eventId,
     title: row.title,
     category: categoryName,
     month: MONTH_CODES[date.getMonth()] ?? "",
@@ -97,18 +58,28 @@ function mapEvent(row: DbEvent): CatalogEvent {
     dateOrder: date.getTime(),
     venue: row.location,
     city: row.city,
-    price: tickets.length > 0 ? Math.min(...tickets.map((ticket) => ticket.price)) : 0,
+    price:
+      eventTickets.length > 0
+        ? Math.min(...eventTickets.map((ticket) => ticket.price))
+        : 0,
     soldPct,
     image: "",
     tag: TAG_BY_CATEGORY[categoryName] ?? categoryName,
-    badge: badgeFor(soldPct),
   };
 }
 
-/** Eventos leídos desde db.json (fuente temporal hasta el backend real). */
-export const EVENTS: CatalogEvent[] = DB_EVENTS.filter((row) => row.active).map(mapEvent);
+export async function getEvents(): Promise<CatalogEvent[]> {
+  const [events, tickets, categories] = await Promise.all([
+    api.get<EventRow[]>("/events"),
+    api.get<TicketTypeRow[]>("/ticket_types"),
+    api.get<CategoryRow[]>("/categories"),
+  ]);
+  return events.data
+    .filter((row) => row.active)
+    .map((row) => mapEvent(row, tickets.data, categories.data));
+}
 
-/** Porcentaje de descuento de la promo (aplica solo a elegibles). */
+/** Porcentaje de descuento de la promo */
 export const PROMO_DISCOUNT_PCT = 15;
 
 /**
@@ -132,11 +103,6 @@ export function isPromoUser(userName: string): boolean {
   return firstName === "roberto" || firstName === "geronimo";
 }
 
-/** Precio final con la promo aplicada. */
-export function getPromoPrice(price: number): number {
-  return price * (1 - PROMO_DISCOUNT_PCT / 100);
-}
-
 /** Orden fijo de categorías en los filtros. */
 export const CATEGORY_ORDER: Category[] = [
   "Conciertos",
@@ -146,21 +112,17 @@ export const CATEGORY_ORDER: Category[] = [
   "Gastronomía & Ferias",
 ];
 
-/** Rango de precio del filtro (montos en soles). */
-export interface PriceRange {
-  id: string;
-  label: string;
-  min: number;
-  max: number;
-}
-
-/** Rangos de precio del filtro (montos en soles). */
 export const PRICE_RANGES: PriceRange[] = [
   { id: "ALL", label: "Todos", min: 0, max: Number.POSITIVE_INFINITY },
   { id: "UNDER_60", label: "Menos de S/ 60", min: 0, max: 60 },
   { id: "BETWEEN_60_120", label: "S/ 60 – S/ 120", min: 60, max: 121 },
   { id: "BETWEEN_120_200", label: "S/ 120 – S/ 200", min: 120, max: 201 },
-  { id: "OVER_200", label: "Más de S/ 200", min: 200, max: Number.POSITIVE_INFINITY },
+  {
+    id: "OVER_200",
+    label: "Más de S/ 200",
+    min: 200,
+    max: Number.POSITIVE_INFINITY,
+  },
 ];
 
 /** Meses presentes en el catálogo (código → etiqueta). */
