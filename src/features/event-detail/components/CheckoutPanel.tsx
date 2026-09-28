@@ -53,7 +53,7 @@ export default function CheckoutPanel({
             className="flex items-center gap-2 bg-surface-container-low text-sm px-3 py-2.5 rounded-lg text-primary font-semibold hover:bg-surface-container-high transition-colors min-w-0"
           >
             <span className="material-symbols-outlined text-[20px] shrink-0">login</span>
-            <span className="truncate">Inicia sesión para validar tu descuento</span>
+            <span className="truncate">Inicia sesión</span>
           </Link>
         )}
       </div>
@@ -116,19 +116,29 @@ export default function CheckoutPanel({
         </div>
       </div>
 
-      <button
-        disabled={empty}
-        type="button"
-        onClick={onCheckout}
-        className={`w-full py-3 px-4 rounded-xl font-bold shadow-md transition-all flex items-center justify-center gap-2 min-w-0 ${
-          empty ? "bg-primary/50 text-white cursor-not-allowed" : "bg-primary text-on-primary hover:opacity-90"
-        }`}
-      >
-        <span className="truncate">
-          {empty ? "Selecciona al menos 1 entrada" : `Continuar (${totals.count})`}
-        </span>
-        {!empty && <span className="material-symbols-outlined text-[20px] shrink-0">arrow_forward</span>}
-      </button>
+      {sessionName === null && !empty ? (
+        <Link
+          to="/login"
+          className="w-full py-3 px-4 rounded-xl font-bold shadow-md transition-all flex items-center justify-center gap-2 min-w-0 bg-primary text-on-primary hover:opacity-90"
+        >
+          <span className="truncate">Inicia sesión para comprar</span>
+          <span className="material-symbols-outlined text-[20px] shrink-0">login</span>
+        </Link>
+      ) : (
+        <button
+          disabled={empty}
+          type="button"
+          onClick={onCheckout}
+          className={`w-full py-3 px-4 rounded-xl font-bold shadow-md transition-all flex items-center justify-center gap-2 min-w-0 ${
+            empty ? "bg-primary/50 text-white cursor-not-allowed" : "bg-primary text-on-primary hover:opacity-90"
+          }`}
+        >
+          <span className="truncate">
+            {empty ? "Selecciona al menos 1 entrada" : `Continuar (${totals.count})`}
+          </span>
+          {!empty && <span className="material-symbols-outlined text-[20px] shrink-0">arrow_forward</span>}
+        </button>
+      )}
     </div>
   );
 }
