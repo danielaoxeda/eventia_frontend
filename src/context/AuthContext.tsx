@@ -14,6 +14,7 @@ interface AuthContextType {
   user: StoredUser | null;
   login: (token: string) => void;
   logout: () => void;
+  updateUser: (updatedUser: StoredUser) => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(
@@ -52,6 +53,10 @@ export function AuthProvider({ children }: AuthProviderProps) {
     setUser(null);
   };
 
+  const updateUser = (updatedUser: StoredUser) => {
+    setUser(updatedUser);
+  };
+
   return (
     <AuthContext.Provider
       value={{
@@ -59,6 +64,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
         user,
         login,
         logout,
+        updateUser,
       }}
     >
       {children}

@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { ChevronLeft, ChevronRight, Layers, PenLine, PowerOff, RotateCcw, Search, X } from "lucide-react";
 import type { AdminCategory, CategoryStatus } from "../types/admin.types";
+import StatusBadge from "./StatusBadge";
 
 interface CategoriesTableProps {
   categories: AdminCategory[];
@@ -152,15 +153,7 @@ export default function CategoriesTable({
                     </td>
 
                     <td className="py-4 px-5 whitespace-nowrap">
-                      {category.estado === "Activa" ? (
-                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-primary-container/40 text-primary border border-primary/20">
-                          Activa
-                        </span>
-                      ) : (
-                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-surface-container text-on-surface-variant border border-outline-variant/30">
-                          Inactiva
-                        </span>
-                      )}
+                      <StatusBadge status={category.estado} />
                     </td>
 
                     <td className="py-4 px-5 text-xs text-on-surface-variant font-mono whitespace-nowrap">

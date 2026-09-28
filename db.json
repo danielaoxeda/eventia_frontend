@@ -40,6 +40,28 @@
       "venue": "Estadio Nacional",
       "qr_code": "EVT-ORD1001-TCK5002-SECURE",
       "status": "ANULADO"
+    },
+    {
+      "id": "tck-5003",
+      "id_order": "ord-1002",
+      "id_user": 2,
+      "event_title": "Festival Rock Lima 2026",
+      "ticket_type": "VIP",
+      "event_date": "2026-10-15T20:00:00Z",
+      "venue": "Estadio Nacional",
+      "qr_code": "EVT-ORD1002-TCK5003-SECURE",
+      "status": "USADO"
+    },
+    {
+      "id": "tck-5004",
+      "id_order": "ord-1003",
+      "id_user": 3,
+      "event_title": "Festival Rock Lima 2026",
+      "ticket_type": "General",
+      "event_date": "2026-10-15T20:00:00Z",
+      "venue": "Estadio Nacional",
+      "qr_code": "EVT-ORD1003-TCK5004-SECURE",
+      "status": "VIGENTE"
     }
   ],
   "ticket_types": [
@@ -47,203 +69,721 @@
       "id": 1,
       "id_event": 101,
       "name": "General",
-      "price": 100.0,
+      "price": 100,
       "stock": 50
     },
-    { "id": 2, "id_event": 101, "name": "VIP", "price": 220.0, "stock": 20 },
+    {
+      "id": 2,
+      "id_event": 101,
+      "name": "VIP",
+      "price": 220,
+      "stock": 20
+    },
     {
       "id": 3,
       "id_event": 101,
       "name": "General",
-      "price": 120.0,
+      "price": 120,
       "stock": 1200
     },
     {
       "id": 4,
       "id_event": 102,
       "name": "General",
-      "price": 85.0,
+      "price": 85,
       "stock": 900
     },
     {
       "id": 5,
       "id_event": 103,
       "name": "General",
-      "price": 60.0,
+      "price": 60,
       "stock": 200
     },
     {
       "id": 6,
       "id_event": 104,
       "name": "General",
-      "price": 45.0,
+      "price": 45,
       "stock": 1500
     },
     {
       "id": 7,
       "id_event": 105,
       "name": "General",
-      "price": 140.0,
+      "price": 140,
       "stock": 1100
     },
     {
       "id": 8,
       "id_event": 106,
       "name": "General",
-      "price": 210.0,
+      "price": 210,
       "stock": 400
     }
   ],
   "categories": [
     {
-      "id": "cat-01",
       "name": "Conciertos",
       "description": "Shows musicales en vivo",
       "active": true,
       "created_at": "2024-01-10T10:00:00Z",
-      "updated_at": "2024-01-10T10:00:00Z"
+      "updated_at": "2024-01-10T10:00:00Z",
+      "id": "cat-01"
     },
     {
-      "id": "cat-02",
       "name": "Festivales",
       "description": "Festivales de varios días y artistas",
       "active": true,
       "created_at": "2024-01-10T10:00:00Z",
-      "updated_at": "2024-01-10T10:00:00Z"
+      "updated_at": "2024-01-10T10:00:00Z",
+      "id": "cat-02"
     },
     {
-      "id": "cat-03",
       "name": "Teatro & Artes",
       "description": "Obras de teatro y espectáculos culturales",
       "active": true,
       "created_at": "2024-01-10T10:00:00Z",
-      "updated_at": "2024-01-10T10:00:00Z"
+      "updated_at": "2024-01-10T10:00:00Z",
+      "id": "cat-03"
     },
     {
-      "id": "cat-04",
       "name": "Gastronomía & Ferias",
       "description": "Ferias gastronómicas y food trucks",
       "active": true,
       "created_at": "2024-01-10T10:00:00Z",
-      "updated_at": "2024-01-10T10:00:00Z"
+      "updated_at": "2024-01-10T10:00:00Z",
+      "id": "cat-04"
     },
     {
-      "id": "cat-05",
       "name": "Tecnología & Startups",
       "description": "Conferencias y ferias de tecnología",
       "active": true,
       "created_at": "2024-01-10T10:00:00Z",
-      "updated_at": "2024-01-10T10:00:00Z"
+      "updated_at": "2024-01-10T10:00:00Z",
+      "id": "cat-05"
     }
   ],
   "events": [
     {
-      "id": 101,
+      "id": "101",
+      "id_event": 101,
+      "code": "EVT-101",
       "title": "Illapu: 50 Años de Memoria",
-      "description": "Concierto por los 50 años de Illapu",
-      "date": "2025-11-22",
-      "start_time": "20:00",
-      "end_time": "23:00",
+      "category": "Conciertos",
+      "id_category": "cat-01",
+      "venue": "Estadio Nacional, Lima",
       "location": "Estadio Nacional, Lima",
       "city": "Lima Metropolitana",
+      "date": "2025-11-22",
+      "time": "20:00",
+      "start_time": "20:00",
+      "end_time": "23:00",
+      "bannerUrl": "https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=600&auto=format&fit=crop&q=80",
+      "status": "published",
+      "active": true,
       "capacity": 45000,
       "available_capacity": 3600,
-      "status": "EN_VENTA",
-      "active": true,
+      "ticketsSold": 41400,
+      "totalRevenue": 4968000,
+      "featured": true,
+      "description": "Concierto por los 50 años de Illapu",
       "created_at": "2025-01-15T10:00:00Z",
       "updated_at": "2025-06-20T10:00:00Z",
-      "id_category": "cat-01",
       "id_organizer": 1
     },
     {
-      "id": 102,
+      "id": "102",
+      "id_event": 102,
+      "code": "EVT-102",
       "title": "Sunsets Sessions Costa Verde",
-      "description": "Festival al atardecer frente al mar",
-      "date": "2025-12-06",
-      "start_time": "16:00",
-      "end_time": "23:00",
+      "category": "Festivales",
+      "id_category": "cat-02",
+      "venue": "Arena 1, San Miguel",
       "location": "Arena 1, San Miguel",
       "city": "Lima Metropolitana",
+      "date": "2025-12-06",
+      "time": "16:00",
+      "start_time": "16:00",
+      "end_time": "23:00",
+      "bannerUrl": "https://images.unsplash.com/photo-1555939594-58d7cb561ad1?w=600&auto=format&fit=crop&q=80",
+      "status": "almost_sold_out",
+      "active": true,
       "capacity": 12000,
       "available_capacity": 4200,
-      "status": "EN_VENTA",
-      "active": true,
+      "ticketsSold": 7800,
+      "totalRevenue": 663000,
+      "featured": false,
+      "description": "Festival al atardecer frente al mar",
       "created_at": "2025-02-01T10:00:00Z",
       "updated_at": "2025-06-20T10:00:00Z",
-      "id_category": "cat-02",
       "id_organizer": 1
     },
     {
-      "id": 103,
+      "id": "103",
+      "id_event": 103,
+      "code": "EVT-103",
       "title": "La Ciudad y los Perros (Adaptación)",
-      "description": "Adaptación teatral de la novela",
-      "date": "2025-11-28",
-      "start_time": "19:30",
-      "end_time": "21:30",
+      "category": "Teatro & Artes",
+      "id_category": "cat-03",
+      "venue": "Teatro Peruano Japonés",
       "location": "Teatro Peruano Japonés",
       "city": "Lima Metropolitana",
+      "date": "2025-11-28",
+      "time": "19:30",
+      "start_time": "19:30",
+      "end_time": "21:30",
+      "bannerUrl": "https://images.unsplash.com/photo-1508700115892-45ecd05ae2ad?w=600&auto=format&fit=crop&q=80",
+      "status": "published",
+      "active": true,
       "capacity": 800,
       "available_capacity": 96,
-      "status": "EN_VENTA",
-      "active": true,
+      "ticketsSold": 704,
+      "totalRevenue": 42240,
+      "featured": false,
+      "description": "Adaptación teatral de la novela",
       "created_at": "2025-03-10T10:00:00Z",
       "updated_at": "2025-06-20T10:00:00Z",
-      "id_category": "cat-03",
       "id_organizer": 2
     },
     {
-      "id": 104,
+      "id": "104",
+      "id_event": 104,
+      "code": "EVT-104",
       "title": "Expo Sabor & Coctelería Andina",
-      "description": "Feria gastronómica con coctelería andina",
-      "date": "2025-12-14",
-      "start_time": "11:00",
-      "end_time": "22:00",
+      "category": "Gastronomía & Ferias",
+      "id_category": "cat-04",
+      "venue": "Jockey Club del Perú",
       "location": "Jockey Club del Perú",
       "city": "Lima Metropolitana",
+      "date": "2025-12-14",
+      "time": "11:00",
+      "start_time": "11:00",
+      "end_time": "22:00",
+      "bannerUrl": "https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=600&auto=format&fit=crop&q=80",
+      "status": "published",
+      "active": true,
       "capacity": 5000,
       "available_capacity": 3000,
-      "status": "EN_VENTA",
-      "active": true,
+      "ticketsSold": 2000,
+      "totalRevenue": 90000,
+      "featured": false,
+      "description": "Feria gastronómica con coctelería andina",
       "created_at": "2025-04-05T10:00:00Z",
       "updated_at": "2025-06-20T10:00:00Z",
-      "id_category": "cat-04",
       "id_organizer": 2
     },
     {
-      "id": 105,
+      "id": "105",
+      "id_event": 105,
+      "code": "EVT-105",
       "title": "Trap & Latin Flow Live Tour",
-      "description": "Gira de trap y latin flow",
-      "date": "2026-01-18",
-      "start_time": "20:00",
-      "end_time": "23:30",
+      "category": "Conciertos",
+      "id_category": "cat-01",
+      "venue": "Arena 1, Costa Verde",
       "location": "Arena 1, Costa Verde",
       "city": "Lima Metropolitana",
+      "date": "2026-01-18",
+      "time": "20:00",
+      "start_time": "20:00",
+      "end_time": "23:30",
+      "bannerUrl": "https://images.unsplash.com/photo-1516450360452-9312f5e86fc7?w=600&auto=format&fit=crop&q=80",
+      "status": "almost_sold_out",
+      "active": true,
       "capacity": 15000,
       "available_capacity": 600,
-      "status": "EN_VENTA",
-      "active": true,
+      "ticketsSold": 14400,
+      "totalRevenue": 2016000,
+      "featured": false,
+      "description": "Gira de trap y latin flow",
       "created_at": "2025-05-12T10:00:00Z",
       "updated_at": "2025-06-20T10:00:00Z",
-      "id_category": "cat-01",
       "id_organizer": 1
     },
     {
-      "id": 106,
+      "id": "106",
+      "id_event": 106,
+      "code": "EVT-106",
       "title": "Peru Tech Summit & Fintech 2025",
-      "description": "Cumbre de tecnología y fintech",
-      "date": "2026-01-25",
-      "start_time": "09:00",
-      "end_time": "18:00",
+      "category": "Tecnología & Startups",
+      "id_category": "cat-05",
+      "venue": "Centro de Convenciones 27 de Enero",
       "location": "Centro de Convenciones 27 de Enero",
       "city": "Lima Metropolitana",
+      "date": "2026-01-25",
+      "time": "09:00",
+      "start_time": "09:00",
+      "end_time": "18:00",
+      "bannerUrl": "https://images.unsplash.com/photo-1607604276583-eef5d076aa5f?w=600&auto=format&fit=crop&q=80",
+      "status": "published",
+      "active": true,
       "capacity": 3000,
       "available_capacity": 1440,
-      "status": "EN_VENTA",
-      "active": true,
+      "ticketsSold": 1560,
+      "totalRevenue": 327600,
+      "featured": false,
+      "description": "Cumbre de tecnología y fintech",
       "created_at": "2025-06-01T10:00:00Z",
       "updated_at": "2025-06-20T10:00:00Z",
-      "id_category": "cat-05",
       "id_organizer": 3
     }
-  ]
+  ],
+  "organizer_tickets": [
+    {
+      "id": "TCK-101-01",
+      "eventId": "101",
+      "name": "Campo VIP Platinum",
+      "zone": "VIP Platinum",
+      "pricePEN": 420,
+      "capacity": 4000,
+      "soldCount": 3850,
+      "status": "active",
+      "saleStartDate": "2025-08-01",
+      "saleEndDate": "2025-11-15",
+      "isPresale": false,
+      "maxPerPurchase": 4
+    },
+    {
+      "id": "TCK-101-02",
+      "eventId": "101",
+      "name": "Campo General - Fase 2",
+      "zone": "General",
+      "pricePEN": 220,
+      "capacity": 7000,
+      "soldCount": 6200,
+      "status": "active",
+      "saleStartDate": "2025-08-15",
+      "saleEndDate": "2025-11-15",
+      "isPresale": false,
+      "maxPerPurchase": 6
+    },
+    {
+      "id": "TCK-101-03",
+      "eventId": "101",
+      "name": "Tribuna Occidente Numerada",
+      "zone": "Tribuna",
+      "pricePEN": 290,
+      "capacity": 2000,
+      "soldCount": 1450,
+      "status": "active",
+      "saleStartDate": "2025-08-01",
+      "saleEndDate": "2025-11-15",
+      "isPresale": false,
+      "maxPerPurchase": 4
+    },
+    {
+      "id": "TCK-102-01",
+      "eventId": "102",
+      "name": "Early Bird - Preventa BBVA",
+      "zone": "General",
+      "pricePEN": 85,
+      "capacity": 5000,
+      "soldCount": 4200,
+      "status": "active",
+      "saleStartDate": "2025-07-15",
+      "saleEndDate": "2025-12-06",
+      "isPresale": true,
+      "maxPerPurchase": 4
+    }
+  ],
+  "dailySales": [
+    {
+      "day": "Lun",
+      "date": "20 Sep",
+      "totalPEN": 180000,
+      "ticketsSold": 890
+    },
+    {
+      "day": "Mar",
+      "date": "21 Sep",
+      "totalPEN": 243000,
+      "ticketsSold": 1120
+    },
+    {
+      "day": "Mié",
+      "date": "22 Sep",
+      "totalPEN": 337000,
+      "ticketsSold": 1540
+    },
+    {
+      "day": "Jue",
+      "date": "23 Sep",
+      "totalPEN": 432000,
+      "ticketsSold": 1980
+    },
+    {
+      "day": "Vie",
+      "date": "24 Sep",
+      "totalPEN": 725000,
+      "ticketsSold": 3210
+    },
+    {
+      "day": "Sáb",
+      "date": "25 Sep",
+      "totalPEN": 878000,
+      "ticketsSold": 3890
+    },
+    {
+      "day": "Dom",
+      "date": "26 Sep",
+      "totalPEN": 590000,
+      "ticketsSold": 2650
+    }
+  ],
+  "admin_users": [
+    {
+      "id": "1",
+      "codigo": "#1082",
+      "nombre": "Mario Vargas Llosa",
+      "email": "contacto@marioeventos.pe",
+      "iniciales": "MV",
+      "dni": "20601948",
+      "telefono": "+51 984 219 042",
+      "rol": "Organizador",
+      "fechaRegistro": "14/01/2024",
+      "estado": "Activo"
+    },
+    {
+      "id": "2",
+      "codigo": "#2491",
+      "nombre": "Camila Paredes Ramos",
+      "email": "camila.paredes@gmail.com",
+      "iniciales": "CP",
+      "dni": "72910482",
+      "telefono": "+51 951 847 302",
+      "rol": "Cliente",
+      "fechaRegistro": "02/02/2024",
+      "estado": "Activo"
+    },
+    {
+      "id": "3",
+      "codigo": "#1184",
+      "nombre": "Live Producciones SAC",
+      "email": "operaciones@liveprod.pe",
+      "iniciales": "LP",
+      "dni": "20548194",
+      "telefono": "+51 998 776 210",
+      "rol": "Organizador",
+      "fechaRegistro": "19/03/2024",
+      "estado": "Inactivo"
+    },
+    {
+      "id": "4",
+      "codigo": "#3188",
+      "nombre": "Jorge Torres Mendoza",
+      "email": "jorge.torres@outlook.com",
+      "iniciales": "JT",
+      "dni": "45892019",
+      "telefono": "+51 940 332 104",
+      "rol": "Cliente",
+      "fechaRegistro": "27/04/2024",
+      "estado": "Activo"
+    },
+    {
+      "id": "5",
+      "codigo": "#3298",
+      "nombre": "Daniela Aguirre Salcedo",
+      "email": "dani.aguirre@pucp.edu.pe",
+      "iniciales": "DA",
+      "dni": "70184920",
+      "telefono": "+51 977 120 449",
+      "rol": "Cliente",
+      "fechaRegistro": "10/05/2024",
+      "estado": "Inactivo"
+    },
+    {
+      "id": "6",
+      "codigo": "#1145",
+      "nombre": "Eventos Teatro Municipal",
+      "email": "administracion@teatromunicipal.pe",
+      "iniciales": "ET",
+      "dni": "20100084",
+      "telefono": "+51 992 405 119",
+      "rol": "Organizador",
+      "fechaRegistro": "18/06/2024",
+      "estado": "Activo"
+    },
+    {
+      "id": "7",
+      "codigo": "#3412",
+      "nombre": "Rodrigo Benavides Vega",
+      "email": "rbenavides@gmail.com",
+      "iniciales": "RB",
+      "dni": "47828194",
+      "telefono": "+51 981 445 092",
+      "rol": "Cliente",
+      "fechaRegistro": "03/07/2024",
+      "estado": "Activo"
+    }
+  ],
+  "admin_categories": [
+    {
+      "id": "cat-1",
+      "numeroId": 1,
+      "nombre": "Conciertos & Festivales",
+      "descripcion": "Presentaciones musicales masivas en vivo, festivales y recitales.",
+      "estado": "Activa",
+      "ultimaActualizacion": "2024-04-10 11:22:15"
+    },
+    {
+      "id": "cat-2",
+      "numeroId": 2,
+      "nombre": "Teatro & Artes Escénicas",
+      "descripcion": "Obras teatrales, comedia en vivo, danza contemporánea y ballet.",
+      "estado": "Activa",
+      "ultimaActualizacion": "2024-04-12 16:45:00"
+    },
+    {
+      "id": "cat-3",
+      "numeroId": 3,
+      "nombre": "Conferencias & Tech",
+      "descripcion": "Cumbres de tecnología, foros empresariales, congresos y networking.",
+      "estado": "Activa",
+      "ultimaActualizacion": "2024-04-14 09:10:30"
+    },
+    {
+      "id": "cat-4",
+      "numeroId": 4,
+      "nombre": "Deportes & Maratones",
+      "descripcion": "Competiciones deportivas oficiales, maratones, torneos y exhibiciones.",
+      "estado": "Activa",
+      "ultimaActualizacion": "2024-04-15 13:05:40"
+    },
+    {
+      "id": "cat-5",
+      "numeroId": 5,
+      "nombre": "Gastronomía & Ferias",
+      "descripcion": "Festivales culinarios representativos, catas de vino y ferias gastronómicas.",
+      "estado": "Inactiva",
+      "ultimaActualizacion": "2024-04-16 10:00:00"
+    },
+    {
+      "id": "cat-6",
+      "numeroId": 6,
+      "nombre": "Cine & Entretenimiento",
+      "descripcion": "Festivales de cortometrajes independientes, proyecciones y alfombras rojas.",
+      "estado": "Activa",
+      "ultimaActualizacion": "2024-04-16 14:15:10"
+    }
+  ],
+  "admin_monitoring": {
+    "kpis": [
+      {
+        "id": "kpi-ingresos",
+        "label": "INGRESOS TOTALES",
+        "value": "S/ 142,850.00",
+        "badge": {
+          "text": "+12.4% vs. mes anterior",
+          "positive": true
+        },
+        "iconName": "wallet",
+        "colorVariant": "indigo"
+      },
+      {
+        "id": "kpi-ordenes",
+        "label": "ÓRDENES REGISTRADAS",
+        "value": "3,842",
+        "subtext": "Total compras en plataforma",
+        "iconName": "receipt",
+        "colorVariant": "blue"
+      },
+      {
+        "id": "kpi-tickets",
+        "label": "TICKETS EMITIDOS",
+        "value": "8,490",
+        "subtext": "Entradas digitales generadas",
+        "iconName": "ticket",
+        "colorVariant": "purple"
+      },
+      {
+        "id": "kpi-usuarios",
+        "label": "USUARIOS ACTIVOS",
+        "value": "4,120",
+        "subtext": "Clientes y organizadores activos",
+        "iconName": "users",
+        "colorVariant": "rose"
+      }
+    ],
+    "salesTrend": [
+      {
+        "day": "Día 1",
+        "ingresos": 1250,
+        "formatted": "S/ 1,250"
+      },
+      {
+        "day": "Día 3",
+        "ingresos": 1480,
+        "formatted": "S/ 1,480"
+      },
+      {
+        "day": "Día 5",
+        "ingresos": 1720,
+        "formatted": "S/ 1,720"
+      },
+      {
+        "day": "Día 7",
+        "ingresos": 2310,
+        "formatted": "S/ 2,310"
+      },
+      {
+        "day": "Día 10",
+        "ingresos": 2190,
+        "formatted": "S/ 2,190"
+      },
+      {
+        "day": "Día 12",
+        "ingresos": 2840,
+        "formatted": "S/ 2,840"
+      },
+      {
+        "day": "Día 15",
+        "ingresos": 3200,
+        "formatted": "S/ 3,200"
+      },
+      {
+        "day": "Día 18",
+        "ingresos": 2980,
+        "formatted": "S/ 2,980"
+      },
+      {
+        "day": "Día 20",
+        "ingresos": 3650,
+        "formatted": "S/ 3,650"
+      },
+      {
+        "day": "Día 22",
+        "ingresos": 4120,
+        "formatted": "S/ 4,120"
+      },
+      {
+        "day": "Día 25",
+        "ingresos": 4890,
+        "formatted": "S/ 4,890"
+      },
+      {
+        "day": "Día 28",
+        "ingresos": 5420,
+        "formatted": "S/ 5,420"
+      },
+      {
+        "day": "Día 30",
+        "ingresos": 6180,
+        "formatted": "S/ 6,180"
+      }
+    ],
+    "monthlyTickets": [
+      {
+        "month": "Ene",
+        "tickets": 1100,
+        "displayLabel": "1.1k"
+      },
+      {
+        "month": "Feb",
+        "tickets": 1250,
+        "displayLabel": "1.2k"
+      },
+      {
+        "month": "Mar",
+        "tickets": 1400,
+        "displayLabel": "1.4k"
+      },
+      {
+        "month": "Abr",
+        "tickets": 1750,
+        "displayLabel": "1.7k"
+      },
+      {
+        "month": "May",
+        "tickets": 2800,
+        "displayLabel": "2.8k",
+        "highlight": true
+      },
+      {
+        "month": "Jun",
+        "tickets": 1950,
+        "displayLabel": "1.9k"
+      }
+    ],
+    "activeEvents": [
+      {
+        "id": "evt-01",
+        "titulo": "Festival de Salsa All Stars 2024",
+        "categoria": "Conciertos",
+        "organizador": "Live Producciones SAC",
+        "ruc": "20548194321",
+        "entradasVendidas": 3850,
+        "aforoTotal": 5000,
+        "recaudacion": 346500,
+        "tasaComision": 0.08,
+        "comision": 27720,
+        "estado": "En Curso"
+      },
+      {
+        "id": "evt-02",
+        "titulo": "Tech Summit Lima 2024",
+        "categoria": "Conferencias",
+        "organizador": "Innovación Perú SAC",
+        "ruc": "20601948231",
+        "entradasVendidas": 820,
+        "aforoTotal": 1000,
+        "recaudacion": 123000,
+        "tasaComision": 0.1,
+        "comision": 12300,
+        "estado": "Activo"
+      },
+      {
+        "id": "evt-03",
+        "titulo": "Obra Teatral: Bodas de Sangre",
+        "categoria": "Teatro",
+        "organizador": "Teatro Municipal de Lima",
+        "ruc": "20100084729",
+        "entradasVendidas": 450,
+        "aforoTotal": 600,
+        "recaudacion": 31500,
+        "tasaComision": 0.07,
+        "comision": 2205,
+        "estado": "Activo"
+      },
+      {
+        "id": "evt-04",
+        "titulo": "Maratón Nocturna Miraflores 10K",
+        "categoria": "Deportes",
+        "organizador": "Club Deportivo Running Perú",
+        "ruc": "20491823741",
+        "entradasVendidas": 2900,
+        "aforoTotal": 3000,
+        "recaudacion": 145000,
+        "tasaComision": 0.06,
+        "comision": 8700,
+        "estado": "Próximo"
+      },
+      {
+        "id": "evt-05",
+        "titulo": "Festival Gastronómico Sabores del Norte",
+        "categoria": "Gastronomía",
+        "organizador": "Asociación Culinaria del Perú",
+        "ruc": "20391847291",
+        "entradasVendidas": 1800,
+        "aforoTotal": 2500,
+        "recaudacion": 54000,
+        "tasaComision": 0.05,
+        "comision": 2700,
+        "estado": "En Curso"
+      },
+      {
+        "id": "evt-06",
+        "titulo": "Expo Café & Chocolate 2024",
+        "categoria": "Ferias",
+        "organizador": "Cámara Peruana del Café",
+        "ruc": "20100456789",
+        "entradasVendidas": 4100,
+        "aforoTotal": 5000,
+        "recaudacion": 123000,
+        "tasaComision": 0.1,
+        "comision": 12300,
+        "estado": "Activo"
+      }
+    ],
+    "totalActiveEventsCount": 42
+  }
 }

@@ -1,11 +1,11 @@
-import axios from "axios";
+import api from "../../../shared/services/api";
 import type { AdminUser, UserFormData } from "../types/admin.types";
 
-const USE_MOCK_DATA = true;
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8080/api/v1";
-
-/* DATOS DE PRUEBA LOCALES */
-const MOCK_USERS: AdminUser[] = [
+/**
+ * Datos semilla locales en memoria como respaldo (fallback)
+ * si el servidor json-server (db.json) se encuentra apagado.
+ */
+let mockUsersMemory: AdminUser[] = [
   {
     id: "1",
     codigo: "#1082",
@@ -92,68 +92,113 @@ const MOCK_USERS: AdminUser[] = [
   },
 ];
 
-/* SERVICIO DE USUARIOS */
+/**
+ * Servicio encargado de la comunicación con la API dummy (json-server / db.json)
+ * para la gestión de usuarios y alta de organizadores.
+ */
 export const adminUsersService = {
+  /**
+   * Obtiene la lista completa de usuarios registrados.
+   * Conecta con GET /admin_users del json-server.
+   */
   async getUsers(): Promise<AdminUser[]> {
-    if (USE_MOCK_DATA) {
-      return Promise.resolve(MOCK_USERS);
+    try {
+      const response = await api.get<AdminUser[]>("/admin_users");
+      if (Array.isArray(response.data) && response.data.length > 0) {
+        mockUsersMemory = response.data;
+        return response.data;
+      }
+      return mockUsersMemory;
+    } catch {
+      // Si la API dummy está offline, retorna la memoria local sin interrumpir la UI
+      return mockUsersMemory;
     }
-    const { data } = await axios.get<AdminUser[]>(`${API_URL}/admin/users`);
-    return data;
   },
 
+  /**
+   * Alterna el estado de una cuenta (Activo <-> Inactivo).
+   * Conecta con PATCH /admin_users/:id en el json-server.
+   */
   async toggleUserStatus(id: string, nuevoEstado: "Activo" | "Inactivo"): Promise<AdminUser> {
-    if (USE_MOCK_DATA) {
-      const user = MOCK_USERS.find((u) => u.id === id);
+    try {
+      const response = await api.patch<AdminUser>(`/admin_users/${id}`, {
+        estado: nuevoEstado,
+      });
+      mockUsersMemory = mockUsersMemory.map((u) => (u.id === id ? response.data : u));
+      return response.data;
+    } catch {
+      // Fallback local
+      const user = mockUsersMemory.find((u) => u.id === id);
       if (!user) throw new Error("Usuario no encontrado");
       user.estado = nuevoEstado;
-      return Promise.resolve({ ...user });
+      return { ...user };
     }
-    const { data } = await axios.patch<AdminUser>(`${API_URL}/admin/users/${id}/status`, {
-      estado: nuevoEstado,
-    });
-    return data;
   },
 
+  /**
+   * Registra un nuevo Organizador de eventos.
+   * Conecta con POST /admin_users en el json-server.
+   */
   async createUser(form: UserFormData): Promise<AdminUser> {
-    if (USE_MOCK_DATA) {
-      const nuevo: AdminUser = {
-        id: String(MOCK_USERS.length + 1),
-        codigo: `#${Math.floor(Math.random() * 9000) + 1000}`,
-        iniciales: form.nombre
-          .split(" ")
-          .slice(0, 2)
-          .map((w) => w[0])
-          .join("")
-          .toUpperCase(),
-        ...form,
-        fechaRegistro: new Date().toLocaleDateString("es-PE"),
-        estado: "Activo",
-      };
-      MOCK_USERS.push(nuevo);
-      return Promise.resolve(nuevo);
+    const nuevoUsuario: AdminUser = {
+      id: String(Date.now()),
+      codigo: `#${Math.floor(Math.random() * 9000) + 1000}`,
+      nombre: form.nombre.trim(),
+      email: form.email.trim(),
+      dni: form.dni.trim(),
+      telefono: form.telefono.trim(),
+      rol: "Organizador",
+      iniciales: form.nombre
+        .trim()
+        .split(" ")
+        .slice(0, 2)
+        .map((w) => w[0])
+        .join("")
+        .toUpperCase(),
+      fechaRegistro: new Date().toLocaleDateString("es-PE"),
+      estado: "Activo",
+    };
+
+    try {
+      const response = await api.post<AdminUser>("/admin_users", nuevoUsuario);
+      mockUsersMemory = [response.data, ...mockUsersMemory];
+      return response.data;
+    } catch {
+      // Fallback local
+      mockUsersMemory = [nuevoUsuario, ...mockUsersMemory];
+      return nuevoUsuario;
     }
-    const { data } = await axios.post<AdminUser>(`${API_URL}/admin/users`, form);
-    return data;
   },
 
+  /**
+   * Actualiza los datos de un usuario existente.
+   * Conecta con PATCH /admin_users/:id en el json-server.
+   */
   async updateUser(id: string, form: UserFormData): Promise<AdminUser> {
-    if (USE_MOCK_DATA) {
-      const idx = MOCK_USERS.findIndex((u) => u.id === id);
+    const payload = {
+      nombre: form.nombre.trim(),
+      email: form.email.trim(),
+      dni: form.dni.trim(),
+      telefono: form.telefono.trim(),
+      iniciales: form.nombre
+        .trim()
+        .split(" ")
+        .slice(0, 2)
+        .map((w) => w[0])
+        .join("")
+        .toUpperCase(),
+    };
+
+    try {
+      const response = await api.patch<AdminUser>(`/admin_users/${id}`, payload);
+      mockUsersMemory = mockUsersMemory.map((u) => (u.id === id ? response.data : u));
+      return response.data;
+    } catch {
+      // Fallback local
+      const idx = mockUsersMemory.findIndex((u) => u.id === id);
       if (idx === -1) throw new Error("Usuario no encontrado");
-      MOCK_USERS[idx] = {
-        ...MOCK_USERS[idx],
-        ...form,
-        iniciales: form.nombre
-          .split(" ")
-          .slice(0, 2)
-          .map((w) => w[0])
-          .join("")
-          .toUpperCase(),
-      };
-      return Promise.resolve({ ...MOCK_USERS[idx] });
+      mockUsersMemory[idx] = { ...mockUsersMemory[idx], ...payload };
+      return { ...mockUsersMemory[idx] };
     }
-    const { data } = await axios.put<AdminUser>(`${API_URL}/admin/users/${id}`, form);
-    return data;
   },
 };

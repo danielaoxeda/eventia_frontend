@@ -23,12 +23,39 @@ export function getStoredUsers(): StoredUser[] {
   const users = localStorage.getItem(STORAGE_KEY);
 
   if (!users) {
-    return [];
+    const defaultUsers: StoredUser[] = [
+      {
+        id: 1,
+        firstName: "Roberto",
+        lastName: "Quispe Huamán",
+        email: "rquispe@gmail.com",
+        password: "Password123!",
+        rol: "USER",
+        documentType: "DNI",
+        documentNumber: "48120573",
+        birthDate: "1992-05-15",
+        phoneNumber: "+51 987 654 321",
+      },
+      {
+        id: 2,
+        firstName: "Valeria",
+        lastName: "Mendoza Ramos",
+        email: "vmendoza@eventia.pe",
+        password: "Password123!",
+        rol: "ADMIN",
+        documentType: "DNI",
+        documentNumber: "45892110",
+        birthDate: "1988-11-20",
+        phoneNumber: "+51 912 345 678",
+      },
+    ];
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(defaultUsers));
+    return defaultUsers;
   }
 
   try {
     const parsed = JSON.parse(users);
-    if (Array.isArray(parsed)) {
+    if (Array.isArray(parsed) && parsed.length > 0) {
       return parsed;
     }
     if (typeof parsed === "object" && parsed !== null) {
@@ -79,4 +106,36 @@ export function findUserByEmail(
     (user) =>
       user.email && user.email.toLowerCase() === email.toLowerCase()
   );
+}
+
+export function updateStoredUser(
+  userId: number,
+  updates: { email?: string; password?: string }
+): StoredUser {
+  const users = getStoredUsers();
+  const index = users.findIndex((u) => u.id === userId);
+
+  if (index === -1) {
+    throw new Error("USER_NOT_FOUND");
+  }
+
+  if (updates.email && updates.email.toLowerCase() !== users[index].email.toLowerCase()) {
+    const emailExists = users.some(
+      (u, i) => i !== index && u.email.toLowerCase() === updates.email!.toLowerCase()
+    );
+    if (emailExists) {
+      throw new Error("EMAIL_IN_USE");
+    }
+  }
+
+  const updatedUser: StoredUser = {
+    ...users[index],
+    ...(updates.email ? { email: updates.email.trim() } : {}),
+    ...(updates.password ? { password: updates.password } : {}),
+  };
+
+  users[index] = updatedUser;
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(users));
+
+  return updatedUser;
 }

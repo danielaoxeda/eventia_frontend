@@ -1,4 +1,4 @@
-import axios from "axios";
+import api from "../../../shared/services/api";
 import type {
   ActiveEvent,
   KpiMetric,
@@ -7,11 +7,10 @@ import type {
   SalesTrend,
 } from "../types/admin.types";
 
-/* false cuando el backend esté disponible. */
-const USE_MOCK_DATA = true;
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8080/api/v1";
-
-/* DATOS DE PRUEBA LOCALES */
+/**
+ * Datos semilla locales para métricas y gráficos del panel de monitoreo
+ * utilizados como respaldo (fallback) si el servidor json-server está apagado.
+ */
 const MOCK_KPIS: KpiMetric[] = [
   {
     id: "kpi-ingresos",
@@ -58,145 +57,93 @@ const MOCK_SALES_TREND: SalesTrend[] = [
   { day: "Día 10", ingresos: 2190, formatted: "S/ 2,190" },
   { day: "Día 12", ingresos: 2840, formatted: "S/ 2,840" },
   { day: "Día 15", ingresos: 3200, formatted: "S/ 3,200" },
-  { day: "Día 18", ingresos: 3650, formatted: "S/ 3,650" },
-  { day: "Día 20", ingresos: 4420, formatted: "S/ 4,420" },
-  { day: "Día 22", ingresos: 4300, formatted: "S/ 4,300" },
-  { day: "Día 25", ingresos: 5120, formatted: "S/ 5,120" },
-  { day: "Día 28", ingresos: 5410, formatted: "S/ 5,410" },
-  { day: "Día 30", ingresos: 5850, formatted: "S/ 5,850" },
+  { day: "Día 18", ingresos: 2980, formatted: "S/ 2,980" },
+  { day: "Día 20", ingresos: 3650, formatted: "S/ 3,650" },
+  { day: "Día 22", ingresos: 4120, formatted: "S/ 4,120" },
+  { day: "Día 25", ingresos: 4890, formatted: "S/ 4,890" },
+  { day: "Día 28", ingresos: 5420, formatted: "S/ 5,420" },
+  { day: "Día 30", ingresos: 6180, formatted: "S/ 6,180" },
 ];
 
 const MOCK_MONTHLY_TICKETS: MonthlyTicket[] = [
-  { month: "Ene", tickets: 840, displayLabel: "840", highlight: false },
-  { month: "Feb", tickets: 1100, displayLabel: "1.1k", highlight: false },
-  { month: "Mar", tickets: 1300, displayLabel: "1.3k", highlight: false },
-  { month: "Abr", tickets: 1700, displayLabel: "1.7k", highlight: false },
-  { month: "May", tickets: 1900, displayLabel: "1.9k", highlight: true },
-  { month: "Jun", tickets: 1600, displayLabel: "1.6k", highlight: false },
+  { month: "Ene", tickets: 1100, displayLabel: "1.1k" },
+  { month: "Feb", tickets: 1250, displayLabel: "1.2k" },
+  { month: "Mar", tickets: 1400, displayLabel: "1.4k" },
+  { month: "Abr", tickets: 1750, displayLabel: "1.7k" },
+  { month: "May", tickets: 2800, displayLabel: "2.8k", highlight: true },
+  { month: "Jun", tickets: 1950, displayLabel: "1.9k" },
 ];
 
 const MOCK_ACTIVE_EVENTS: ActiveEvent[] = [
   {
-    id: "EVT-01",
-    titulo: "Lima Live Fest 2024",
-    categoria: "Festival Musical",
-    organizador: "Live Nation Perú S.A.C.",
-    ruc: "20601839211",
-    entradasVendidas: 4250,
+    id: "evt-01",
+    titulo: "Festival de Salsa All Stars 2024",
+    categoria: "Conciertos",
+    organizador: "Live Producciones SAC",
+    ruc: "20548194321",
+    entradasVendidas: 3850,
     aforoTotal: 5000,
-    recaudacion: 382500,
-    tasaComision: 0.1,
-    comision: 38250,
+    recaudacion: 346500,
+    tasaComision: 0.08,
+    comision: 27720,
     estado: "En Curso",
   },
   {
-    id: "EVT-02",
-    titulo: "Noche de Jazz en el Olivar",
-    categoria: "Concierto Acústico",
-    organizador: "Cultural San Isidro",
-    ruc: "20549210084",
-    entradasVendidas: 780,
-    aforoTotal: 800,
-    recaudacion: 62400,
+    id: "evt-02",
+    titulo: "Tech Summit Lima 2024",
+    categoria: "Conferencias",
+    organizador: "Innovación Perú SAC",
+    ruc: "20601948231",
+    entradasVendidas: 820,
+    aforoTotal: 1000,
+    recaudacion: 123000,
     tasaComision: 0.1,
-    comision: 6240,
+    comision: 12300,
     estado: "Activo",
   },
   {
-    id: "EVT-03",
-    titulo: "Cumbre de Innovación & Startups",
-    categoria: "Congreso & Networking",
-    organizador: "TechVentures Hub",
-    ruc: "20603418902",
-    entradasVendidas: 1120,
-    aforoTotal: 1500,
-    recaudacion: 168000,
-    tasaComision: 0.1,
-    comision: 16800,
-    estado: "Activo",
-  },
-  {
-    id: "EVT-04",
-    titulo: "Hamlet: Adaptación Contemporánea",
-    categoria: "Teatro & Artes",
-    organizador: "Asociación Teatral La Plaza",
-    ruc: "20512839401",
-    entradasVendidas: 420,
+    id: "evt-03",
+    titulo: "Obra Teatral: Bodas de Sangre",
+    categoria: "Teatro",
+    organizador: "Teatro Municipal de Lima",
+    ruc: "20100084729",
+    entradasVendidas: 450,
     aforoTotal: 600,
-    recaudacion: 33600,
-    tasaComision: 0.1,
-    comision: 3360,
-    estado: "Próximo",
-  },
-  {
-    id: "EVT-05",
-    titulo: "GastroFest Sabores Peruanos",
-    categoria: "Feria Gastronómica",
-    organizador: "Acurio & Asociados Eventos",
-    ruc: "20491028472",
-    entradasVendidas: 2850,
-    aforoTotal: 3000,
-    recaudacion: 142500,
-    tasaComision: 0.1,
-    comision: 14250,
-    estado: "En Curso",
-  },
-  {
-    id: "EVT-06",
-    titulo: "Sinfonía Andina: Homenaje a Yma Sumac",
-    categoria: "Música Clásica",
-    organizador: "Filarmónica Juvenil del Perú",
-    ruc: "20556781290",
-    entradasVendidas: 1450,
-    aforoTotal: 1800,
-    recaudacion: 116000,
-    tasaComision: 0.1,
-    comision: 11600,
+    recaudacion: 31500,
+    tasaComision: 0.07,
+    comision: 2205,
     estado: "Activo",
   },
   {
-    id: "EVT-07",
-    titulo: "Expo Tech AI & Robotics 2024",
-    categoria: "Tecnología",
-    organizador: "Comunidad Tech Lima",
-    ruc: "20608912345",
-    entradasVendidas: 2100,
-    aforoTotal: 2500,
-    recaudacion: 189000,
-    tasaComision: 0.1,
-    comision: 18900,
-    estado: "Próximo",
-  },
-  {
-    id: "EVT-08",
-    titulo: "Maratón Nocturna Costa Verde 15K",
+    id: "evt-04",
+    titulo: "Maratón Nocturna Miraflores 10K",
     categoria: "Deportes",
-    organizador: "Perú Runners Asociación",
-    ruc: "20511234567",
-    entradasVendidas: 3200,
-    aforoTotal: 3500,
-    recaudacion: 192000,
-    tasaComision: 0.1,
-    comision: 19200,
-    estado: "Activo",
+    organizador: "Club Deportivo Running Perú",
+    ruc: "20491823741",
+    entradasVendidas: 2900,
+    aforoTotal: 3000,
+    recaudacion: 145000,
+    tasaComision: 0.06,
+    comision: 8700,
+    estado: "Próximo",
   },
   {
-    id: "EVT-09",
-    titulo: "Stand Up: Noche de Risas Criollas",
-    categoria: "Comedia & Stand Up",
-    organizador: "Producciones El Barranco",
-    ruc: "20603344551",
-    entradasVendidas: 380,
-    aforoTotal: 400,
-    recaudacion: 26600,
-    tasaComision: 0.1,
-    comision: 2660,
+    id: "evt-05",
+    titulo: "Festival Gastronómico Sabores del Norte",
+    categoria: "Gastronomía",
+    organizador: "Asociación Culinaria del Perú",
+    ruc: "20391847291",
+    entradasVendidas: 1800,
+    aforoTotal: 2500,
+    recaudacion: 54000,
+    tasaComision: 0.05,
+    comision: 2700,
     estado: "En Curso",
   },
   {
-    id: "EVT-10",
-    titulo: "Festival del Café y Cacao Peruano",
-    categoria: "Feria Gastronómica",
+    id: "evt-06",
+    titulo: "Expo Café & Chocolate 2024",
+    categoria: "Ferias",
     organizador: "Cámara Peruana del Café",
     ruc: "20100456789",
     entradasVendidas: 4100,
@@ -208,45 +155,35 @@ const MOCK_ACTIVE_EVENTS: ActiveEvent[] = [
   },
 ];
 
-/* SERVICIO DE MONITOREO */
-
+/**
+ * Servicio encargado de la comunicación con la API dummy (json-server / db.json)
+ * para el panel de control operativo y KPIs de la plataforma.
+ */
 export const adminMonitoringService = {
+  /**
+   * Obtiene la data consolidada del panel de monitoreo desde GET /admin_monitoring
+   */
   async getDashboardData(): Promise<MonitoringDashboardData> {
-    if (USE_MOCK_DATA) {
-      return Promise.resolve({
+    try {
+      const response = await api.get<MonitoringDashboardData>("/admin_monitoring");
+      if (response.data && response.data.kpis) {
+        return response.data;
+      }
+      return {
         kpis: MOCK_KPIS,
         salesTrend: MOCK_SALES_TREND,
         monthlyTickets: MOCK_MONTHLY_TICKETS,
         activeEvents: MOCK_ACTIVE_EVENTS,
         totalActiveEventsCount: 42,
-      });
+      };
+    } catch {
+      return {
+        kpis: MOCK_KPIS,
+        salesTrend: MOCK_SALES_TREND,
+        monthlyTickets: MOCK_MONTHLY_TICKETS,
+        activeEvents: MOCK_ACTIVE_EVENTS,
+        totalActiveEventsCount: 42,
+      };
     }
-
-    const { data } = await axios.get<MonitoringDashboardData>(
-      `${API_URL}/admin/monitoring/dashboard`
-    );
-    return data;
-  },
-
-  async getActiveEvents(
-    page = 0,
-    size = 10
-  ): Promise<{ content: ActiveEvent[]; total: number }> {
-    if (USE_MOCK_DATA) {
-      const start = page * size;
-      const content = MOCK_ACTIVE_EVENTS.slice(start, start + size);
-      return Promise.resolve({
-        content,
-        total: MOCK_ACTIVE_EVENTS.length,
-      });
-    }
-
-    const { data } = await axios.get<{ content: ActiveEvent[]; totalElements: number }>(
-      `${API_URL}/admin/monitoring/events?page=${page}&size=${size}`
-    );
-    return {
-      content: data.content,
-      total: data.totalElements,
-    };
   },
 };

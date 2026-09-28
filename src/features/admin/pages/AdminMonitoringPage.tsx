@@ -7,14 +7,21 @@ import SalesTrendChart from "../components/SalesTrendChart";
 import { adminMonitoringService } from "../services/adminMonitoringService";
 import type { MonitoringDashboardData } from "../types/admin.types";
 
+/**
+ * Panel de Monitoreo Central para Administradores.
+ * Consolida métricas financieras, gráficos temporales de ventas/tickets
+ * y supervisión de aforos/recaudación de eventos en curso.
+ */
 export default function AdminMonitoringPage() {
   const [data, setData] = useState<MonitoringDashboardData | null>(null);
   const [isRefreshing, setIsRefreshing] = useState(false);
 
+  // Carga inicial de datos de telemetría y métricas
   useEffect(() => {
     adminMonitoringService.getDashboardData().then(setData);
   }, []);
 
+  // Función de refresco con feedback visual de sincronización
   const handleRefresh = () => {
     setIsRefreshing(true);
     adminMonitoringService.getDashboardData().then((res) => {
@@ -23,6 +30,7 @@ export default function AdminMonitoringPage() {
     });
   };
 
+  // Estado de carga inicial mientras se obtiene la data
   if (!data) {
     return (
       <div className="py-24 flex flex-col items-center justify-center">
@@ -36,23 +44,23 @@ export default function AdminMonitoringPage() {
 
   return (
     <div className="w-full pb-12 space-y-6">
-      {/* Cabecera con título y botón de sincronización */}
+      {/* Cabecera con botón para forzar sincronización de datos */}
       <MonitoringHeader onRefresh={handleRefresh} isRefreshing={isRefreshing} />
 
-      {/* Tarjetas de KPIs principales */}
+      {/* Indicadores Clave de Desempeño (KPIs) */}
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 lg:gap-5">
         {data.kpis.map((metric) => (
           <KpiCard key={metric.id} metric={metric} />
         ))}
       </div>
 
-      {/* Gráficos interactivos de ventas y emisión */}
+      {/* Gráficos analíticos: Ingresos diarios y Emisión mensual */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-5 lg:gap-6">
         <SalesTrendChart data={data.salesTrend} />
         <MonthlyTicketsChart data={data.monthlyTickets} />
       </div>
 
-      {/* Tabla de rendimiento y supervisión de eventos */}
+      {/* Tabla detallada de rendimiento y comisiones por evento */}
       <ActiveEventsTable
         events={data.activeEvents}
         totalCount={data.totalActiveEventsCount}

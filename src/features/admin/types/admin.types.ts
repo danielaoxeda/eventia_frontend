@@ -1,7 +1,12 @@
-/* ── Gestión de Categorías ── */
+/**
+ * Definiciones de tipos para el módulo de Administración (Backoffice).
+ * Modela categorías, usuarios (organizadores/clientes) y métricas de monitoreo.
+ */
 
+// Estado operativo de una categoría en la plataforma
 export type CategoryStatus = "Activa" | "Inactiva";
 
+// Modelo de datos de una Categoría en el catálogo del Admin
 export interface AdminCategory {
   id: string;
   numeroId: number;
@@ -11,17 +16,18 @@ export interface AdminCategory {
   ultimaActualizacion: string;
 }
 
+// Datos transferidos desde el formulario para crear o editar una categoría
 export interface CategoryFormData {
   nombre: string;
   descripcion: string;
   estado: CategoryStatus;
 }
 
-/* ── Gestión de Usuarios ── */
-
+// Roles de usuario en el sistema: Solo 'Organizador' puede ser creado desde este panel
 export type UserRole = "Organizador" | "Cliente";
 export type UserStatus = "Activo" | "Inactivo";
 
+// Modelo de usuario visualizado en la tabla de administración
 export interface AdminUser {
   id: string;
   codigo: string;
@@ -35,19 +41,20 @@ export interface AdminUser {
   estado: UserStatus;
 }
 
+// Datos para registrar o actualizar un usuario (restringido a Organizador para nuevas altas)
 export interface UserFormData {
   nombre: string;
   email: string;
   dni: string;
   telefono: string;
-  rol: UserRole;
+  rol: "Organizador" | UserRole;
 }
 
-/* ── Monitoreo ── */
-
+// Variantes visuales para las tarjetas de métricas
 export type MetricColorVariant = "indigo" | "blue" | "purple" | "rose";
 export type EventStatus = "En Curso" | "Activo" | "Próximo" | "Finalizado";
 
+// Indicador clave de rendimiento (KPI)
 export interface KpiMetric {
   id: string;
   label: string;
@@ -61,12 +68,14 @@ export interface KpiMetric {
   colorVariant: MetricColorVariant;
 }
 
+// Punto de datos para el gráfico de ingresos en el tiempo
 export interface SalesTrend {
   day: string;
   ingresos: number;
   formatted: string;
 }
 
+// Emisión mensual de entradas para el gráfico de barras
 export interface MonthlyTicket {
   month: string;
   tickets: number;
@@ -74,6 +83,7 @@ export interface MonthlyTicket {
   highlight?: boolean;
 }
 
+// Evento en supervisión operativa por la administración
 export interface ActiveEvent {
   id: string;
   titulo: string;
@@ -88,6 +98,7 @@ export interface ActiveEvent {
   estado: EventStatus;
 }
 
+// Estructura completa retornada por el endpoint de monitoreo
 export interface MonitoringDashboardData {
   kpis: KpiMetric[];
   salesTrend: SalesTrend[];
@@ -106,6 +117,5 @@ export interface PageResponse<T> {
   last: boolean;
 }
 
-// Aliases para compatibilidad interna
 export type SalesDataPoint = SalesTrend;
 export type MonthlyTicketData = MonthlyTicket;

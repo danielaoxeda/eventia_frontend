@@ -8,11 +8,12 @@
     "build": "tsc -b && vite build",
     "lint": "eslint .",
     "preview": "vite preview",
-    "server" : "json-server db.json"
+    "server": "json-server db.json"
   },
   "dependencies": {
     "@tailwindcss/vite": "^4.3.3",
     "axios": "^1.20.0",
+    "html5-qrcode": "^2.3.8",
     "json-server": "^1.0.0-beta.15",
     "lucide-react": "^1.48.0",
     "react": "^19.2.8",

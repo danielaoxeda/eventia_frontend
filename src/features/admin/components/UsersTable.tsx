@@ -1,6 +1,7 @@
 import { ChevronLeft, ChevronRight, PenLine, PowerOff, RotateCcw } from "lucide-react";
 import { useState } from "react";
 import type { AdminUser } from "../types/admin.types";
+import StatusBadge from "./StatusBadge";
 
 interface UsersTableProps {
   users: AdminUser[];
@@ -30,23 +31,6 @@ export default function UsersTable({ users, onToggleStatus, onEdit }: UsersTable
       <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold bg-surface-container-high text-on-surface-variant border border-outline-variant/30">
         <span className="material-symbols-outlined text-[14px]">person</span>
         Cliente
-      </span>
-    );
-  };
-
-  const getEstadoBadge = (estado: AdminUser["estado"]) => {
-    if (estado === "Activo") {
-      return (
-        <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold text-green-700 bg-green-50 border border-green-200">
-          <span className="w-1.5 h-1.5 rounded-full bg-green-500" />
-          Activo
-        </span>
-      );
-    }
-    return (
-      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold text-error bg-error-container/30 border border-error-container">
-        <span className="w-1.5 h-1.5 rounded-full bg-error" />
-        Inactivo
       </span>
     );
   };
@@ -112,7 +96,9 @@ export default function UsersTable({ users, onToggleStatus, onEdit }: UsersTable
                     {user.fechaRegistro}
                   </td>
 
-                  <td className="py-4 px-5">{getEstadoBadge(user.estado)}</td>
+                  <td className="py-4 px-5">
+                    <StatusBadge status={user.estado} />
+                  </td>
 
                   <td className="py-4 px-5">
                     <div className="flex items-center justify-end gap-2">

@@ -1,4 +1,5 @@
 import { Link, NavLink } from "react-router-dom";
+import eventiaLogo from "../../assets/Logo-Eventia.jpg";
 
 export default function PublicHeader() {
   return (
@@ -6,11 +7,18 @@ export default function PublicHeader() {
       <div className="mx-auto flex h-16 max-w-7xl items-center px-6">
 
         {/* Logo / Home */}
-        <Link
-          to="/"
-          className="text-xl font-extrabold text-indigo-600"
-        >
-          Eventia
+        <Link to="/" className="flex items-center gap-3">
+          <img
+            src={eventiaLogo}
+            alt="Eventia"
+            className="w-12 h-12 object-contain"
+          />
+
+          <div className="flex flex-col">
+            <span className="font-extrabold text-lg tracking-tight leading-none text-indigo-600">
+              Eventia
+            </span>
+          </div>
         </Link>
 
       <nav className="ml-auto hidden md:flex items-center gap-3">
