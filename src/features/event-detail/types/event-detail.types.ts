@@ -1,15 +1,14 @@
 /** Identificador de localidad (viene de `ticket_types` en db.json). */
-export type TicketTierId = string;
+export type TicketTierId = number;
 
 /** Localidad con precios (base y regular tachado) para el checkout. */
 export interface TicketTier {
-  id: TicketTierId;
+  id: number;
   name: string;
   description: string;
   note: string;
   price: number;
   regularPrice: number;
-  /** Clase del punto de color en el checkout. */
   dot: string;
 }
 
@@ -19,11 +18,10 @@ export interface EventDetailData {
   title: string;
   venue: string;
   city: string;
-  /** Fecha legible (ej. "22 Nov 2025"). */
+  /* Fecha legible */
   dateLabel: string;
-  /** Mes abreviado para la insignia (ej. "NOV"). */
+  /* Mes abreviado (ej. "NOV") */
   month: string;
-  /** Día con dos dígitos para la insignia. */
   day: string;
   tiers: TicketTier[];
 }
