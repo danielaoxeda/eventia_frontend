@@ -72,7 +72,7 @@ export default function MisTicketsPage() {
 
   if (!user) {
     return (
-      <div className="max-w-[1280px] mx-auto px-6 py-10">
+      <div className="max-w-7xl mx-auto px-6 py-10">
         {header}
         <div className="rounded-xl border border-slate-200 bg-white p-8 text-center shadow-sm">
           <p className="text-slate-600 mb-4">
@@ -90,7 +90,7 @@ export default function MisTicketsPage() {
   }
 
   return (
-    <div className="max-w-[1280px] mx-auto px-6 py-10">
+    <div className="max-w-7xl mx-auto px-6 py-10">
       {header}
 
       {loading && (
