@@ -25,3 +25,20 @@ export interface OrderDetailPayload {
   id_ticket_type: number;
   quantity: number;
 }
+
+
+
+export interface CardForm {
+  number: string;
+  exp: string;
+  cvv: string;
+  name: string;
+  cuotas: string;
+}
+
+export interface CardErrors {
+    number: string;
+    exp: string;
+    cvv: string;
+    name: string;
+}
