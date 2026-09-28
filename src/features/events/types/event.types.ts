@@ -25,7 +25,6 @@ export interface CatalogEvent {
   soldPct: number;
   image: string;
   tag?: string;
-  badge?: string;
 }
 
 /** Criterios de orden del toolbar. */
@@ -33,3 +32,55 @@ export type SortKey = "popular" | "date" | "price-asc" | "price-desc";
 
 /** Densidad visual de la grilla de resultados. */
 export type ViewMode = "grid" | "list";
+
+export interface EventRow {
+  id: string;
+  title: string;
+  description: string;
+  date: string;
+  start_time: string;
+  end_time: string;
+  location: string;
+  city: string;
+  capacity: number;
+  available_capacity: number;
+  status: string;
+  active: boolean;
+  created_at: string;
+  updated_at: string;
+  id_category: string;
+  id_organizer: number;
+}
+
+/** Fila de `ticket_types`. */
+export interface TicketTypeRow {
+  id: string;
+  id_event: number;
+  name: string;
+  price: number;
+  stock: number;
+}
+
+/** Fila de `categories`. */
+export interface CategoryRow {
+  id: string;
+  name: string;
+  description: string;
+  active: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+/** Rango de precio del filtro (montos en soles). */
+export interface PriceRange {
+  id: string;
+  label: string;
+  min: number;
+  max: number;
+}
+export interface PriceRange {
+  id: string;
+  label: string;
+  min: number;
+  max: number;
+}

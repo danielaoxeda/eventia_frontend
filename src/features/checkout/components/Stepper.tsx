@@ -1,6 +1,15 @@
 import { useState } from "react";
 import PaymentMethodStep from "./PaymentMethodStep";
 import SummaryStep from "./SummaryStep";
+import { Link, useNavigate } from "react-router-dom";
+import { validateCard } from "../services/cardValidation.service";
+import { useCartContext } from "../hooks/useCartContext";
+import { createPurchase } from "../services/purchase.service";
+import {
+  isPromoUser,
+  PROMO_DISCOUNT_PCT,
+} from "@/features/events/services/events.service";
+import { useAuth } from "@/context/AuthContext";
 
 const steps = [
   { label: "Selección de Entradas" },
@@ -25,15 +34,87 @@ const CheckIcon = () => (
 );
 
 function Stepper() {
+  const navigate = useNavigate();
+  const { items, clearCart } = useCartContext();
+  const { user } = useAuth();
   const [step, setStep] = useState(2);
+  const [showErrors, setShowErrors] = useState(false);
+  const [processing, setProcessing] = useState(false);
+  const [purchaseError, setPurchaseError] = useState<string | null>(null);
   const isLastStep = step === steps.length;
-  const handleNext = () => {
+  const [card, setCard] = useState({
+    number: "",
+    exp: "",
+    cvv: "",
+    name: "",
+    cuotas: "1",
+  });
+
+  const handleNext = async () => {
+    if (step === 2) {
+      setShowErrors(true);
+      if (!cardValid) return;
+    }
+
     if (isLastStep) {
-      alert("COMPRANDO CALICHIN");
+      if (!user) {
+        setPurchaseError("Necesitas iniciar sesión para completar la compra.");
+        return;
+      }
+
+      setProcessing(true);
+      setPurchaseError(null);
+      try {
+        const sessionName = `${user.firstName} ${user.lastName}`.trim();
+        const discountPct = isPromoUser(sessionName) ? PROMO_DISCOUNT_PCT : 0;
+        await createPurchase(items, user.id, discountPct);
+        clearCart();
+        navigate("/mis-tickets");
+      } catch {
+        setPurchaseError("No se pudo completar la compra. Inténtalo de nuevo.");
+      } finally {
+        setProcessing(false);
+      }
       return;
     }
+
     setStep((s) => Math.min(steps.length, s + 1));
   };
+
+  const handleBack = () => {
+    setPurchaseError(null);
+    if (step === 3) {
+      setStep(2);
+    } else {
+      navigate(-1);
+    }
+  };
+
+  // Tarjeta completada sin ningun campo obligatorio vacio
+  const cardErrors = validateCard(card);
+  const cardValid = Object.values(cardErrors).every((error) => error === "");
+
+  if (items.length === 0) {
+    return (
+      <div className="w-full text-center py-16 flex flex-col items-center gap-3">
+        <span className="material-symbols-outlined text-5xl text-outline">
+          shopping_cart
+        </span>
+        <h2 className="font-display font-extrabold text-2xl">
+          Tu carrito está vacío
+        </h2>
+        <p className="text-sm text-on-surface-variant">
+          Agrega entradas desde el catálogo para continuar.
+        </p>
+        <button
+          onClick={() => navigate("/")}
+          className="mt-2 px-4 py-2 bg-indigo-600 text-white text-sm font-bold rounded-lg"
+        >
+          Volver al catálogo
+        </button>
+      </div>
+    );
+  }
 
   return (
     <div className="w-full">
@@ -78,26 +159,48 @@ function Stepper() {
       {/*-----------------------------------------------*/}
       {/*Vistas*/}
       <div className="my-6 p-4 sm:p-6 rounded-xl bg-white shadow-sm border border-gray-100">
-        {step === 2 && <PaymentMethodStep />}
+        {step === 2 && (
+          <PaymentMethodStep
+            errors={cardErrors}
+            showErrors={showErrors}
+            card={card}
+            setCard={setCard}
+          />
+        )}
         {step === 3 && <SummaryStep />}
       </div>
       {/*-----------------------------------------------*/}
       {/*Botones para Retroceder o Avanzar*/}
+      {purchaseError && (
+        <div className="mb-4 flex items-center justify-between gap-3 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+          <span>{purchaseError}</span>
+          {!user && (
+            <Link to="/login" className="font-bold underline shrink-0">
+              Iniciar sesión
+            </Link>
+          )}
+        </div>
+      )}
       <div className="flex justify-between items-center">
         <button
           type="button"
+          disabled={processing}
           className="px-4 py-2 border rounded disabled:opacity-40 disabled:cursor-not-allowed"
-          disabled={step <= 2}
-          onClick={() => setStep((s) => Math.max(2, s - 1))}
+          onClick={handleBack}
         >
           Atras
         </button>
         <button
           type="button"
-          className="px-4 py-2 bg-indigo-600 text-white border rounded hover:bg-indigo-700"
+          disabled={processing}
+          className="px-4 py-2 bg-indigo-600 text-white border rounded hover:bg-indigo-700 disabled:opacity-60"
           onClick={handleNext}
         >
-          {step === steps.length ? "Finalizar Compra" : "Siguiente"}
+          {processing
+            ? "Procesando..."
+            : step === steps.length
+              ? "Finalizar Compra"
+              : "Siguiente"}
         </button>
       </div>
     </div>

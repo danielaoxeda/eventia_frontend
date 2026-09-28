@@ -1,70 +1,55 @@
+import type {
+  EventRow,
+  TicketTypeRow,
+} from "@/features/events/types/event.types";
 import type { EventDetailData, TicketTier } from "../types/event-detail.types";
-// Fuente temporal: luego se reemplaza por el backend real.
-import db from "../../../../db.json";
-
-/** Fila de `events` en db.json (ver diagrama ER). */
-interface DbEvent {
-  id_event: number;
-  title: string;
-  description: string;
-  date: string;
-  start_time: string;
-  end_time: string;
-  location: string;
-  city: string;
-  capacity: number;
-  available_capacity: number;
-  status: string;
-  active: boolean;
-  created_at: string;
-  updated_at: string;
-  id_category: string;
-  id_organizer: number;
-}
-
-/** Fila de `ticket_types` en db.json (ver diagrama ER). */
-interface DbTicketType {
-  id: number;
-  id_event: number;
-  name: string;
-  price: number;
-  stock: number;
-}
-
-interface DbShape {
-  events?: DbEvent[];
-  ticket_types?: DbTicketType[];
-}
-
-const dbData = db as DbShape;
-const DB_EVENTS = dbData.events ?? [];
-const DB_TICKET_TYPES = dbData.ticket_types ?? [];
+import axios from "axios";
+import api from "@/shared/services/api";
 
 /** Mes abreviado para insignias y etiquetas (ej. "NOV"). */
 const MONTH_CODES = [
-  "ENE", "FEB", "MAR", "ABR", "MAY", "JUN",
-  "JUL", "AGO", "SET", "OCT", "NOV", "DIC",
+  "ENE",
+  "FEB",
+  "MAR",
+  "ABR",
+  "MAY",
+  "JUN",
+  "JUL",
+  "AGO",
+  "SET",
+  "OCT",
+  "NOV",
+  "DIC",
 ];
 
 /** Mes completo en español para etiquetas (ej. "Noviembre"). */
 const MONTH_NAMES = [
-  "Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio",
-  "Julio", "Agosto", "Setiembre", "Octubre", "Noviembre", "Diciembre",
+  "Enero",
+  "Febrero",
+  "Marzo",
+  "Abril",
+  "Mayo",
+  "Junio",
+  "Julio",
+  "Agosto",
+  "Setiembre",
+  "Octubre",
+  "Noviembre",
+  "Diciembre",
 ];
 
 /** Colores cíclicos para las localidades del checkout. */
 const TIER_DOTS = ["bg-primary-container", "bg-tertiary", "bg-primary"];
 
-/**
- * Mapea un tipo de entrada de db.json a localidad del checkout.
- * El precio regular se estima +15% sobre el base.
- */
-function mapTier(ticket: DbTicketType, index: number): TicketTier {
+function mapTier(ticket: TicketTypeRow, index: number): TicketTier {
   return {
-    id: `t-${ticket.id}`,
+    id: Number(ticket.id),
     name: ticket.name,
     description: `${ticket.stock} entradas disponibles`,
-    note: ticket.stock < 100 ? `¡Últimas ${ticket.stock}!` : "Disponibilidad regular",
+    note:
+      ticket.stock < 100
+        ? `¡Últimas ${ticket.stock}!`
+        : "Disponibilidad regular",
     price: ticket.price,
     regularPrice: Math.round(ticket.price / 0.85),
     dot: TIER_DOTS[index % TIER_DOTS.length],
@@ -75,26 +60,37 @@ function mapTier(ticket: DbTicketType, index: number): TicketTier {
  * Arma la ficha del evento desde db.json: evento por id (o el primero
  * activo) con sus tipos de entrada como localidades comprables.
  */
-export function getEventDetail(eventId: number): EventDetailData | null {
-  const row =
-    DB_EVENTS.find((item) => item.id_event === eventId && item.active) ??
-    DB_EVENTS.find((item) => item.active) ??
-    null;
-  if (!row) return null;
+export async function getEventDetail(
+  eventId: string,
+): Promise<EventDetailData | null> {
+  try {
+    const [event, tickets] = await Promise.all([
+      api.get<EventRow>(`/events/${eventId}`),
+      api.get<TicketTypeRow[]>("/ticket_types", {
+        params: { id_event: eventId },
+      }),
+    ]);
+    const row = event.data;
+    if (!row.active) return null;
 
-  const date = new Date(`${row.date}T00:00:00`);
-  const day = String(date.getDate()).padStart(2, "0");
-  const monthCode = MONTH_CODES[date.getMonth()] ?? "";
-  return {
-    id: row.id_event,
-    title: row.title,
-    venue: row.location,
-    city: row.city,
-    dateLabel: `${day} ${MONTH_NAMES[date.getMonth()] ?? ""} ${date.getFullYear()}`,
-    month: monthCode,
-    day,
-    tiers: DB_TICKET_TYPES.filter((ticket) => ticket.id_event === row.id_event).map(mapTier),
-  };
+    const date = new Date(`${row.date}T00:00:00`);
+    const day = String(date.getDate()).padStart(2, "0");
+    return {
+      id: Number(row.id),
+      title: row.title,
+      venue: row.location,
+      city: row.city,
+      dateLabel: `${day} ${MONTH_NAMES[date.getMonth()] ?? ""} ${date.getFullYear()}`,
+      month: MONTH_CODES[date.getMonth()] ?? "",
+      day,
+      eventDate: `${row.date}T${row.start_time || "00:00"}:00`,
+      tiers: tickets.data.map(mapTier),
+    };
+  } catch (error) {
+    if (axios.isAxiosError(error) && error.response?.status === 404)
+      return null;
+    throw error;
+  }
 }
 
 /** Tope antirreventa por orden de compra. */

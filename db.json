@@ -67,101 +67,101 @@
   "ticket_types": [
     {
       "id": 1,
-      "id_event": 100,
+      "id_event": 101,
       "name": "General",
-      "price": 100.0,
+      "price": 100,
       "stock": 50
     },
     {
       "id": 2,
-      "id_event": 100,
+      "id_event": 101,
       "name": "VIP",
-      "price": 220.0,
+      "price": 220,
       "stock": 20
     },
     {
       "id": 3,
       "id_event": 101,
       "name": "General",
-      "price": 120.0,
+      "price": 120,
       "stock": 1200
     },
     {
       "id": 4,
       "id_event": 102,
       "name": "General",
-      "price": 85.0,
+      "price": 85,
       "stock": 900
     },
     {
       "id": 5,
       "id_event": 103,
       "name": "General",
-      "price": 60.0,
+      "price": 60,
       "stock": 200
     },
     {
       "id": 6,
       "id_event": 104,
       "name": "General",
-      "price": 45.0,
+      "price": 45,
       "stock": 1500
     },
     {
       "id": 7,
       "id_event": 105,
       "name": "General",
-      "price": 140.0,
+      "price": 140,
       "stock": 1100
     },
     {
       "id": 8,
       "id_event": 106,
       "name": "General",
-      "price": 210.0,
+      "price": 210,
       "stock": 400
     }
   ],
   "categories": [
     {
-      "id_category": "cat-01",
       "name": "Conciertos",
       "description": "Shows musicales en vivo",
       "active": true,
       "created_at": "2024-01-10T10:00:00Z",
-      "updated_at": "2024-01-10T10:00:00Z"
+      "updated_at": "2024-01-10T10:00:00Z",
+      "id": "cat-01"
     },
     {
-      "id_category": "cat-02",
       "name": "Festivales",
       "description": "Festivales de varios días y artistas",
       "active": true,
       "created_at": "2024-01-10T10:00:00Z",
-      "updated_at": "2024-01-10T10:00:00Z"
+      "updated_at": "2024-01-10T10:00:00Z",
+      "id": "cat-02"
     },
     {
-      "id_category": "cat-03",
       "name": "Teatro & Artes",
       "description": "Obras de teatro y espectáculos culturales",
       "active": true,
       "created_at": "2024-01-10T10:00:00Z",
-      "updated_at": "2024-01-10T10:00:00Z"
+      "updated_at": "2024-01-10T10:00:00Z",
+      "id": "cat-03"
     },
     {
-      "id_category": "cat-04",
       "name": "Gastronomía & Ferias",
       "description": "Ferias gastronómicas y food trucks",
       "active": true,
       "created_at": "2024-01-10T10:00:00Z",
-      "updated_at": "2024-01-10T10:00:00Z"
+      "updated_at": "2024-01-10T10:00:00Z",
+      "id": "cat-04"
     },
     {
-      "id_category": "cat-05",
       "name": "Tecnología & Startups",
       "description": "Conferencias y ferias de tecnología",
       "active": true,
       "created_at": "2024-01-10T10:00:00Z",
-      "updated_at": "2024-01-10T10:00:00Z"
+      "updated_at": "2024-01-10T10:00:00Z",
+      "id": "cat-05"
     }
   ],
   "events": [
@@ -175,7 +175,7 @@
       "venue": "Estadio Nacional, Lima",
       "location": "Estadio Nacional, Lima",
       "city": "Lima Metropolitana",
-      "date": "2025-11-22",
+      "date": "2026-11-22",
       "time": "20:00",
       "start_time": "20:00",
       "end_time": "23:00",
@@ -202,7 +202,7 @@
       "venue": "Arena 1, San Miguel",
       "location": "Arena 1, San Miguel",
       "city": "Lima Metropolitana",
-      "date": "2025-12-06",
+      "date": "2026-12-06",
       "time": "16:00",
       "start_time": "16:00",
       "end_time": "23:00",
@@ -229,7 +229,7 @@
       "venue": "Teatro Peruano Japonés",
       "location": "Teatro Peruano Japonés",
       "city": "Lima Metropolitana",
-      "date": "2025-11-28",
+      "date": "2026-11-28",
       "time": "19:30",
       "start_time": "19:30",
       "end_time": "21:30",
@@ -256,7 +256,7 @@
       "venue": "Jockey Club del Perú",
       "location": "Jockey Club del Perú",
       "city": "Lima Metropolitana",
-      "date": "2025-12-14",
+      "date": "2026-12-14",
       "time": "11:00",
       "start_time": "11:00",
       "end_time": "22:00",
@@ -283,7 +283,7 @@
       "venue": "Arena 1, Costa Verde",
       "location": "Arena 1, Costa Verde",
       "city": "Lima Metropolitana",
-      "date": "2026-01-18",
+      "date": "2027-01-18",
       "time": "20:00",
       "start_time": "20:00",
       "end_time": "23:30",
@@ -310,7 +310,7 @@
       "venue": "Centro de Convenciones 27 de Enero",
       "location": "Centro de Convenciones 27 de Enero",
       "city": "Lima Metropolitana",
-      "date": "2026-01-25",
+      "date": "2027-01-25",
       "time": "09:00",
       "start_time": "09:00",
       "end_time": "18:00",
@@ -605,27 +605,104 @@
       }
     ],
     "salesTrend": [
-      { "day": "Día 1", "ingresos": 1250, "formatted": "S/ 1,250" },
-      { "day": "Día 3", "ingresos": 1480, "formatted": "S/ 1,480" },
-      { "day": "Día 5", "ingresos": 1720, "formatted": "S/ 1,720" },
-      { "day": "Día 7", "ingresos": 2310, "formatted": "S/ 2,310" },
-      { "day": "Día 10", "ingresos": 2190, "formatted": "S/ 2,190" },
-      { "day": "Día 12", "ingresos": 2840, "formatted": "S/ 2,840" },
-      { "day": "Día 15", "ingresos": 3200, "formatted": "S/ 3,200" },
-      { "day": "Día 18", "ingresos": 2980, "formatted": "S/ 2,980" },
-      { "day": "Día 20", "ingresos": 3650, "formatted": "S/ 3,650" },
-      { "day": "Día 22", "ingresos": 4120, "formatted": "S/ 4,120" },
-      { "day": "Día 25", "ingresos": 4890, "formatted": "S/ 4,890" },
-      { "day": "Día 28", "ingresos": 5420, "formatted": "S/ 5,420" },
-      { "day": "Día 30", "ingresos": 6180, "formatted": "S/ 6,180" }
+      {
+        "day": "Día 1",
+        "ingresos": 1250,
+        "formatted": "S/ 1,250"
+      },
+      {
+        "day": "Día 3",
+        "ingresos": 1480,
+        "formatted": "S/ 1,480"
+      },
+      {
+        "day": "Día 5",
+        "ingresos": 1720,
+        "formatted": "S/ 1,720"
+      },
+      {
+        "day": "Día 7",
+        "ingresos": 2310,
+        "formatted": "S/ 2,310"
+      },
+      {
+        "day": "Día 10",
+        "ingresos": 2190,
+        "formatted": "S/ 2,190"
+      },
+      {
+        "day": "Día 12",
+        "ingresos": 2840,
+        "formatted": "S/ 2,840"
+      },
+      {
+        "day": "Día 15",
+        "ingresos": 3200,
+        "formatted": "S/ 3,200"
+      },
+      {
+        "day": "Día 18",
+        "ingresos": 2980,
+        "formatted": "S/ 2,980"
+      },
+      {
+        "day": "Día 20",
+        "ingresos": 3650,
+        "formatted": "S/ 3,650"
+      },
+      {
+        "day": "Día 22",
+        "ingresos": 4120,
+        "formatted": "S/ 4,120"
+      },
+      {
+        "day": "Día 25",
+        "ingresos": 4890,
+        "formatted": "S/ 4,890"
+      },
+      {
+        "day": "Día 28",
+        "ingresos": 5420,
+        "formatted": "S/ 5,420"
+      },
+      {
+        "day": "Día 30",
+        "ingresos": 6180,
+        "formatted": "S/ 6,180"
+      }
     ],
     "monthlyTickets": [
-      { "month": "Ene", "tickets": 1100, "displayLabel": "1.1k" },
-      { "month": "Feb", "tickets": 1250, "displayLabel": "1.2k" },
-      { "month": "Mar", "tickets": 1400, "displayLabel": "1.4k" },
-      { "month": "Abr", "tickets": 1750, "displayLabel": "1.7k" },
-      { "month": "May", "tickets": 2800, "displayLabel": "2.8k", "highlight": true },
-      { "month": "Jun", "tickets": 1950, "displayLabel": "1.9k" }
+      {
+        "month": "Ene",
+        "tickets": 1100,
+        "displayLabel": "1.1k"
+      },
+      {
+        "month": "Feb",
+        "tickets": 1250,
+        "displayLabel": "1.2k"
+      },
+      {
+        "month": "Mar",
+        "tickets": 1400,
+        "displayLabel": "1.4k"
+      },
+      {
+        "month": "Abr",
+        "tickets": 1750,
+        "displayLabel": "1.7k"
+      },
+      {
+        "month": "May",
+        "tickets": 2800,
+        "displayLabel": "2.8k",
+        "highlight": true
+      },
+      {
+        "month": "Jun",
+        "tickets": 1950,
+        "displayLabel": "1.9k"
+      }
     ],
     "activeEvents": [
       {

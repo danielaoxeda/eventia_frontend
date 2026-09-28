@@ -4,14 +4,14 @@ import type { OrderTotals, TicketTier, TicketTierId } from "../types/event-detai
 import { isPromoUser, PROMO_DISCOUNT_PCT } from "../../events/services/events.service";
 
 interface CheckoutPanelProps {
-  /** Localidades desde db.json (tipos de entrada del evento). */
   tiers: TicketTier[];
-  quantities: Record<TicketTierId, number>;
+  quantities: Record<number, number>;
   onUpdateQuantity: (tier: TicketTierId, delta: number) => void;
   totals: OrderTotals;
   highlightedTier: TicketTierId | null;
   /** Nombre de sesión o null si es visita anónima (sin input manual). */
   sessionName: string | null;
+  onCheckout: () => void;
 }
 
 /** Panel de compra: cantidades, resumen y pago. El nombre viene de la sesión. */
@@ -22,6 +22,7 @@ export default function CheckoutPanel({
   totals,
   highlightedTier,
   sessionName,
+  onCheckout,
 }: CheckoutPanelProps) {
   const empty = totals.count === 0;
   const promoUser = sessionName !== null && isPromoUser(sessionName);
@@ -32,7 +33,7 @@ export default function CheckoutPanel({
 
       <div className="bg-surface-container p-3 rounded-lg flex items-center gap-2 min-w-0">
         <span className="material-symbols-outlined text-primary text-[20px] shrink-0">info</span>
-        <span className="text-xs font-medium break-words">
+        <span className="text-xs font-medium wrap-break-word">
           Máximo {MAX_TICKETS} tickets por orden.
         </span>
       </div>
@@ -82,7 +83,7 @@ export default function CheckoutPanel({
               >
                 <span className="material-symbols-outlined text-[18px]">remove</span>
               </button>
-              <span className="w-8 text-center text-sm font-bold" aria-live="polite">{quantities[tier.id]}</span>
+              <span className="w-8 text-center text-sm font-bold" aria-live="polite">{quantities[tier.id] ?? 0}</span>
               <button
                 aria-label={`Aumentar ${tier.name}`}
                 onClick={() => onUpdateQuantity(tier.id, 1)}
@@ -118,6 +119,7 @@ export default function CheckoutPanel({
       <button
         disabled={empty}
         type="button"
+        onClick={onCheckout}
         className={`w-full py-3 px-4 rounded-xl font-bold shadow-md transition-all flex items-center justify-center gap-2 min-w-0 ${
           empty ? "bg-primary/50 text-white cursor-not-allowed" : "bg-primary text-on-primary hover:opacity-90"
         }`}

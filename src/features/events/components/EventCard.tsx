@@ -19,7 +19,7 @@ export default function EventCard({ event, view }: EventCardProps) {
     >
       <div
         className={`relative overflow-hidden bg-surface-container-high shrink-0 min-w-0 ${
-          isList ? "w-full sm:w-52 lg:w-56 aspect-video sm:aspect-auto sm:min-h-[190px]" : "w-full aspect-video"
+          isList ? "w-full sm:w-52 lg:w-56 aspect-video sm:aspect-auto sm:min-h-47.5" : "w-full aspect-video"
         }`}
       >
         {/* Sin imagen en db.json se muestra el fondo con gradiente. */}
@@ -31,7 +31,7 @@ export default function EventCard({ event, view }: EventCardProps) {
             loading="lazy"
           />
         )}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent pointer-events-none"></div>
+        <div className="absolute inset-0 bg-linear-to-t from-black/70 via-transparent to-transparent pointer-events-none"></div>
         {/* Etiqueta de categoría sobre la foto. */}
         {event.tag && (
           <span className="absolute top-3 left-3 bg-primary-container/90 text-white text-[11px] font-bold px-2.5 py-1 rounded-md uppercase tracking-wider shadow-sm max-w-[45%] truncate">
@@ -42,12 +42,12 @@ export default function EventCard({ event, view }: EventCardProps) {
 
       <div className="p-4 flex-1 flex flex-col justify-between gap-3 min-w-0">
         <div className="flex items-start gap-3 min-w-0">
-          <div className="bg-surface-container flex flex-col items-center justify-center min-w-[50px] py-1.5 px-2 rounded-lg text-center shrink-0">
+          <div className="bg-surface-container flex flex-col items-center justify-center min-w-12.5 py-1.5 px-2 rounded-lg text-center shrink-0">
             <span className="text-[11px] uppercase font-bold text-primary">{event.month}</span>
             <span className="font-display font-extrabold text-xl leading-none">{event.day}</span>
           </div>
           <div className="flex flex-col min-w-0 flex-1">
-            <h3 className="font-display font-bold text-base sm:text-lg group-hover:text-primary transition-colors break-words line-clamp-2">
+            <h3 className="font-display font-bold text-base sm:text-lg group-hover:text-primary transition-colors wrap-break-word line-clamp-2">
               {event.title}
             </h3>
             <div className="flex items-center gap-1 text-on-surface-variant text-sm mt-0.5 min-w-0">

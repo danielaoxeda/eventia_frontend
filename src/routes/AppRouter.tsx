@@ -13,6 +13,7 @@ import AdminCategoriesPage from "../features/admin/pages/AdminCategoriesPage";
 import AdminUsersPage from "../features/admin/pages/AdminUsersPage";
 import MisTicketsPage from "@/features/users/pages/MisTicketsPage";
 import PerfilPage from "@/features/users/pages/PerfilPage";
+import CheckoutPage from "@/features/checkout/pages/CheckoutPage";
 
 import ScrollToTop from "@/shared/components/ScrollToTop";
 
@@ -51,6 +52,7 @@ export default function AppRouter() {
         <Route path="/registro" element={<RegisterPage />} />
         <Route path="/mis-tickets" element={<MisTicketsPage />} />
         <Route path="/perfil" element={<PerfilPage />} />
+        <Route path="/checkout" element={<CheckoutPage />} />
       </Route>
 
       {/* 2. Módulo de Administración */}

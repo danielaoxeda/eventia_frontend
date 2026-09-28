@@ -1,20 +1,25 @@
-import { useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import Footer from "../../../shared/layouts/Footer";
 import CatalogFilterBar from "../components/CatalogFilterBar";
 import CatalogToolbar from "../components/CatalogToolbar";
 import EventCard from "../components/EventCard";
 import Pagination from "../components/Pagination";
-import { CATEGORY_ORDER, EVENTS, PRICE_RANGES } from "../services/events.service";
-import type { Category, SortKey, ViewMode } from "../types/event.types";
+import {
+  CATEGORY_ORDER,
+  getEvents,
+  PRICE_RANGES,
+} from "../services/events.service";
+import type {
+  CatalogEvent,
+  Category,
+  SortKey,
+  ViewMode,
+} from "../types/event.types";
 
 /** Cantidad de eventos visibles por página. */
 const PAGE_SIZE = 6;
 
-/**
- * Página del catálogo público de eventos.
- * Filtros en barra superior (texto, fecha, ubicación, precio, categoría),
- * promo y nombre siempre desde la sesión (nunca de un input manual).
- */
+/* Página del catálogo público de eventos */
 export default function CatalogPage() {
   const [search, setSearch] = useState("");
   const [month, setMonth] = useState("ALL");
@@ -25,18 +30,37 @@ export default function CatalogPage() {
   const [view, setView] = useState<ViewMode>("grid");
   const [page, setPage] = useState(1);
 
+  const [events, setEvents] = useState<CatalogEvent[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [reload, setReload] = useState(0);
+
+  useEffect(() => {
+    let active = true;
+    getEvents()
+      .then((data) => {
+        if (active) {
+          setEvents(data);
+          setLoading(false);
+        }
+      })
+      .catch(() => {
+        if (active) {
+          setError("Revisa que el servidor esté activo (npm run server).");
+          setLoading(false);
+        }
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [reload]);
+
   // Opciones derivadas de los datos del servicio (sin valores fijos).
-  const months = useMemo(
-    () => Array.from(new Set(EVENTS.map((event) => event.month))),
-    []
-  );
-  const locations = useMemo(
-    () => Array.from(new Set(EVENTS.map((event) => event.venue))),
-    []
-  );
-  const categories = useMemo(
-    () => CATEGORY_ORDER.filter((name) => EVENTS.some((event) => event.category === name)),
-    []
+  const months = Array.from(new Set(events.map((event) => event.month)));
+  const locations = Array.from(new Set(events.map((event) => event.venue)));
+  const categories = CATEGORY_ORDER.filter((name) =>
+    events.some((event) => event.category === name),
   );
   const priceRange =
     PRICE_RANGES.find((range) => range.id === priceRangeId) ?? PRICE_RANGES[0];
@@ -59,46 +83,91 @@ export default function CatalogPage() {
     setPage(1);
   };
 
+  const handleRetry = () => {
+    setLoading(true);
+    setError(null);
+    setReload((n) => n + 1);
+  };
   const scrollToResults = () => {
-    document.getElementById("catalog-results")?.scrollIntoView({ behavior: "smooth" });
+    document
+      .getElementById("catalog-results")
+      ?.scrollIntoView({ behavior: "smooth" });
   };
 
   const query = search.trim().toLowerCase();
-  // Filtrado + orden memorizados: solo se recalculan si cambia un filtro.
-  const filtered = useMemo(() => {
-    const result = EVENTS.filter((event) => {
-      if (category !== "ALL" && event.category !== category) return false;
-      if (month !== "ALL" && event.month !== month) return false;
-      if (location !== "ALL" && event.venue !== location) return false;
-      if (event.price < priceRange.min || event.price >= priceRange.max) return false;
-      if (query && !`${event.title} ${event.venue} ${event.city}`.toLowerCase().includes(query))
-        return false;
-      return true;
-    });
 
-    return [...result].sort((a, b) => {
-      if (sort === "date") return a.dateOrder - b.dateOrder;
-      if (sort === "price-asc") return a.price - b.price;
-      if (sort === "price-desc") return b.price - a.price;
-      return b.soldPct - a.soldPct;
-    });
-  }, [category, month, location, priceRange, query, sort]);
+  const result = events.filter((event) => {
+    if (category !== "ALL" && event.category !== category) return false;
+    if (month !== "ALL" && event.month !== month) return false;
+    if (location !== "ALL" && event.venue !== location) return false;
+    if (event.price < priceRange.min || event.price >= priceRange.max)
+      return false;
+    if (
+      query &&
+      !`${event.title} ${event.venue} ${event.city}`
+        .toLowerCase()
+        .includes(query)
+    )
+      return false;
+    return true;
+  });
+
+  const filtered = [...result].sort((a, b) => {
+    if (sort === "date") return a.dateOrder - b.dateOrder;
+    if (sort === "price-asc") return a.price - b.price;
+    if (sort === "price-desc") return b.price - a.price;
+    return b.soldPct - a.soldPct;
+  });
 
   // Paginación defensiva: la página actual nunca sale del rango válido.
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
   const safePage = Math.min(Math.max(1, page), totalPages);
-  const paged = filtered.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE);
-  // Ciudades de los resultados (sin texto fijo).
-  const locationLabel = useMemo(
-    () => Array.from(new Set(filtered.map((event) => event.city))).join(" · "),
-    [filtered]
+  const paged = filtered.slice(
+    (safePage - 1) * PAGE_SIZE,
+    safePage * PAGE_SIZE,
   );
+  // Ciudades de los resultados (sin texto fijo).
+  const locationLabel = Array.from(
+    new Set(filtered.map((event) => event.city)),
+  ).join(" · ");
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-surface flex flex-col items-center justify-center gap-3 px-4 text-center">
+        <span className="material-symbols-outlined animate-spin text-4xl text-primary">
+          progress_activity
+        </span>
+        <p className="text-sm text-on-surface-variant">Cargando eventos...</p>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-surface flex flex-col items-center justify-center gap-2 px-4 text-center">
+        <span className="material-symbols-outlined text-5xl text-outline">
+          cloud_off
+        </span>
+        <h1 className="font-display font-extrabold text-2xl">
+          No se pudieron cargar los eventos
+        </h1>
+        <p className="text-sm text-on-surface-variant">
+          Revisa que el servidor esté activo (<code>npm run server</code>).
+        </p>
+        <button
+          onClick={handleRetry}
+          className="mt-2 px-4 py-2 bg-primary text-on-primary text-sm font-bold rounded-lg"
+        >
+          Reintentar
+        </button>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-surface overflow-x-hidden">
-
       <div className="w-full pt-16 min-h-screen min-w-0">
-        <section className="max-w-[1280px] w-full mx-auto px-4 sm:px-6 py-6 min-w-0 flex flex-col gap-4 sm:gap-6">
+        <section className="max-w-7xl w-full mx-auto px-4 sm:px-6 py-6 min-w-0 flex flex-col gap-4 sm:gap-6">
           <CatalogFilterBar
             search={search}
             onSearchChange={(value) => {
@@ -138,16 +207,21 @@ export default function CatalogPage() {
               type="button"
               className="inline-flex items-center gap-1 text-xs font-semibold text-secondary hover:opacity-80 transition ml-auto shrink-0"
             >
-              <span className="material-symbols-outlined text-[16px]">restart_alt</span>
+              <span className="material-symbols-outlined text-[16px]">
+                restart_alt
+              </span>
               Limpiar
             </button>
           </div>
 
-          <div id="catalog-results" className="flex flex-col gap-4 sm:gap-6 min-w-0 scroll-mt-24">
-              <CatalogToolbar
-                total={filtered.length}
-                locationLabel={locationLabel}
-                sort={sort}
+          <div
+            id="catalog-results"
+            className="flex flex-col gap-4 sm:gap-6 min-w-0 scroll-mt-24"
+          >
+            <CatalogToolbar
+              total={filtered.length}
+              locationLabel={locationLabel}
+              sort={sort}
               onSortChange={handleSortChange}
               view={view}
               onViewChange={setView}
@@ -159,8 +233,10 @@ export default function CatalogPage() {
                 <span className="material-symbols-outlined text-5xl text-outline">
                   search_off
                 </span>
-                <h3 className="font-display font-bold text-xl mt-2">Sin resultados</h3>
-                <p className="text-sm text-on-surface-variant mt-1 break-words">
+                <h3 className="font-display font-bold text-xl mt-2">
+                  Sin resultados
+                </h3>
+                <p className="text-sm text-on-surface-variant mt-1 wrap-break-word">
                   Prueba quitando filtros o pulsa “Limpiar”.
                 </p>
                 <button
@@ -178,9 +254,9 @@ export default function CatalogPage() {
                     : "flex flex-col gap-4 min-w-0"
                 }
               >
-                  {paged.map((event) => (
-                    <EventCard key={event.id} event={event} view={view} />
-                  ))}
+                {paged.map((event) => (
+                  <EventCard key={event.id} event={event} view={view} />
+                ))}
               </div>
             )}
 
@@ -190,8 +266,8 @@ export default function CatalogPage() {
               totalItems={filtered.length}
               pageSize={PAGE_SIZE}
               onPageChange={setPage}
-              />
-            </div>
+            />
+          </div>
         </section>
       </div>
 
