@@ -39,6 +39,7 @@ export interface AdminUser {
   rol: UserRole;
   fechaRegistro: string;
   estado: UserStatus;
+  password?: string;
 }
 
 // Datos para registrar o actualizar un usuario (restringido a Organizador para nuevas altas)
@@ -48,6 +49,7 @@ export interface UserFormData {
   dni: string;
   telefono: string;
   rol: "Organizador" | UserRole;
+  password?: string;
 }
 
 // Variantes visuales para las tarjetas de métricas

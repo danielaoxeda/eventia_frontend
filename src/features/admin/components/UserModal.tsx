@@ -24,9 +24,11 @@ export default function UserModal({
   onSave,
 }: UserModalProps) {
   const [form, setForm] = useState<UserFormData>(EMPTY_FORM);
+  const [error, setError] = useState("");
 
   // Hook 1: Sincroniza los campos cuando se abre el modal o cambia el usuario a editar
   useEffect(() => {
+    setError("");
     if (userToEdit) {
       setForm({
         nombre: userToEdit.nombre,
@@ -56,17 +58,42 @@ export default function UserModal({
 
   const isEditing = Boolean(userToEdit);
 
-  // Manejador genérico para inputs de texto
+  // Manejador de inputs con filtrado numérico para DNI (8 dígitos) y Teléfono (9 dígitos)
   const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
-    setForm((prev) => ({ ...prev, [e.target.name]: e.target.value }));
+    const { name, value } = e.target;
+    if (name === "dni") {
+      const numeric = value.replace(/\D/g, "").slice(0, 8);
+      setForm((prev) => ({ ...prev, dni: numeric }));
+      if (error) setError("");
+      return;
+    }
+    if (name === "telefono") {
+      const numeric = value.replace(/\D/g, "").slice(0, 9);
+      setForm((prev) => ({ ...prev, telefono: numeric }));
+      if (error) setError("");
+      return;
+    }
+    setForm((prev) => ({ ...prev, [name]: value }));
   };
 
-  // Envía el formulario forzando rol 'Organizador' en altas
+  // Envía el formulario forzando rol 'Organizador' en altas y asignando clave provisional
   const handleSubmit = (e: FormEvent) => {
     e.preventDefault();
+    if (form.dni.length !== 8) {
+      setError("El DNI debe tener exactamente 8 dígitos.");
+      return;
+    }
+    if (form.telefono.length !== 9) {
+      setError("El teléfono debe tener exactamente 9 dígitos.");
+      return;
+    }
+    setError("");
+
+    const provisionalPassword = `Org${form.dni}!`;
     onSave({
       ...form,
       rol: isEditing ? form.rol : "Organizador",
+      password: provisionalPassword,
     });
   };
 
@@ -102,6 +129,13 @@ export default function UserModal({
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-4">
+          {/* Mensaje de error de validación */}
+          {error && (
+            <div className="bg-red-50 text-red-600 text-xs font-semibold px-4 py-2.5 rounded-xl border border-red-200">
+              {error}
+            </div>
+          )}
+
           {/* Nombre completo */}
           <div>
             <label className="block text-xs font-semibold text-on-surface-variant mb-1.5">
@@ -134,20 +168,22 @@ export default function UserModal({
             />
           </div>
 
-          {/* DNI / RUC y Teléfono */}
+          {/* DNI y Teléfono con solo números */}
           <div className="grid grid-cols-2 gap-3">
             <div>
               <label className="block text-xs font-semibold text-on-surface-variant mb-1.5">
-                DNI / RUC
+                DNI
               </label>
               <input
                 type="text"
+                inputMode="numeric"
                 name="dni"
                 value={form.dni}
                 onChange={handleChange}
                 required
-                placeholder="20601948231"
-                className="w-full px-4 py-2.5 text-sm rounded-xl border border-outline-variant/40 bg-surface-container-low text-on-surface placeholder-on-surface-variant/50 outline-none focus:border-primary/60 focus:ring-2 focus:ring-primary/10 transition-all"
+                maxLength={8}
+                placeholder="72910482"
+                className="w-full px-4 py-2.5 text-sm rounded-xl border border-outline-variant/40 bg-surface-container-low text-on-surface placeholder-on-surface-variant/50 outline-none focus:border-primary/60 focus:ring-2 focus:ring-primary/10 transition-all font-mono"
               />
             </div>
             <div>
@@ -156,12 +192,14 @@ export default function UserModal({
               </label>
               <input
                 type="text"
+                inputMode="numeric"
                 name="telefono"
                 value={form.telefono}
                 onChange={handleChange}
                 required
-                placeholder="+51 999 999 999"
-                className="w-full px-4 py-2.5 text-sm rounded-xl border border-outline-variant/40 bg-surface-container-low text-on-surface placeholder-on-surface-variant/50 outline-none focus:border-primary/60 focus:ring-2 focus:ring-primary/10 transition-all"
+                maxLength={9}
+                placeholder="984219042"
+                className="w-full px-4 py-2.5 text-sm rounded-xl border border-outline-variant/40 bg-surface-container-low text-on-surface placeholder-on-surface-variant/50 outline-none focus:border-primary/60 focus:ring-2 focus:ring-primary/10 transition-all font-mono"
               />
             </div>
           </div>
@@ -174,6 +212,19 @@ export default function UserModal({
               {isEditing ? form.rol : "Organizador"}
             </span>
           </div>
+
+          {/* Contraseña provisional asignada */}
+          {!isEditing && (
+            <div className="bg-surface-container-low rounded-xl px-4 py-3 border border-outline-variant/30 text-xs">
+              <span className="font-semibold text-on-surface">Contraseña provisional: </span>
+              <span className="font-mono font-bold text-primary">
+                {form.dni ? `Org${form.dni}!` : "Org[DNI]!"}
+              </span>
+              <p className="text-[11px] text-on-surface-variant mt-1">
+                El organizador usará su correo y esta clave provisional para ingresar a su cuenta.
+              </p>
+            </div>
+          )}
 
           {/* Acciones */}
           <div className="flex items-center justify-end gap-3 pt-2">

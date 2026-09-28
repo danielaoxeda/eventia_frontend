@@ -1,4 +1,5 @@
 import api from "../../../shared/services/api";
+import { saveOrganizerFromAdmin } from "../../../shared/services/mockUserStorage";
 import type { AdminUser, UserFormData } from "../types/admin.types";
 
 /**
@@ -140,6 +141,8 @@ export const adminUsersService = {
    * Conecta con POST /admin_users en el json-server.
    */
   async createUser(form: UserFormData): Promise<AdminUser> {
+    const provisionalPassword = form.password || `Org${form.dni.trim()}!`;
+
     const nuevoUsuario: AdminUser = {
       id: String(Date.now()),
       codigo: `#${Math.floor(Math.random() * 9000) + 1000}`,
@@ -148,6 +151,7 @@ export const adminUsersService = {
       dni: form.dni.trim(),
       telefono: form.telefono.trim(),
       rol: "Organizador",
+      password: provisionalPassword,
       iniciales: form.nombre
         .trim()
         .split(" ")
@@ -158,6 +162,15 @@ export const adminUsersService = {
       fechaRegistro: new Date().toLocaleDateString("es-PE"),
       estado: "Activo",
     };
+
+    // Sincroniza las credenciales en la autenticación local para permitir el login inmediato
+    saveOrganizerFromAdmin({
+      nombre: form.nombre,
+      email: form.email,
+      dni: form.dni,
+      telefono: form.telefono,
+      password: provisionalPassword,
+    });
 
     try {
       const response = await api.post<AdminUser>("/admin_users", nuevoUsuario);
