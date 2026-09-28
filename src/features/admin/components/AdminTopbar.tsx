@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
-import { Link } from "react-router-dom";
-import { ChevronDown, Clock, Menu, Shield, Store, Ticket, User } from "lucide-react";
+import { Link, useNavigate } from "react-router-dom";
+import { ChevronDown, Clock, LogOut, Menu, Shield, Store, Ticket, User } from "lucide-react";
 import { useAuth } from "@/context/AuthContext";
 import { getLimaCurrentTime } from "../utils/adminFormatters";
 
@@ -9,10 +9,17 @@ interface AdminTopbarProps {
 }
 
 export default function AdminTopbar({ onToggleMobileSidebar }: AdminTopbarProps) {
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
+  const navigate = useNavigate();
   const [time, setTime] = useState(getLimaCurrentTime());
   const [isMenuOpen, setIsMenuOpen] = useState(false);
   const menuRef = useRef<HTMLDivElement>(null);
+
+  const handleLogout = () => {
+    logout();
+    setIsMenuOpen(false);
+    navigate("/login");
+  };
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -122,6 +129,17 @@ export default function AdminTopbar({ onToggleMobileSidebar }: AdminTopbarProps)
                 <Ticket className="w-4 h-4 text-slate-500" />
                 Mis Entradas
               </Link>
+
+              <div className="my-1 border-t border-slate-100" />
+
+              <button
+                type="button"
+                onClick={handleLogout}
+                className="w-full flex items-center gap-3 px-4 py-2.5 text-sm font-medium text-red-600 hover:bg-red-50 transition cursor-pointer"
+              >
+                <LogOut className="w-4 h-4 text-red-600" />
+                Cerrar sesión
+              </button>
             </div>
           )}
         </div>
