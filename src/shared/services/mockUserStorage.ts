@@ -48,6 +48,18 @@ export function getStoredUsers(): StoredUser[] {
         birthDate: "1988-11-20",
         phoneNumber: "+51 912 345 678",
       },
+      {
+        id: 3,
+        firstName: "Geronimo",
+        lastName: "Salazar Vega",
+        email: "gsalazar@eventia.pe",
+        password: "Password123!",
+        rol: "ORGANIZER",
+        documentType: "DNI",
+        documentNumber: "72541896",
+        birthDate: "1990-03-08",
+        phoneNumber: "+51 918 765 432",
+      },
     ];
     localStorage.setItem(STORAGE_KEY, JSON.stringify(defaultUsers));
     return defaultUsers;
