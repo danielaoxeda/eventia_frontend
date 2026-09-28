@@ -4,15 +4,13 @@ import {
   useState,
   type ReactNode,
 } from "react";
-import {
-  getStoredUsers,
-  type StoredUser,
-} from "../shared/services/mockUserStorage";
+
+import type { StoredUser } from "../shared/services/mockUserStorage";
 
 interface AuthContextType {
   isAuthenticated: boolean;
   user: StoredUser | null;
-  login: (token: string) => void;
+  login: (token: string, user: StoredUser) => void;
   logout: () => void;
   updateUser: (updatedUser: StoredUser) => void;
 }
@@ -25,35 +23,55 @@ interface AuthProviderProps {
   children: ReactNode;
 }
 
-function resolveUserFromToken(token: string | null): StoredUser | null {
-  if (!token) return null;
-  // Formato del token simulado: eventia-mock-token-{userId}-{timestamp}
-  const userId = Number(token.split("-")[3]);
-  if (!Number.isFinite(userId)) return null;
-  return getStoredUsers().find((stored) => stored.id === userId) ?? null;
-}
+export function AuthProvider({
+  children,
+}: AuthProviderProps) {
 
-export function AuthProvider({ children }: AuthProviderProps) {
   const [isAuthenticated, setIsAuthenticated] = useState(
     () => localStorage.getItem("accessToken") !== null
   );
-  const [user, setUser] = useState<StoredUser | null>(() =>
-    resolveUserFromToken(localStorage.getItem("accessToken"))
-  );
 
-  const login = (token: string) => {
+  const [user, setUser] = useState<StoredUser | null>(() => {
+    const storedUser = localStorage.getItem("authUser");
+
+    if (!storedUser) return null;
+
+    try {
+      return JSON.parse(storedUser);
+    } catch {
+      return null;
+    }
+  });
+
+  const login = (
+    token: string,
+    authenticatedUser: StoredUser
+  ) => {
     localStorage.setItem("accessToken", token);
+
+    localStorage.setItem(
+      "authUser",
+      JSON.stringify(authenticatedUser)
+    );
+
     setIsAuthenticated(true);
-    setUser(resolveUserFromToken(token));
+    setUser(authenticatedUser);
   };
 
   const logout = () => {
     localStorage.removeItem("accessToken");
+    localStorage.removeItem("authUser");
+
     setIsAuthenticated(false);
     setUser(null);
   };
 
   const updateUser = (updatedUser: StoredUser) => {
+    localStorage.setItem(
+      "authUser",
+      JSON.stringify(updatedUser)
+    );
+
     setUser(updatedUser);
   };
 
