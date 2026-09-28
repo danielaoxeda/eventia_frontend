@@ -13,6 +13,7 @@ import AdminCategoriesPage from "../features/admin/pages/AdminCategoriesPage";
 import AdminUsersPage from "../features/admin/pages/AdminUsersPage";
 import MisTicketsPage from "@/features/users/pages/MisTicketsPage";
 import PerfilPage from "@/features/users/pages/PerfilPage";
+import CheckoutPage from "@/features/checkout/pages/CheckoutPage";
 
 
 function NotFound() {
@@ -39,6 +40,9 @@ export default function AppRouter() {
 
           {/* Detalle del evento */}
           <Route path="/event/:id" element={<EventDetailPage />} />
+
+          {/* Flujo de Compra Checkout*/}
+          <Route path="/checkout" element={<CheckoutPage/>} />
 
           {/* Autenticación */}
           <Route path="/login" element={<LoginPage />} />
