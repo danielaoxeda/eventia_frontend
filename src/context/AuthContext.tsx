@@ -5,14 +5,14 @@ import {
   type ReactNode,
 } from "react";
 
-import type { StoredUser } from "../shared/services/mockUserStorage";
+import type { AuthUser } from "@/shared/types/auth.types";
 
 interface AuthContextType {
   isAuthenticated: boolean;
-  user: StoredUser | null;
-  login: (token: string, user: StoredUser) => void;
+  user: AuthUser | null;
+  login: (token: string, user: AuthUser) => void;
   logout: () => void;
-  updateUser: (updatedUser: StoredUser) => void;
+  updateUser: (updatedUser: AuthUser) => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(
@@ -31,7 +31,7 @@ export function AuthProvider({
     () => localStorage.getItem("accessToken") !== null
   );
 
-  const [user, setUser] = useState<StoredUser | null>(() => {
+  const [user, setUser] = useState<AuthUser | null>(() => {
     const storedUser = localStorage.getItem("authUser");
 
     if (!storedUser) return null;
@@ -45,7 +45,7 @@ export function AuthProvider({
 
   const login = (
     token: string,
-    authenticatedUser: StoredUser
+    authenticatedUser: AuthUser
   ) => {
     localStorage.setItem("accessToken", token);
 
@@ -66,7 +66,7 @@ export function AuthProvider({
     setUser(null);
   };
 
-  const updateUser = (updatedUser: StoredUser) => {
+  const updateUser = (updatedUser: AuthUser) => {
     localStorage.setItem(
       "authUser",
       JSON.stringify(updatedUser)
