@@ -83,6 +83,7 @@ export async function getEventDetail(
       dateLabel: `${day} ${MONTH_NAMES[date.getMonth()] ?? ""} ${date.getFullYear()}`,
       month: MONTH_CODES[date.getMonth()] ?? "",
       day,
+      eventDate: `${row.date}T${row.start_time || "00:00"}:00`,
       tiers: tickets.data.map(mapTier),
     };
   } catch (error) {

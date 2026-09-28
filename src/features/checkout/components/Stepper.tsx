@@ -1,9 +1,15 @@
 import { useState } from "react";
 import PaymentMethodStep from "./PaymentMethodStep";
 import SummaryStep from "./SummaryStep";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { validateCard } from "../services/cardValidation.service";
 import { useCartContext } from "../hooks/useCartContext";
+import { createPurchase } from "../services/purchase.service";
+import {
+  isPromoUser,
+  PROMO_DISCOUNT_PCT,
+} from "@/features/events/services/events.service";
+import { useAuth } from "@/context/AuthContext";
 
 const steps = [
   { label: "Selección de Entradas" },
@@ -29,9 +35,12 @@ const CheckIcon = () => (
 
 function Stepper() {
   const navigate = useNavigate();
-  const { items } = useCartContext();
+  const { items, clearCart } = useCartContext();
+  const { user } = useAuth();
   const [step, setStep] = useState(2);
   const [showErrors, setShowErrors] = useState(false);
+  const [processing, setProcessing] = useState(false);
+  const [purchaseError, setPurchaseError] = useState<string | null>(null);
   const isLastStep = step === steps.length;
   const [card, setCard] = useState({
     number: "",
@@ -41,20 +50,39 @@ function Stepper() {
     cuotas: "1",
   });
 
-  const handleNext = () => {
+  const handleNext = async () => {
     if (step === 2) {
       setShowErrors(true);
       if (!cardValid) return;
     }
 
     if (isLastStep) {
-      alert("COMPRANDO CALICHIN");
+      if (!user) {
+        setPurchaseError("Necesitas iniciar sesión para completar la compra.");
+        return;
+      }
+
+      setProcessing(true);
+      setPurchaseError(null);
+      try {
+        const sessionName = `${user.firstName} ${user.lastName}`.trim();
+        const discountPct = isPromoUser(sessionName) ? PROMO_DISCOUNT_PCT : 0;
+        await createPurchase(items, user.id, discountPct);
+        clearCart();
+        navigate("/mis-tickets");
+      } catch {
+        setPurchaseError("No se pudo completar la compra. Inténtalo de nuevo.");
+      } finally {
+        setProcessing(false);
+      }
       return;
     }
+
     setStep((s) => Math.min(steps.length, s + 1));
   };
 
   const handleBack = () => {
+    setPurchaseError(null);
     if (step === 3) {
       setStep(2);
     } else {
@@ -143,9 +171,20 @@ function Stepper() {
       </div>
       {/*-----------------------------------------------*/}
       {/*Botones para Retroceder o Avanzar*/}
+      {purchaseError && (
+        <div className="mb-4 flex items-center justify-between gap-3 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700">
+          <span>{purchaseError}</span>
+          {!user && (
+            <Link to="/login" className="font-bold underline shrink-0">
+              Iniciar sesión
+            </Link>
+          )}
+        </div>
+      )}
       <div className="flex justify-between items-center">
         <button
           type="button"
+          disabled={processing}
           className="px-4 py-2 border rounded disabled:opacity-40 disabled:cursor-not-allowed"
           onClick={handleBack}
         >
@@ -153,10 +192,15 @@ function Stepper() {
         </button>
         <button
           type="button"
-          className="px-4 py-2 bg-indigo-600 text-white border rounded hover:bg-indigo-700"
+          disabled={processing}
+          className="px-4 py-2 bg-indigo-600 text-white border rounded hover:bg-indigo-700 disabled:opacity-60"
           onClick={handleNext}
         >
-          {step === steps.length ? "Finalizar Compra" : "Siguiente"}
+          {processing
+            ? "Procesando..."
+            : step === steps.length
+              ? "Finalizar Compra"
+              : "Siguiente"}
         </button>
       </div>
     </div>

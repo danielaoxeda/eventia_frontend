@@ -23,6 +23,8 @@ export interface EventDetailData {
   /* Mes abreviado (ej. "NOV") */
   month: string;
   day: string;
+  /* ISO local para emitir la entrada (ej. "2025-11-22T20:00:00") */
+  eventDate: string;
   tiers: TicketTier[];
 }
 

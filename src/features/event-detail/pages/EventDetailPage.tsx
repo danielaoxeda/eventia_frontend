@@ -179,6 +179,8 @@ export default function EventDetailPage() {
           id_ticket_type: tier.id,
           ticket_name: tier.name,
           event_name: detail.title,
+          event_date: detail.eventDate,
+          venue: detail.venue,
           unit_price: tier.price,
           quantity,
         });
