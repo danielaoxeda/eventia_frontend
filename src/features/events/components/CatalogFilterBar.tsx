@@ -74,7 +74,7 @@ export default function CatalogFilterBar(props: CatalogFilterBarProps) {
 
       <div className="hidden lg:block w-px self-stretch bg-outline-variant/60 shrink-0" />
 
-      <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-4 gap-4 flex-[2] min-w-0">
+      <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-4 gap-4 flex-2 min-w-0">
         <div className="flex flex-col gap-1 min-w-0">
           <label htmlFor="filter-month" className={FIELD_LABEL}>
             Fecha
