@@ -1,5 +1,7 @@
-import { useEffect, useState } from "react";
-import { Clock, Menu, Shield, User } from "lucide-react";
+import { useEffect, useRef, useState } from "react";
+import { Link } from "react-router-dom";
+import { ChevronDown, Clock, Menu, Shield, Store, Ticket, User } from "lucide-react";
+import { useAuth } from "@/context/AuthContext";
 import { getLimaCurrentTime } from "../utils/adminFormatters";
 
 interface AdminTopbarProps {
@@ -7,13 +9,33 @@ interface AdminTopbarProps {
 }
 
 export default function AdminTopbar({ onToggleMobileSidebar }: AdminTopbarProps) {
+  const { user } = useAuth();
   const [time, setTime] = useState(getLimaCurrentTime());
+  const [isMenuOpen, setIsMenuOpen] = useState(false);
+  const menuRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     const timer = setInterval(() => {
       setTime(getLimaCurrentTime());
     }, 1000);
     return () => clearInterval(timer);
+  }, []);
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (
+        menuRef.current &&
+        !menuRef.current.contains(event.target as Node)
+      ) {
+        setIsMenuOpen(false);
+      }
+    };
+
+    document.addEventListener("mousedown", handleClickOutside);
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
   }, []);
 
   return (
@@ -31,7 +53,7 @@ export default function AdminTopbar({ onToggleMobileSidebar }: AdminTopbarProps)
 
         <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-primary-fixed/40 border border-primary-fixed/50 text-xs font-bold text-primary font-display">
           <Shield className="w-3.5 h-3.5 text-primary" />
-          <span>Rol: Administrador</span>
+          <span>Rol: {user?.rol === "ADMIN" ? "Administrador" : (user?.rol ?? "")}</span>
         </div>
       </div>
 
@@ -43,20 +65,65 @@ export default function AdminTopbar({ onToggleMobileSidebar }: AdminTopbarProps)
           <span className="font-mono">{time}</span>
         </div>
 
-        {/* Perfil del Admin Principal */}
-        <div className="flex items-center gap-3">
-          <div className="text-right hidden sm:block">
-            <div className="text-xs sm:text-sm font-bold text-on-surface leading-tight font-display">
-              Admin Principal
+        {/* Perfil del usuario autenticado con menú desplegable */}
+        <div className="relative" ref={menuRef}>
+          <button
+            type="button"
+            onClick={() => setIsMenuOpen((previous) => !previous)}
+            className="flex items-center gap-3 cursor-pointer"
+            aria-expanded={isMenuOpen}
+            aria-haspopup="menu"
+          >
+            <div className="text-right hidden sm:block">
+              <div className="text-xs sm:text-sm font-bold text-on-surface leading-tight font-display">
+                {user ? `${user.firstName} ${user.lastName}` : "Administrador"}
+              </div>
+              <div className="text-[11px] text-on-surface-variant font-medium">
+                {user?.email ?? ""}
+              </div>
             </div>
-            <div className="text-[11px] text-on-surface-variant font-medium">
-              admin@eventia.pe
-            </div>
-          </div>
 
-          <div className="w-9 h-9 rounded-full bg-primary text-on-primary flex items-center justify-center font-bold shadow-xs">
-            <User className="w-5 h-5" />
-          </div>
+            <div className="w-9 h-9 rounded-full bg-primary text-on-primary flex items-center justify-center font-bold shadow-xs">
+              <User className="w-5 h-5" />
+            </div>
+
+            <ChevronDown
+              className={`w-4 h-4 text-on-surface-variant transition-transform ${
+                isMenuOpen ? "rotate-180" : ""
+              }`}
+            />
+          </button>
+
+          {isMenuOpen && (
+            <div className="absolute right-0 top-full mt-3 w-52 bg-white border border-slate-200 rounded-xl shadow-lg py-2 z-50">
+              <Link
+                to="/"
+                onClick={() => setIsMenuOpen(false)}
+                className="flex items-center gap-3 px-4 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-50 transition"
+              >
+                <Store className="w-4 h-4 text-slate-500" />
+                Ver Catálogo
+              </Link>
+
+              <Link
+                to="/perfil"
+                onClick={() => setIsMenuOpen(false)}
+                className="flex items-center gap-3 px-4 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-50 transition"
+              >
+                <User className="w-4 h-4 text-slate-500" />
+                Mi Perfil
+              </Link>
+
+              <Link
+                to="/mis-tickets"
+                onClick={() => setIsMenuOpen(false)}
+                className="flex items-center gap-3 px-4 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-50 transition"
+              >
+                <Ticket className="w-4 h-4 text-slate-500" />
+                Mis Entradas
+              </Link>
+            </div>
+          )}
         </div>
       </div>
     </header>
