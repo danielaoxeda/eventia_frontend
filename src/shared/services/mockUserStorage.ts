@@ -151,3 +151,51 @@ export function updateStoredUser(
 
   return updatedUser;
 }
+
+/**
+ * Registra o actualiza las credenciales de un Organizador creado desde el panel Admin
+ * para permitir su inicio de sesión inmediato en /login con rol ORGANIZER.
+ */
+export function saveOrganizerFromAdmin(data: {
+  nombre: string;
+  email: string;
+  dni: string;
+  telefono: string;
+  password: string;
+}): StoredUser {
+  const users = getStoredUsers();
+  const existingIndex = users.findIndex(
+    (u) => u.email && u.email.toLowerCase() === data.email.trim().toLowerCase()
+  );
+
+  const parts = data.nombre.trim().split(" ");
+  const firstName = parts[0] || "Organizador";
+  const lastName = parts.slice(1).join(" ") || "Eventia";
+
+  if (existingIndex !== -1) {
+    users[existingIndex].password = data.password;
+    users[existingIndex].rol = "ORGANIZER";
+    users[existingIndex].firstName = firstName;
+    users[existingIndex].lastName = lastName;
+    users[existingIndex].documentNumber = data.dni.trim();
+    users[existingIndex].phoneNumber = data.telefono.trim();
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(users));
+    return users[existingIndex];
+  }
+
+  const newUser: StoredUser = {
+    id: Date.now(),
+    firstName,
+    lastName,
+    email: data.email.trim(),
+    password: data.password,
+    rol: "ORGANIZER",
+    documentType: "DNI",
+    documentNumber: data.dni.trim(),
+    phoneNumber: data.telefono.trim(),
+  };
+
+  users.push(newUser);
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(users));
+  return newUser;
+}
