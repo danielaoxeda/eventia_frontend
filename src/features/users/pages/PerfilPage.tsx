@@ -1,5 +1,5 @@
 import { useAuth } from "@/context/AuthContext";
-import { getStoredUsers, updateStoredUser } from "@/shared/services/mockUserStorage";
+import { updateAccount,type UpdateAccountData,} from "../services/updateAccountService";
 import ProfileHeader from "../components/profile/ProfileHeader";
 import ReadOnlyUserInfo from "../components/profile/ReadOnlyUserInfo";
 import UpdateAccountForm from "../components/profile/UpdateAccountForm";
@@ -7,22 +7,23 @@ import { User, LogIn } from "lucide-react";
 import { Link } from "react-router-dom";
 
 export default function PerfilPage() {
-  const { user, updateUser } = useAuth();
+ const { user, updateUser } = useAuth();
 
-  // Si por alguna razón la sesión en contexto no tiene un usuario, tomamos el usuario almacenado por defecto
-  const currentUser = user || (getStoredUsers().length > 0 ? getStoredUsers()[0] : null);
+const currentUser = user;
 
-  const handleUpdate = async (updates: { email?: string; password?: string }) => {
-    if (!currentUser) return;
+const handleUpdate = async (
+  updates: UpdateAccountData
+) => {
+  if (!currentUser) return;
 
-    // Actualizar en localStorage
-    const updatedUser = updateStoredUser(currentUser.id, updates);
+  const updatedUser = await updateAccount(
+    currentUser.id,
+    updates
+  );
 
-    // Actualizar contexto global de react
-    if (updateUser) {
-      updateUser(updatedUser);
-    }
-  };
+  // Actualizar usuario de la sesión
+  updateUser(updatedUser);
+};
 
   return (
     <div className="min-h-screen bg-slate-50 py-10">

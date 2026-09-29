@@ -40,7 +40,13 @@ export default function LoginForm() {
     try {
       const data = await login(form);
 
-      authenticate(data.accessToken);
+      authenticate(data.accessToken, {
+        id: data.id,
+        firstName: data.firstName,
+        lastName: data.lastName,
+        email: data.email,
+        rol: data.rol,
+      });
 
       navigate("/");
 

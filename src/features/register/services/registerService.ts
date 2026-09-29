@@ -1,59 +1,72 @@
 import api from "../../../shared/services/api";
+import type { ApiUser } from "@/shared/types/api.types";
 
 import type {
   RegisterRequest,
   RegisterResponse,
 } from "../types/register.types";
 
-import {
-  saveUser,
-  findUserByEmail,
-} from "../../../shared/services/mockUserStorage";
-
 export async function register(
   data: RegisterRequest
 ): Promise<RegisterResponse> {
 
-  // Verifica si ya existe localmente
-  const existingUser = findUserByEmail(data.email);
-
-  if (existingUser) {
-    throw new Error(
-      "Ya existe una cuenta con este correo electrónico."
-    );
-  }
-
   try {
-    // Simulamos el registro mediante la API dummy
-    await api.post("/users/add", {
+    // 1. Verificar si el correo ya existe en la API
+    const existingUsers = await api.get<ApiUser[]>("/users", {
+      params: {
+        email: data.email,
+      },
+    });
+
+    if (existingUsers.data.length > 0) {
+      throw new Error(
+        "Ya existe una cuenta con este correo electrónico."
+      );
+    }
+
+    // 2. Registrar usuario mediante la API REST simulada
+    const response = await api.post<ApiUser>("/users", {
       firstName: data.firstName,
       lastName: data.lastName,
       email: data.email,
-      username:
-        data.email.split("@")[0] ||
-        data.firstName.toLowerCase(),
       password: data.password,
+      rol: "USER",
+      documentType: data.documentType,
+      documentNumber: data.documentNumber,
+      birthDate: data.birthDate,
+      phoneNumber: data.phoneNumber,
     });
 
+    const user = response.data;
+
+    // 3. Devolver respuesta al RegisterForm
+    return {
+      id: Number(user.id),
+      firstName: user.firstName,
+      lastName: user.lastName,
+      email: user.email,
+      accessToken: "",
+      message: "Cuenta creada exitosamente",
+    };
+
   } catch (error) {
-    console.warn(
-      "La API dummy no está disponible. Continuando con almacenamiento local.",
+
+    // Mantener el error de correo duplicado
+    if (
+      error instanceof Error &&
+      error.message ===
+        "Ya existe una cuenta con este correo electrónico."
+    ) {
+      throw error;
+    }
+
+    console.error(
+      "Error al registrar usuario mediante la API:",
       error
     );
 
-    // No detenemos el registro porque nuestro almacenamiento
-    // local será el que permita posteriormente iniciar sesión.
+    throw new Error(
+      "No se pudo registrar la cuenta. Verifica que la API esté disponible."
+    );
   }
-
-  // Guardar usuario localmente
-  const user = saveUser(data);
-
-  return {
-    id: user.id,
-    firstName: user.firstName,
-    lastName: user.lastName,
-    email: user.email,
-    accessToken: "",
-    message: "Cuenta creada exitosamente",
-  };
 }

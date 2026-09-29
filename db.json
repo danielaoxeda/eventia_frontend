@@ -430,6 +430,44 @@
       "ticketsSold": 2650
     }
   ],
+  "users": [
+    {
+      "id": "1",
+      "firstName": "Roberto",
+      "lastName": "Zarate",
+      "email": "rzarate@gmail.com",
+      "password": "Password123!",
+      "rol": "USER",
+      "documentType": "DNI",
+      "documentNumber": "48120573",
+      "birthDate": "1992-05-15",
+      "phoneNumber": "+51 987 654 321"
+    },
+    {
+      "id": "2",
+      "firstName": "Admin",
+      "lastName": "inicial",
+      "email": "admin@eventia.pe",
+      "password": "Password123!",
+      "rol": "ADMIN",
+      "documentType": "DNI",
+      "documentNumber": "45892110",
+      "birthDate": "1988-11-20",
+      "phoneNumber": "+51 912 345 678"
+    },
+    {
+      "id": "3",
+      "firstName": "Organizer",
+      "lastName": "inicial",
+      "email": "organizer@eventia.pe",
+      "password": "Password123!",
+      "rol": "ORGANIZER",
+      "documentType": "DNI",
+      "documentNumber": "12341910",
+      "birthDate": "1988-03-07",
+      "phoneNumber": "+51 990 124 229"
+    }
+  ], 
   "admin_users": [
     {
       "id": "1",

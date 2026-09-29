@@ -1,4 +1,3 @@
-import { findUserByEmail } from "@/shared/services/mockUserStorage";
 import type { RegisterRequest } from "../types/register.types";
 
 export function validateRegisterForm(
@@ -10,57 +9,83 @@ export function validateRegisterForm(
   const documentNumber = form.documentNumber.trim();
   const phoneNumber = form.phoneNumber.trim();
 
-  // Nombres
+  // =========================
+  // NOMBRES
+  // =========================
+
   if (!firstName) {
     return "Ingresa tus nombres.";
   }
 
-  if (!/^[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s]+$/.test(firstName)) {
+  if (
+    !/^[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s]+$/.test(
+      firstName
+    )
+  ) {
     return "El nombre solo puede contener letras.";
   }
 
-  // Apellidos
+  // =========================
+  // APELLIDOS
+  // =========================
+
   if (!lastName) {
     return "Ingresa tus apellidos.";
   }
 
-  if (!/^[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s]+$/.test(lastName)) {
+  if (
+    !/^[a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s]+$/.test(
+      lastName
+    )
+  ) {
     return "El apellido solo puede contener letras.";
   }
 
-  // Documento
+  // =========================
+  // DOCUMENTO
+  // =========================
+
   if (form.documentType === "DNI (Perú)") {
     if (!/^\d{8}$/.test(documentNumber)) {
       return "El DNI debe contener exactamente 8 números.";
     }
   }
 
-  if (form.documentType === "Carnet de Extranjería") {
-    if (!/^[A-Za-z0-9]{9,12}$/.test(documentNumber)) {
+  if (
+    form.documentType === "Carnet de Extranjería"
+  ) {
+    if (
+      !/^[A-Za-z0-9]{9,12}$/.test(
+        documentNumber
+      )
+    ) {
       return "El Carnet de Extranjería debe contener entre 9 y 12 caracteres alfanuméricos.";
     }
   }
 
-  // Celular
+  // =========================
+  // CELULAR
+  // =========================
+
   if (!/^9\d{8}$/.test(phoneNumber)) {
     return "El celular debe contener 9 números y comenzar con 9.";
   }
 
-  // Correo
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  // =========================
+  // CORREO
+  // =========================
+
+  const emailRegex =
+    /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
   if (!emailRegex.test(email)) {
     return "Ingresa un correo electrónico válido.";
   }
 
-  // Correo duplicado
-  const existingUser = findUserByEmail(email);
+  // =========================
+  // CONTRASEÑA
+  // =========================
 
-  if (existingUser) {
-    return "Ya existe una cuenta registrada con este correo.";
-  }
-
-  // Contraseña
   if (form.password.length < 8) {
     return "La contraseña debe tener al menos 8 caracteres.";
   }
@@ -73,32 +98,51 @@ export function validateRegisterForm(
     return "La contraseña debe contener al menos un número.";
   }
 
-  // Confirmación
-  if (form.password !== form.confirmPassword) {
+  // =========================
+  // CONFIRMACIÓN
+  // =========================
+
+  if (
+    form.password !== form.confirmPassword
+  ) {
     return "Las contraseñas no coinciden.";
   }
 
   return null;
 }
 
+// =====================================================
+// SANITIZACIÓN DE CAMPOS
+// =====================================================
+
 export function sanitizeRegisterField(
   name: string,
   value: string,
   documentType: string
 ): string {
-  if (name === "firstName" || name === "lastName") {
+  // Nombres y apellidos
+  if (
+    name === "firstName" ||
+    name === "lastName"
+  ) {
     return value.replace(
       /[^a-zA-ZáéíóúÁÉÍÓÚñÑüÜ\s]/g,
       ""
     );
   }
 
+  // Documento
   if (name === "documentNumber") {
     if (documentType === "DNI (Perú)") {
-      return value.replace(/\D/g, "").slice(0, 8);
+      return value
+        .replace(/\D/g, "")
+        .slice(0, 8);
     }
 
-    if (documentType === "Carnet de Extranjería") {
+    if (
+      documentType ===
+      "Carnet de Extranjería"
+    ) {
       return value
         .replace(/[^a-zA-Z0-9]/g, "")
         .slice(0, 12)
@@ -106,8 +150,11 @@ export function sanitizeRegisterField(
     }
   }
 
+  // Celular
   if (name === "phoneNumber") {
-    return value.replace(/\D/g, "").slice(0, 9);
+    return value
+      .replace(/\D/g, "")
+      .slice(0, 9);
   }
 
   return value;
