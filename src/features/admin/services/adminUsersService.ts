@@ -1,5 +1,5 @@
 import api from "../../../shared/services/api";
-import { saveOrganizerFromAdmin } from "../../../shared/services/mockUserStorage";
+import type { ApiUser } from "../../../shared/types/api.types";
 import type { AdminUser, UserFormData } from "../types/admin.types";
 
 /**
@@ -94,6 +94,47 @@ let mockUsersMemory: AdminUser[] = [
 ];
 
 /**
+ * Sincroniza las credenciales del organizador creado desde el panel admin
+ * con la colección principal `/users` (json-server / db.json), que es la
+ * que consumen `loginService` y `registerService` para autenticar.
+ * Así se permite el login inmediato sin depender del mock eliminado
+ * `mockUserStorage`.
+ */
+async function syncOrganizerToUsers(input: {
+  nombre: string;
+  email: string;
+  dni: string;
+  telefono: string;
+  password: string;
+}): Promise<void> {
+  const nameParts = input.nombre.trim().split(/\s+/);
+  const firstName = nameParts.slice(0, 1).join(" ");
+  const lastName = nameParts.slice(1).join(" ") || "-";
+
+  try {
+    // Evita duplicados si el correo ya existe en /users
+    const existing = await api.get<ApiUser[]>("/users", {
+      params: { email: input.email.trim() },
+    });
+    if (existing.data.length > 0) return;
+
+    await api.post<ApiUser>("/users", {
+      firstName,
+      lastName,
+      email: input.email.trim(),
+      password: input.password,
+      rol: "ORGANIZER",
+      documentType: "DNI",
+      documentNumber: input.dni.trim(),
+      phoneNumber: input.telefono.trim(),
+    });
+  } catch {
+    // No bloquea la creación en /admin_users si /users está offline;
+    // el fallback en memoria de abajo sigue funcionando.
+  }
+}
+
+/**
  * Servicio encargado de la comunicación con la API dummy (json-server / db.json)
  * para la gestión de usuarios y alta de organizadores.
  */
@@ -163,8 +204,9 @@ export const adminUsersService = {
       estado: "Activo",
     };
 
-    // Sincroniza las credenciales en la autenticación local para permitir el login inmediato
-    saveOrganizerFromAdmin({
+    // Sincroniza las credenciales en /users (service real de autenticación)
+    // para permitir el login inmediato del organizador creado
+    await syncOrganizerToUsers({
       nombre: form.nombre,
       email: form.email,
       dni: form.dni,
