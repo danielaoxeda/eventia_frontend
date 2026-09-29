@@ -38,6 +38,7 @@ export default function MisTicketsPage() {
   const [tickets, setTickets] = useState<MyTicket[] | null>(null);
   const [error, setError] = useState(false);
   const [refresh, setRefresh] = useState(0);
+  const [copiedId, setCopiedId] = useState<string | null>(null);
 
   useEffect(() => {
     if (!user) return;
@@ -61,6 +62,16 @@ export default function MisTicketsPage() {
     setError(false);
     setTickets(null);
     setRefresh((r) => r + 1);
+  };
+
+  const handleCopy = (code: string) => {
+    navigator.clipboard
+      .writeText(code)
+      .then(() => {
+        setCopiedId(code);
+        window.setTimeout(() => setCopiedId(null), 2000);
+      })
+      .catch(() => {});
   };
 
   const header = (
@@ -151,8 +162,20 @@ export default function MisTicketsPage() {
                   Entrada {ticket.id}
                 </p>
               </div>
-              <div className="shrink-0 rounded-lg border border-slate-200 bg-white p-2">
-                <QrCode value={ticket.qr_code} size={112} />
+              <div className="shrink-0 flex flex-col items-center gap-2">
+                <div className="rounded-lg border border-slate-200 bg-white p-2">
+                  <QrCode value={ticket.qr_code} size={112} />
+                </div>
+                <span className="font-mono text-[10px] text-slate-500 break-all text-center max-w-[150px]">
+                  {ticket.qr_code}
+                </span>
+                <button
+                  type="button"
+                  onClick={() => handleCopy(ticket.qr_code)}
+                  className="text-[11px] font-bold text-indigo-600 hover:text-indigo-800 transition-colors cursor-pointer"
+                >
+                  {copiedId === ticket.qr_code ? "¡Copiado!" : "Copiar código"}
+                </button>
               </div>
             </li>
           ))}

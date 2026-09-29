@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { NavLink } from "react-router-dom";
+import { Link, NavLink } from "react-router-dom";
 
 export default function OrganizerSidebar() {
   const [collapsed, setCollapsed] = useState(false);
@@ -42,7 +42,11 @@ export default function OrganizerSidebar() {
     >
       <div className="flex flex-col gap-5">
         {/* Brand Header */}
-        <div className="flex items-center gap-3 px-1 py-1">
+        <Link
+          to="/"
+          title="Ir al catálogo"
+          className="flex items-center gap-3 px-1 py-1"
+        >
           <div className="w-9 h-9 rounded-lg bg-primary flex items-center justify-center text-on-primary font-display font-extrabold text-lg shadow-sm flex-shrink-0">
             E
           </div>
@@ -56,7 +60,7 @@ export default function OrganizerSidebar() {
               </span>
             </div>
           )}
-        </div>
+        </Link>
 
         {/* Current Role Badge */}
         {!collapsed && (

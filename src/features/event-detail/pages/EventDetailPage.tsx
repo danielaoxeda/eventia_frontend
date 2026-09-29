@@ -168,6 +168,7 @@ export default function EventDetailPage() {
   };
 
   const handleProceedToCheckout = () => {
+    if (!user) return;
     if (totalTickets === 0) return;
 
     clearCart();
