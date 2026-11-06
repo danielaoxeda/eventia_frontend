@@ -1,59 +1,39 @@
 import api from "../../../shared/services/api";
+import type { RegisterRequest, RegisterResponse } from "../types/register.types";
 
-import type {
-  RegisterRequest,
-  RegisterResponse,
-} from "../types/register.types";
+/**
+ * Registro real contra el backend:
+ * POST http://localhost:8080/auth/register
+ * { firstName, lastName, dni, email, password }
+ *
+ * Nota sencilla: el formulario tiene más campos (fecha de nacimiento,
+ * tipo de documento, teléfono...), pero el backend solo pide estos 5.
+ * Por eso usamos documentNumber como "dni". Si el tipo no es DNI (Perú),
+ * el backend puede rechazarlo porque espera 8 dígitos.
+ */
+export async function register(data: RegisterRequest): Promise<RegisterResponse> {
+  console.log("[Eventia] 📝 Intentando registrar usuario:", data.email);
 
-import {
-  saveUser,
-  findUserByEmail,
-} from "../../../shared/services/mockUserStorage";
+  const payload = {
+    firstName: data.firstName.trim(),
+    lastName: data.lastName.trim(),
+    dni: data.documentNumber.trim(),
+    email: data.email.trim().toLowerCase(),
+    password: data.password,
+  };
 
-export async function register(
-  data: RegisterRequest
-): Promise<RegisterResponse> {
+  console.log("[Eventia] 📦 Enviando al backend:", { ...payload, password: "***" });
 
-  // Verifica si ya existe localmente
-  const existingUser = findUserByEmail(data.email);
+  const { data: backendData } = await api.post("/auth/register", payload);
 
-  if (existingUser) {
-    throw new Error(
-      "Ya existe una cuenta con este correo electrónico."
-    );
-  }
-
-  try {
-    // Simulamos el registro mediante la API dummy
-    await api.post("/users/add", {
-      firstName: data.firstName,
-      lastName: data.lastName,
-      email: data.email,
-      username:
-        data.email.split("@")[0] ||
-        data.firstName.toLowerCase(),
-      password: data.password,
-    });
-
-  } catch (error) {
-    console.warn(
-      "La API dummy no está disponible. Continuando con almacenamiento local.",
-      error
-    );
-
-    // No detenemos el registro porque nuestro almacenamiento
-    // local será el que permita posteriormente iniciar sesión.
-  }
-
-  // Guardar usuario localmente
-  const user = saveUser(data);
+  console.log("[Eventia] ✅ Registro exitoso en el backend para:", backendData.email);
 
   return {
-    id: user.id,
-    firstName: user.firstName,
-    lastName: user.lastName,
-    email: user.email,
-    accessToken: "",
+    id: backendData.id,
+    firstName: backendData.firstName,
+    lastName: backendData.lastName,
+    email: backendData.email,
+    accessToken: backendData.token,
     message: "Cuenta creada exitosamente",
   };
 }

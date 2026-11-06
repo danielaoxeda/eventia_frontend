@@ -1,4 +1,3 @@
-import { findUserByEmail } from "@/shared/services/mockUserStorage";
 import type { RegisterRequest } from "../types/register.types";
 
 export function validateRegisterForm(
@@ -53,12 +52,8 @@ export function validateRegisterForm(
     return "Ingresa un correo electrónico válido.";
   }
 
-  // Correo duplicado
-  const existingUser = findUserByEmail(email);
-
-  if (existingUser) {
-    return "Ya existe una cuenta registrada con este correo.";
-  }
+  // Correo duplicado: ya NO se revisa en el navegador (localStorage).
+  // Ahora lo revisa el backend al registrar (POST /auth/register).
 
   // Contraseña
   if (form.password.length < 8) {

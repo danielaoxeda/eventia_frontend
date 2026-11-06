@@ -1,38 +1,31 @@
-import type {
-  LoginRequest,
-  LoginResponse,
-} from "../types/login.types";
+import api from "../../../shared/services/api";
+import type { LoginRequest, LoginResponse } from "../types/login.types";
 
-import {
-  findUserByEmail,
-} from "../../../shared/services/mockUserStorage";
+/**
+ * Login real contra el backend:
+ * POST http://localhost:8080/auth/login  { email, password }
+ * Devuelve: { id, firstName, lastName, email, token }
+ */
+export async function login(data: LoginRequest): Promise<LoginResponse> {
+  console.log("[Eventia] 🔑 Intentando iniciar sesión para:", data.email);
 
-export async function login(
-  data: LoginRequest
-): Promise<LoginResponse> {
+  try {
+    const { data: backendData } = await api.post("/auth/login", data);
 
-  // Buscar usuario registrado localmente
-  const user = findUserByEmail(data.email);
+    console.log("[Eventia] ✅ Login exitoso en el backend para:", backendData.email);
 
-  if (!user) {
-    throw new Error("INVALID_CREDENTIALS");
+    return {
+      id: backendData.id,
+      firstName: backendData.firstName,
+      lastName: backendData.lastName,
+      email: backendData.email,
+      accessToken: backendData.token,
+      message: "Inicio de sesión exitoso",
+    };
+  } catch (error) {
+    // El Interceptor de api.ts ya mostró el error en consola.
+    // Aquí solo traducimos el error para el formulario.
+    console.log("[Eventia] ⚠️ Login falló, se avisa al usuario.");
+    throw error;
   }
-
-  // Validar contraseña
-  if (user.password !== data.password) {
-    throw new Error("INVALID_CREDENTIALS");
-  }
-
-  // Generar token simulado
-  const accessToken =
-    `eventia-mock-token-${user.id}-${Date.now()}`;
-
-  return {
-    id: user.id,
-    firstName: user.firstName,
-    lastName: user.lastName,
-    email: user.email,
-    accessToken,
-    message: "Inicio de sesión exitoso",
-  };
 }

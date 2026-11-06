@@ -1,6 +1,7 @@
 import type { CatalogEvent, Category } from "../types/event.types";
-// Fuente temporal: luego se reemplaza por el backend real.
+// Respaldo local (db.json): se usa solo si el backend está apagado.
 import db from "../../../../db.json";
+import api from "../../../shared/services/api";
 
 /** Fila de `categories` en db.json (ver diagrama ER). */
 interface DbCategory {
@@ -105,8 +106,59 @@ function mapEvent(row: DbEvent): CatalogEvent {
   };
 }
 
-/** Eventos leídos desde db.json (fuente temporal hasta el backend real). */
+/** Eventos de respaldo desde db.json (solo si el backend no responde). */
 export const EVENTS: CatalogEvent[] = DB_EVENTS.filter((row) => row.active).map(mapEvent);
+
+// --- Lo que manda el backend (GET /events) ---
+interface BackendEvent {
+  id: number;
+  title: string;
+  description: string;
+  date: string; // "2026-11-22"
+  location: string;
+  capacity: number;
+  status: string;
+  category: string;
+  price: number;
+  soldPct: number;
+}
+
+function mapBackendEvent(row: BackendEvent): CatalogEvent {
+  const date = new Date(`${row.date}T00:00:00`);
+  const categoryName = (row.category || "Conciertos") as Category;
+  return {
+    id: row.id,
+    title: row.title,
+    category: categoryName,
+    month: MONTH_CODES[date.getMonth()] ?? "",
+    day: String(date.getDate()).padStart(2, "0"),
+    dateOrder: date.getTime(),
+    venue: row.location,
+    city: row.location,
+    price: row.price,
+    soldPct: row.soldPct,
+    image: "",
+    tag: TAG_BY_CATEGORY[categoryName] ?? categoryName,
+    badge: badgeFor(row.soldPct),
+  };
+}
+
+/**
+ * Trae los eventos del backend real: GET /events
+ * Si el backend está apagado, usa db.json para que la página no se rompa.
+ */
+export async function fetchEvents(): Promise<CatalogEvent[]> {
+  console.log("[Eventia] 🎫 Pidiendo eventos al backend (GET /events)...");
+  try {
+    const { data } = await api.get<BackendEvent[]>("/events");
+    const events = (data ?? []).map(mapBackendEvent);
+    console.log(`[Eventia] ✅ Llegaron ${events.length} eventos desde el backend`);
+    return events.length > 0 ? events : EVENTS;
+  } catch {
+    console.warn("[Eventia] ⚠️ Backend no disponible, usando datos de respaldo (db.json)");
+    return EVENTS;
+  }
+}
 
 /** Porcentaje de descuento de la promo (aplica solo a elegibles). */
 export const PROMO_DISCOUNT_PCT = 15;

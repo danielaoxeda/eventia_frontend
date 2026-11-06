@@ -7,7 +7,7 @@ import { User, LogIn } from "lucide-react";
 import { Link } from "react-router-dom";
 
 export default function PerfilPage() {
-  const { user, updateUser, isAuthenticated } = useAuth();
+  const { user, updateUser } = useAuth();
 
   // Si por alguna razón la sesión en contexto no tiene un usuario, tomamos el usuario almacenado por defecto
   const currentUser = user || (getStoredUsers().length > 0 ? getStoredUsers()[0] : null);

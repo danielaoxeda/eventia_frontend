@@ -40,20 +40,28 @@ export default function LoginForm() {
     try {
       const data = await login(form);
 
-      authenticate(data.accessToken);
+      // Guardamos token y datos del usuario que mandó el backend
+      authenticate(data.accessToken, {
+        id: data.id,
+        firstName: data.firstName,
+        lastName: data.lastName,
+        email: data.email,
+      });
 
+      console.log("[Eventia] ➡️ Redirigiendo al inicio...");
       navigate("/");
 
-      } catch (error) {
-      if (
-        error instanceof Error &&
-        error.message === "INVALID_CREDENTIALS"
-      ) {
+    } catch (error) {
+      // Mensajes sencillos según lo que respondió el backend
+      const err = error as { response?: { status?: number; data?: { message?: string } }; message?: string };
+      if (err?.response?.status === 401) {
+        console.log("[Eventia] ⚠️ El backend dijo: credenciales incorrectas (401)");
         setError("Correo o contraseña incorrectos.");
+      } else if (!err?.response) {
+        console.log("[Eventia] ⚠️ No hubo respuesta: backend apagado");
+        setError("No se pudo contactar el servidor. ¿Está encendido el backend?");
       } else {
-        setError(
-          "Ocurrió un error inesperado. Inténtalo nuevamente."
-        );
+        setError(err.response.data?.message || "Ocurrió un error inesperado. Inténtalo nuevamente.");
       }
     } finally {
       setLoading(false);

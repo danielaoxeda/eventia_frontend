@@ -1,11 +1,11 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Footer from "../../../shared/layouts/Footer";
 import CatalogFilterBar from "../components/CatalogFilterBar";
 import CatalogToolbar from "../components/CatalogToolbar";
 import EventCard from "../components/EventCard";
 import Pagination from "../components/Pagination";
-import { CATEGORY_ORDER, EVENTS, PRICE_RANGES } from "../services/events.service";
-import type { Category, SortKey, ViewMode } from "../types/event.types";
+import { CATEGORY_ORDER, PRICE_RANGES, fetchEvents } from "../services/events.service";
+import type { CatalogEvent, Category, SortKey, ViewMode } from "../types/event.types";
 
 /** Cantidad de eventos visibles por página. */
 const PAGE_SIZE = 6;
@@ -16,6 +16,18 @@ const PAGE_SIZE = 6;
  * promo y nombre siempre desde la sesión (nunca de un input manual).
  */
 export default function CatalogPage() {
+  // Eventos que llegan del backend (GET /events)
+  const [events, setEvents] = useState<CatalogEvent[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    console.log("[Eventia] 📄 Página de catálogo abierta, cargando eventos...");
+    fetchEvents()
+      .then((list) => setEvents(list))
+      .catch(() => setEvents([]))
+      .finally(() => setLoading(false));
+  }, []);
+
   const [search, setSearch] = useState("");
   const [month, setMonth] = useState("ALL");
   const [location, setLocation] = useState("ALL");
@@ -27,16 +39,16 @@ export default function CatalogPage() {
 
   // Opciones derivadas de los datos del servicio (sin valores fijos).
   const months = useMemo(
-    () => Array.from(new Set(EVENTS.map((event) => event.month))),
-    []
+    () => Array.from(new Set(events.map((event) => event.month))),
+    [events]
   );
   const locations = useMemo(
-    () => Array.from(new Set(EVENTS.map((event) => event.venue))),
-    []
+    () => Array.from(new Set(events.map((event) => event.venue))),
+    [events]
   );
   const categories = useMemo(
-    () => CATEGORY_ORDER.filter((name) => EVENTS.some((event) => event.category === name)),
-    []
+    () => CATEGORY_ORDER.filter((name) => events.some((event) => event.category === name)),
+    [events]
   );
   const priceRange =
     PRICE_RANGES.find((range) => range.id === priceRangeId) ?? PRICE_RANGES[0];
@@ -66,7 +78,7 @@ export default function CatalogPage() {
   const query = search.trim().toLowerCase();
   // Filtrado + orden memorizados: solo se recalculan si cambia un filtro.
   const filtered = useMemo(() => {
-    const result = EVENTS.filter((event) => {
+    const result = events.filter((event) => {
       if (category !== "ALL" && event.category !== category) return false;
       if (month !== "ALL" && event.month !== month) return false;
       if (location !== "ALL" && event.venue !== location) return false;
@@ -82,7 +94,7 @@ export default function CatalogPage() {
       if (sort === "price-desc") return b.price - a.price;
       return b.soldPct - a.soldPct;
     });
-  }, [category, month, location, priceRange, query, sort]);
+  }, [events, category, month, location, priceRange, query, sort]);
 
   // Paginación defensiva: la página actual nunca sale del rango válido.
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
@@ -153,7 +165,9 @@ export default function CatalogPage() {
               onViewChange={setView}
             />
 
-            {paged.length === 0 ? (
+            {loading ? (
+              <p className="text-sm text-slate-500">Cargando eventos desde el backend...</p>
+            ) : paged.length === 0 ? (
               // Estado vacío con salida clara (limpiar filtros).
               <div className="bg-surface-container-lowest p-10 rounded-xl text-center shadow-sm min-w-0">
                 <span className="material-symbols-outlined text-5xl text-outline">

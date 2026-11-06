@@ -142,11 +142,15 @@ export default function RegisterForm() {
       navigate("/login");
     }, 1500);
   } catch (err) {
-    console.error(err);
-
-    setError(
-      "Ocurrió un error al registrar la cuenta. Inténtalo nuevamente."
-    );
+    // El Interceptor de api.ts ya mostró el error en consola.
+    const e = err as { response?: { status?: number; data?: { message?: string } }; message?: string };
+    if (!e?.response) {
+      console.log("[Eventia] ⚠️ No hubo respuesta: backend apagado");
+      setError("No se pudo contactar el servidor. ¿Está encendido el backend?");
+    } else {
+      console.log(`[Eventia] ⚠️ Registro rechazado por el backend (${e.response.status})`);
+      setError(e.response.data?.message || "Ocurrió un error al registrar la cuenta. Inténtalo nuevamente.");
+    }
   } finally {
     setLoading(false);
   }
