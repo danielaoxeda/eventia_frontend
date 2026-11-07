@@ -132,10 +132,10 @@ export default function RegisterForm() {
   setLoading(true);
 
   try {
-    const response = await register(form);
+    await register(form);
 
     setSuccess(
-      `¡Cuenta creada con éxito! Bienvenido, ${response.firstName}. Redirigiendo al inicio de sesión...`
+      `¡Cuenta creada con éxito! Bienvenido, ${form.firstName}. Redirigiendo al inicio de sesión...`
     );
 
     setTimeout(() => {

@@ -26,13 +26,9 @@ export async function register(data: RegisterRequest): Promise<RegisterResponse>
 
   const { data: backendData } = await api.post("/auth/register", payload);
 
-  console.log("[Eventia] ✅ Registro exitoso en el backend para:", backendData.email);
+  console.log("[Eventia] ✅ Registro exitoso en el backend para:", data.email);
 
   return {
-    id: backendData.id,
-    firstName: backendData.firstName,
-    lastName: backendData.lastName,
-    email: backendData.email,
     accessToken: backendData.token,
     message: "Cuenta creada exitosamente",
   };

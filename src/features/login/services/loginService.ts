@@ -4,11 +4,9 @@ import type { LoginRequest, LoginResponse } from "../types/login.types";
 /**
  * Login real contra el backend:
  * POST http://localhost:8080/auth/login  { email, password }
- * Devuelve: { id, firstName, lastName, email, token }
+ * Devuelve: { token }
  *
- * Pendiente: el backend todavía no devuelve el rol del usuario, así que
- * asignamos "USER" por defecto. Cuando AuthResponse incluya el rol, se
- * reemplaza este valor por el que venga del backend.
+ * La identidad y el rol del usuario se consultan después en GET /auth/me.
  */
 export async function login(data: LoginRequest): Promise<LoginResponse> {
   console.log("[Eventia] 🔑 Intentando iniciar sesión para:", data.email);
@@ -16,14 +14,9 @@ export async function login(data: LoginRequest): Promise<LoginResponse> {
   try {
     const { data: backendData } = await api.post("/auth/login", data);
 
-    console.log("[Eventia] ✅ Login exitoso en el backend para:", backendData.email);
+    console.log("[Eventia] ✅ Login exitoso en el backend para:", data.email);
 
     return {
-      id: backendData.id,
-      firstName: backendData.firstName,
-      lastName: backendData.lastName,
-      email: backendData.email,
-      rol: "USER",
       accessToken: backendData.token,
       message: "Inicio de sesión exitoso",
     };

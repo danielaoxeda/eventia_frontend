@@ -5,12 +5,13 @@ import {
   type ReactNode,
 } from "react";
 
+import { getCurrentUser } from "@/shared/services/authService";
 import type { AuthUser } from "@/shared/types/auth.types";
 
 interface AuthContextType {
   isAuthenticated: boolean;
   user: AuthUser | null;
-  login: (token: string, user: AuthUser) => void;
+  login: (token: string) => Promise<void>;
   logout: () => void;
   updateUser: (updatedUser: AuthUser) => void;
 }
@@ -35,12 +36,24 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   );
   const [user, setUser] = useState<AuthUser | null>(() => getSavedUser());
 
-  const login = (token: string, authenticatedUser: AuthUser) => {
-    console.log("[Eventia] ✅ Guardando sesión para:", authenticatedUser.email);
+  // Guarda el token y carga la identidad real desde el backend (GET /auth/me).
+  const login = async (token: string) => {
     localStorage.setItem("accessToken", token);
-    localStorage.setItem(USER_KEY, JSON.stringify(authenticatedUser));
-    setIsAuthenticated(true);
-    setUser(authenticatedUser);
+
+    try {
+      const authenticatedUser = await getCurrentUser();
+      console.log("[Eventia] ✅ Sesión iniciada para:", authenticatedUser.email);
+      localStorage.setItem(USER_KEY, JSON.stringify(authenticatedUser));
+      setIsAuthenticated(true);
+      setUser(authenticatedUser);
+    } catch (error) {
+      // Si no se pudo identificar al usuario, no dejamos una sesión a medias.
+      localStorage.removeItem("accessToken");
+      localStorage.removeItem(USER_KEY);
+      setIsAuthenticated(false);
+      setUser(null);
+      throw error;
+    }
   };
 
   const logout = () => {

@@ -40,14 +40,8 @@ export default function LoginForm() {
     try {
       const data = await login(form);
 
-      // Guardamos token y datos del usuario que mandó el backend
-      authenticate(data.accessToken, {
-        id: data.id,
-        firstName: data.firstName,
-        lastName: data.lastName,
-        email: data.email,
-        rol: data.rol,
-      });
+      // El token identifica la sesión; el perfil se carga con GET /auth/me.
+      await authenticate(data.accessToken);
 
       console.log("[Eventia] ➡️ Redirigiendo al inicio...");
       navigate("/");

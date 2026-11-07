@@ -3,12 +3,9 @@ export interface LoginRequest {
   password: string;
 }
 
+// El backend solo devuelve el token. El perfil (incluido el rol)
+// se obtiene después con GET /auth/me.
 export interface LoginResponse {
-  id: number;
-  firstName: string;
-  lastName: string;
-  email: string;
-  rol: string;
   accessToken: string;
   message: string;
 }
