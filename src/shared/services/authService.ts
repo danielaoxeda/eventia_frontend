@@ -10,10 +10,7 @@ interface AuthenticatedUserResponse {
   role: string;
 }
 
-/**
- * Obtiene el perfil del usuario autenticado a partir del JWT.
- * El backend identifica al usuario con Authentication (email del subject).
- */
+// Obtiene el perfil real del usuario mediante el JWT.
 export async function getCurrentUser(): Promise<AuthUser> {
   const { data } = await api.get<AuthenticatedUserResponse>("/auth/me");
 

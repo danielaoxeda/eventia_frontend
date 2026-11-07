@@ -1,16 +1,7 @@
 import api from "../../../shared/services/api";
 import type { RegisterRequest, RegisterResponse } from "../types/register.types";
 
-/**
- * Registro real contra el backend:
- * POST http://localhost:8080/auth/register
- * { firstName, lastName, dni, email, password }
- *
- * Nota sencilla: el formulario tiene más campos (fecha de nacimiento,
- * tipo de documento, teléfono...), pero el backend solo pide estos 5.
- * Por eso usamos documentNumber como "dni". Si el tipo no es DNI (Perú),
- * el backend puede rechazarlo porque espera 8 dígitos.
- */
+// El backend solo acepta 5 campos; documentNumber se envía como "dni" de 8 dígitos.
 export async function register(data: RegisterRequest): Promise<RegisterResponse> {
   console.log("[Eventia] 📝 Intentando registrar usuario:", data.email);
 

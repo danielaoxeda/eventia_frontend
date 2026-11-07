@@ -142,7 +142,7 @@ export default function RegisterForm() {
       navigate("/login");
     }, 1500);
   } catch (err) {
-    // El Interceptor de api.ts ya mostró el error en consola.
+    // El interceptor de api.ts ya registró el error.
     const e = err as { response?: { status?: number; data?: { message?: string } }; message?: string };
     if (!e?.response) {
       console.log("[Eventia] ⚠️ No hubo respuesta: backend apagado");
@@ -158,7 +158,6 @@ export default function RegisterForm() {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
-      {/* Título */}
       <div>
         <h1 className="text-3xl font-extrabold tracking-tight text-slate-900">
           Crea tu cuenta en Eventia
@@ -169,13 +168,11 @@ export default function RegisterForm() {
         </p>
       </div>
 
-      {/* Datos personales */}
       <PersonalDataSection
         form={form}
         onChange={handleChange}
       />
 
-      {/* Credenciales */}
       <CredentialsSection
         form={form}
         onChange={handleChange}
@@ -190,13 +187,11 @@ export default function RegisterForm() {
         strength={strength}
       />
 
-      {/* Mensajes */}
       <RegisterMessages
         error={error}
         success={success}
       />
 
-      {/* Botón */}
       <button
         type="submit"
         disabled={loading}
@@ -212,7 +207,6 @@ export default function RegisterForm() {
         )}
       </button>
 
-      {/* Login */}
       <div className="text-center pt-2">
         <p className="text-xs font-medium text-slate-500">
           ¿Ya tienes una cuenta en Eventia?{" "}

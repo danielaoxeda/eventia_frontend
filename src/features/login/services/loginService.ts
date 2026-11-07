@@ -1,13 +1,7 @@
 import api from "../../../shared/services/api";
 import type { LoginRequest, LoginResponse } from "../types/login.types";
 
-/**
- * Login real contra el backend:
- * POST http://localhost:8080/auth/login  { email, password }
- * Devuelve: { token }
- *
- * La identidad y el rol del usuario se consultan después en GET /auth/me.
- */
+// Login real; devuelve solo el token (el perfil se obtiene en /auth/me).
 export async function login(data: LoginRequest): Promise<LoginResponse> {
   console.log("[Eventia] 🔑 Intentando iniciar sesión para:", data.email);
 
@@ -21,8 +15,7 @@ export async function login(data: LoginRequest): Promise<LoginResponse> {
       message: "Inicio de sesión exitoso",
     };
   } catch (error) {
-    // El interceptor de api.ts ya mostró el error en consola.
-    // Aquí solo traducimos el error para el formulario.
+    // El interceptor de api.ts ya registró el error; el formulario lo muestra.
     console.log("[Eventia] ⚠️ Login falló, se avisa al usuario.");
     throw error;
   }

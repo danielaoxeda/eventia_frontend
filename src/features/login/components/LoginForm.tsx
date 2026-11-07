@@ -47,7 +47,6 @@ export default function LoginForm() {
       navigate("/");
 
     } catch (error) {
-      // Mensajes sencillos según lo que respondió el backend
       const err = error as { response?: { status?: number; data?: { message?: string } }; message?: string };
       if (err?.response?.status === 401) {
         console.log("[Eventia] ⚠️ El backend dijo: credenciales incorrectas (401)");
@@ -68,7 +67,6 @@ export default function LoginForm() {
       onSubmit={handleSubmit}
       className="space-y-5"
     >
-      {/* Correo */}
       <div>
         <label
           htmlFor="email"
@@ -95,7 +93,6 @@ export default function LoginForm() {
         </div>
       </div>
 
-      {/* Contraseña */}
       <div>
         <label
           htmlFor="password"
@@ -141,14 +138,12 @@ export default function LoginForm() {
         </div>
       </div>
 
-      {/* Error */}
       {error && (
         <div className="rounded-lg bg-red-50 px-4 py-3 text-sm text-red-600">
           {error}
         </div>
       )}
 
-      {/* Botón */}
       <button
         type="submit"
         disabled={loading}

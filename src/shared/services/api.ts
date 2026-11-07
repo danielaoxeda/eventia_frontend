@@ -1,16 +1,8 @@
 import axios from "axios";
 
-// ============================================================
-// CONEXIÓN CON EL BACKEND
-// ------------------------------------------------------------
-// - El backend Spring Boot corre en http://localhost:8080
-// - Puedes cambiarlo con un archivo .env (ver .env.example)
-//   VITE_API_URL=http://localhost:8080
-// ============================================================
-
+// URL del backend (configurable con VITE_API_URL).
 const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8080";
 
-// Log básico al arrancar: qué backend está usando el frontend
 console.log(`[Eventia] 🌐 Frontend conectado al backend en: ${API_URL}`);
 
 const api = axios.create({
@@ -20,7 +12,7 @@ const api = axios.create({
   },
 });
 
-// Antes de enviar: adjunta el token guardado (si el usuario hizo login)
+// Agrega el JWT a las peticiones autenticadas.
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem("accessToken");
   if (token) {
@@ -34,7 +26,6 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
-// Después de responder: log sencillo de éxito o error
 api.interceptors.response.use(
   (response) => {
     console.log(`[Eventia] ✅ ${response.config.method?.toUpperCase()} ${response.config.url} -> ${response.status}`);
