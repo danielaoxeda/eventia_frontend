@@ -26,7 +26,11 @@ api.interceptors.request.use((config) => {
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
-  console.log(`[Eventia] 📡 ${config.method?.toUpperCase()} ${config.baseURL}${config.url}`);
+  console.log(
+    `[Eventia] 📡 ${config.method?.toUpperCase()} ${config.baseURL}${config.url}${
+      token ? " (con JWT)" : " (sin JWT)"
+    }`
+  );
   return config;
 });
 

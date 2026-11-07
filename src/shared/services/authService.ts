@@ -17,6 +17,13 @@ interface AuthenticatedUserResponse {
 export async function getCurrentUser(): Promise<AuthUser> {
   const { data } = await api.get<AuthenticatedUserResponse>("/auth/me");
 
+  console.log(
+    "[Eventia] 👤 Usuario autenticado obtenido desde /auth/me:",
+    data.email,
+    "| rol:",
+    data.role
+  );
+
   return {
     id: data.id,
     firstName: data.firstName,
