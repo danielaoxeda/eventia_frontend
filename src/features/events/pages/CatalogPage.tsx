@@ -4,29 +4,54 @@ import CatalogFilterBar from "../components/CatalogFilterBar";
 import CatalogToolbar from "../components/CatalogToolbar";
 import EventCard from "../components/EventCard";
 import Pagination from "../components/Pagination";
-import { CATEGORY_ORDER, PRICE_RANGES, fetchEvents } from "../services/events.service";
-import type { CatalogEvent, Category, SortKey, ViewMode } from "../types/event.types";
+import {
+  CATEGORY_ORDER,
+  getEvents,
+  PRICE_RANGES,
+} from "../services/events.service";
+import type {
+  CatalogEvent,
+  Category,
+  SortKey,
+  ViewMode,
+} from "../types/event.types";
 
 /** Cantidad de eventos visibles por página. */
 const PAGE_SIZE = 6;
 
-/**
- * Página del catálogo público de eventos.
- * Filtros en barra superior (texto, fecha, ubicación, precio, categoría),
- * promo y nombre siempre desde la sesión (nunca de un input manual).
- */
+/* Página del catálogo público de eventos */
 export default function CatalogPage() {
   // Eventos que llegan del backend (GET /events)
   const [events, setEvents] = useState<CatalogEvent[]>([]);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [reload, setReload] = useState(0);
 
   useEffect(() => {
-    console.log("[Eventia] 📄 Página de catálogo abierta, cargando eventos...");
-    fetchEvents()
-      .then((list) => setEvents(list))
-      .catch(() => setEvents([]))
-      .finally(() => setLoading(false));
-  }, []);
+    let active = true;
+    setLoading(true);
+    setError(null);
+
+    getEvents()
+      .then((data) => {
+        if (active) {
+          setEvents(data);
+          setLoading(false);
+        }
+      })
+      .catch(() => {
+        if (active) {
+          setError(
+            "No se pudieron cargar los eventos. Verifica que el backend esté activo.",
+          );
+          setLoading(false);
+        }
+      });
+
+    return () => {
+      active = false;
+    };
+  }, [reload]);
 
   const [search, setSearch] = useState("");
   const [month, setMonth] = useState("ALL");
@@ -50,6 +75,7 @@ export default function CatalogPage() {
     () => CATEGORY_ORDER.filter((name) => events.some((event) => event.category === name)),
     [events]
   );
+
   const priceRange =
     PRICE_RANGES.find((range) => range.id === priceRangeId) ?? PRICE_RANGES[0];
 
@@ -71,11 +97,19 @@ export default function CatalogPage() {
     setPage(1);
   };
 
+  const handleRetry = () => {
+    setLoading(true);
+    setError(null);
+    setReload((n) => n + 1);
+  };
   const scrollToResults = () => {
-    document.getElementById("catalog-results")?.scrollIntoView({ behavior: "smooth" });
+    document
+      .getElementById("catalog-results")
+      ?.scrollIntoView({ behavior: "smooth" });
   };
 
   const query = search.trim().toLowerCase();
+
   // Filtrado + orden memorizados: solo se recalculan si cambia un filtro.
   const filtered = useMemo(() => {
     const result = events.filter((event) => {
@@ -99,18 +133,50 @@ export default function CatalogPage() {
   // Paginación defensiva: la página actual nunca sale del rango válido.
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
   const safePage = Math.min(Math.max(1, page), totalPages);
-  const paged = filtered.slice((safePage - 1) * PAGE_SIZE, safePage * PAGE_SIZE);
-  // Ciudades de los resultados (sin texto fijo).
-  const locationLabel = useMemo(
-    () => Array.from(new Set(filtered.map((event) => event.city))).join(" · "),
-    [filtered]
+  const paged = filtered.slice(
+    (safePage - 1) * PAGE_SIZE,
+    safePage * PAGE_SIZE,
   );
+  // Ciudades de los resultados (sin texto fijo).
+  const locationLabel = Array.from(
+    new Set(filtered.map((event) => event.city)),
+  ).join(" · ");
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-surface flex flex-col items-center justify-center gap-3 px-4 text-center">
+        <span className="material-symbols-outlined animate-spin text-4xl text-primary">
+          progress_activity
+        </span>
+        <p className="text-sm text-on-surface-variant">Cargando eventos...</p>
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-surface flex flex-col items-center justify-center gap-2 px-4 text-center">
+        <span className="material-symbols-outlined text-5xl text-outline">
+          cloud_off
+        </span>
+        <h1 className="font-display font-extrabold text-2xl">
+          No se pudieron cargar los eventos
+        </h1>
+        <p className="text-sm text-on-surface-variant">{error}</p>
+        <button
+          onClick={handleRetry}
+          className="mt-2 px-4 py-2 bg-primary text-on-primary text-sm font-bold rounded-lg"
+        >
+          Reintentar
+        </button>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-surface overflow-x-hidden">
-
       <div className="w-full pt-16 min-h-screen min-w-0">
-        <section className="max-w-[1280px] w-full mx-auto px-4 sm:px-6 py-6 min-w-0 flex flex-col gap-4 sm:gap-6">
+        <section className="max-w-7xl w-full mx-auto px-4 sm:px-6 py-6 min-w-0 flex flex-col gap-4 sm:gap-6">
           <CatalogFilterBar
             search={search}
             onSearchChange={(value) => {
@@ -150,31 +216,36 @@ export default function CatalogPage() {
               type="button"
               className="inline-flex items-center gap-1 text-xs font-semibold text-secondary hover:opacity-80 transition ml-auto shrink-0"
             >
-              <span className="material-symbols-outlined text-[16px]">restart_alt</span>
+              <span className="material-symbols-outlined text-[16px]">
+                restart_alt
+              </span>
               Limpiar
             </button>
           </div>
 
-          <div id="catalog-results" className="flex flex-col gap-4 sm:gap-6 min-w-0 scroll-mt-24">
-              <CatalogToolbar
-                total={filtered.length}
-                locationLabel={locationLabel}
-                sort={sort}
+          <div
+            id="catalog-results"
+            className="flex flex-col gap-4 sm:gap-6 min-w-0 scroll-mt-24"
+          >
+            <CatalogToolbar
+              total={filtered.length}
+              locationLabel={locationLabel}
+              sort={sort}
               onSortChange={handleSortChange}
               view={view}
               onViewChange={setView}
             />
 
-            {loading ? (
-              <p className="text-sm text-slate-500">Cargando eventos desde el backend...</p>
-            ) : paged.length === 0 ? (
+            {paged.length === 0 ? (
               // Estado vacío con salida clara (limpiar filtros).
               <div className="bg-surface-container-lowest p-10 rounded-xl text-center shadow-sm min-w-0">
                 <span className="material-symbols-outlined text-5xl text-outline">
                   search_off
                 </span>
-                <h3 className="font-display font-bold text-xl mt-2">Sin resultados</h3>
-                <p className="text-sm text-on-surface-variant mt-1 break-words">
+                <h3 className="font-display font-bold text-xl mt-2">
+                  Sin resultados
+                </h3>
+                <p className="text-sm text-on-surface-variant mt-1 wrap-break-word">
                   Prueba quitando filtros o pulsa “Limpiar”.
                 </p>
                 <button
@@ -192,9 +263,9 @@ export default function CatalogPage() {
                     : "flex flex-col gap-4 min-w-0"
                 }
               >
-                  {paged.map((event) => (
-                    <EventCard key={event.id} event={event} view={view} />
-                  ))}
+                {paged.map((event) => (
+                  <EventCard key={event.id} event={event} view={view} />
+                ))}
               </div>
             )}
 
@@ -204,8 +275,8 @@ export default function CatalogPage() {
               totalItems={filtered.length}
               pageSize={PAGE_SIZE}
               onPageChange={setPage}
-              />
-            </div>
+            />
+          </div>
         </section>
       </div>
 

@@ -5,25 +5,34 @@ import CategoryModal from "../components/CategoryModal";
 import { adminCategoriesService } from "../services/adminCategoriesService";
 import type { AdminCategory, CategoryFormData } from "../types/admin.types";
 
+/**
+ * Página principal de Gestión de Categorías de Eventos.
+ * Permite listar, filtrar, dar de alta y editar taxonomías con sincronización
+ * hacia la API dummy (json-server db.json).
+ */
 export default function AdminCategoriesPage() {
   const [categories, setCategories] = useState<AdminCategory[]>([]);
   const [modalOpen, setModalOpen] = useState(false);
   const [categoryToEdit, setCategoryToEdit] = useState<AdminCategory | null>(null);
 
+  // Carga inicial del catálogo desde la API dummy
   useEffect(() => {
     adminCategoriesService.getCategories().then(setCategories);
   }, []);
 
+  // Prepara el modal para registrar una nueva taxonomía
   const handleNuevaCategoria = () => {
     setCategoryToEdit(null);
     setModalOpen(true);
   };
 
+  // Abre el modal cargando la información de la categoría seleccionada
   const handleEdit = (category: AdminCategory) => {
     setCategoryToEdit(category);
     setModalOpen(true);
   };
 
+  // Guarda una nueva categoría o actualiza la existente
   const handleSave = async (formData: CategoryFormData) => {
     if (categoryToEdit) {
       const actualizada = await adminCategoriesService.updateCategory(
@@ -40,6 +49,7 @@ export default function AdminCategoriesPage() {
     setModalOpen(false);
   };
 
+  // Alterna visibilidad pública (Activa <-> Inactiva)
   const handleToggleStatus = async (category: AdminCategory) => {
     const nuevoEstado = category.estado === "Activa" ? "Inactiva" : "Activa";
     const actualizada = await adminCategoriesService.toggleCategoryStatus(
@@ -53,17 +63,17 @@ export default function AdminCategoriesPage() {
 
   return (
     <div className="w-full pb-12 space-y-6">
-      {/* Cabecera con título y botón para registrar nueva categoría */}
+      {/* Cabecera con botón de acción */}
       <CategoriesHeader onNuevaCategoria={handleNuevaCategoria} />
 
-      {/* Catálogo completo sin recorte ni scroll incómodo */}
+      {/* Catálogo con filtros y botones de acción rápida */}
       <CategoriesTable
         categories={categories}
         onEdit={handleEdit}
         onToggleStatus={handleToggleStatus}
       />
 
-      {/* Modal para crear o editar categoría */}
+      {/* Modal interactivo de creación y modificación */}
       <CategoryModal
         open={modalOpen}
         categoryToEdit={categoryToEdit}

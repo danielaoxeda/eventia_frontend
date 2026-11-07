@@ -4,10 +4,11 @@ export interface LoginRequest {
 }
 
 export interface LoginResponse {
-  accessToken: string;
   id: number;
   firstName: string;
   lastName: string;
   email: string;
+  rol: string;
+  accessToken: string;
   message: string;
 }

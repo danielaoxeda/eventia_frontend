@@ -1,8 +1,8 @@
-import type { StoredUser } from "@/shared/services/mockUserStorage";
+import type { AuthUser } from "@/shared/types/auth.types";
 import { Lock, User, FileText, Phone, Calendar, ShieldAlert } from "lucide-react";
 
 interface ReadOnlyUserInfoProps {
-  user: StoredUser;
+  user: AuthUser;
 }
 
 export default function ReadOnlyUserInfo({ user }: ReadOnlyUserInfoProps) {

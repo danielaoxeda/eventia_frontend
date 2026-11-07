@@ -1,10 +1,9 @@
-import axios from "axios";
+import api from "../../../shared/services/api";
 import type { AdminCategory, CategoryFormData, CategoryStatus } from "../types/admin.types";
 
-const USE_MOCK_DATA = true;
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8080/api/v1";
-const API_BASE_URL = `${API_URL}/admin/categories`;
-
+/**
+ * Genera una estampa de tiempo formateada YYYY-MM-DD HH:mm:ss
+ */
 function getFormattedDateTime(): string {
   const now = new Date();
   const year = now.getFullYear();
@@ -16,7 +15,11 @@ function getFormattedDateTime(): string {
   return `${year}-${month}-${day} ${hours}:${minutes}:${seconds}`;
 }
 
-const MOCK_CATEGORIES: AdminCategory[] = [
+/**
+ * Datos semilla locales en memoria como respaldo (fallback)
+ * si el servidor json-server (db.json) se encuentra apagado.
+ */
+let categoriesMemory: AdminCategory[] = [
   {
     id: "cat-1",
     numeroId: 1,
@@ -67,77 +70,96 @@ const MOCK_CATEGORIES: AdminCategory[] = [
   },
 ];
 
-let categoriesMemory: AdminCategory[] = [...MOCK_CATEGORIES];
-
+/**
+ * Servicio encargado de la comunicación con la API dummy (json-server / db.json)
+ * para el catálogo de taxonomías y categorías de eventos.
+ */
 export const adminCategoriesService = {
+  /**
+   * Obtiene la lista completa de categorías desde GET /admin_categories
+   */
   async getCategories(): Promise<AdminCategory[]> {
-    if (USE_MOCK_DATA) {
-      return Promise.resolve([...categoriesMemory]);
+    try {
+      const response = await api.get<AdminCategory[]>("/admin_categories");
+      if (Array.isArray(response.data) && response.data.length > 0) {
+        categoriesMemory = response.data;
+        return response.data;
+      }
+      return categoriesMemory;
+    } catch {
+      return categoriesMemory;
     }
-    const response = await axios.get<AdminCategory[]>(API_BASE_URL);
-    return response.data;
   },
 
+  /**
+   * Registra una nueva categoría en POST /admin_categories
+   */
   async createCategory(formData: CategoryFormData): Promise<AdminCategory> {
-    if (USE_MOCK_DATA) {
-      const nextNum =
-        categoriesMemory.length > 0
-          ? Math.max(...categoriesMemory.map((c) => c.numeroId)) + 1
-          : 1;
+    const nextNum =
+      categoriesMemory.length > 0
+        ? Math.max(...categoriesMemory.map((c) => c.numeroId)) + 1
+        : 1;
 
-      const nueva: AdminCategory = {
-        id: `cat-${Date.now()}`,
-        numeroId: nextNum,
-        nombre: formData.nombre.trim(),
-        descripcion: formData.descripcion.trim(),
-        estado: formData.estado,
-        ultimaActualizacion: getFormattedDateTime(),
-      };
+    const nueva: AdminCategory = {
+      id: `cat-${Date.now()}`,
+      numeroId: nextNum,
+      nombre: formData.nombre.trim(),
+      descripcion: formData.descripcion.trim(),
+      estado: formData.estado,
+      ultimaActualizacion: getFormattedDateTime(),
+    };
 
+    try {
+      const response = await api.post<AdminCategory>("/admin_categories", nueva);
+      categoriesMemory = [response.data, ...categoriesMemory];
+      return response.data;
+    } catch {
       categoriesMemory = [nueva, ...categoriesMemory];
-      return Promise.resolve(nueva);
+      return nueva;
     }
-    const response = await axios.post<AdminCategory>(API_BASE_URL, formData);
-    return response.data;
   },
 
+  /**
+   * Actualiza el nombre, descripción y estado de una categoría en PATCH /admin_categories/:id
+   */
   async updateCategory(id: string, formData: CategoryFormData): Promise<AdminCategory> {
-    if (USE_MOCK_DATA) {
+    const payload = {
+      nombre: formData.nombre.trim(),
+      descripcion: formData.descripcion.trim(),
+      estado: formData.estado,
+      ultimaActualizacion: getFormattedDateTime(),
+    };
+
+    try {
+      const response = await api.patch<AdminCategory>(`/admin_categories/${id}`, payload);
+      categoriesMemory = categoriesMemory.map((c) => (c.id === id ? response.data : c));
+      return response.data;
+    } catch {
       const index = categoriesMemory.findIndex((c) => c.id === id);
       if (index === -1) throw new Error("Categoría no encontrada");
-
-      const actualizada: AdminCategory = {
-        ...categoriesMemory[index],
-        nombre: formData.nombre.trim(),
-        descripcion: formData.descripcion.trim(),
-        estado: formData.estado,
-        ultimaActualizacion: getFormattedDateTime(),
-      };
-
-      categoriesMemory[index] = actualizada;
-      return Promise.resolve(actualizada);
+      categoriesMemory[index] = { ...categoriesMemory[index], ...payload };
+      return { ...categoriesMemory[index] };
     }
-    const response = await axios.put<AdminCategory>(`${API_BASE_URL}/${id}`, formData);
-    return response.data;
   },
 
+  /**
+   * Alterna el estado de publicación (Activa <-> Inactiva) en PATCH /admin_categories/:id
+   */
   async toggleCategoryStatus(id: string, nuevoEstado: CategoryStatus): Promise<AdminCategory> {
-    if (USE_MOCK_DATA) {
+    const payload = {
+      estado: nuevoEstado,
+      ultimaActualizacion: getFormattedDateTime(),
+    };
+
+    try {
+      const response = await api.patch<AdminCategory>(`/admin_categories/${id}`, payload);
+      categoriesMemory = categoriesMemory.map((c) => (c.id === id ? response.data : c));
+      return response.data;
+    } catch {
       const index = categoriesMemory.findIndex((c) => c.id === id);
       if (index === -1) throw new Error("Categoría no encontrada");
-
-      const actualizada: AdminCategory = {
-        ...categoriesMemory[index],
-        estado: nuevoEstado,
-        ultimaActualizacion: getFormattedDateTime(),
-      };
-
-      categoriesMemory[index] = actualizada;
-      return Promise.resolve(actualizada);
+      categoriesMemory[index] = { ...categoriesMemory[index], ...payload };
+      return { ...categoriesMemory[index] };
     }
-    const response = await axios.patch<AdminCategory>(`${API_BASE_URL}/${id}/status`, {
-      estado: nuevoEstado,
-    });
-    return response.data;
   },
 };

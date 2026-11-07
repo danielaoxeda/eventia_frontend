@@ -8,6 +8,7 @@ import {
   X,
 } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
+import { useAuth } from "@/context/AuthContext";
 
 interface AdminSidebarProps {
   mobileOpen: boolean;
@@ -20,6 +21,7 @@ export default function AdminSidebar({
 }: AdminSidebarProps) {
   const navigate = useNavigate();
   const location = useLocation();
+  const { logout } = useAuth();
 
   const navItems = [
     {
@@ -40,7 +42,8 @@ export default function AdminSidebar({
   ];
 
   const handleLogout = () => {
-    navigate("/");
+    logout();
+    navigate("/login");
   };
 
   const sidebarContent = (

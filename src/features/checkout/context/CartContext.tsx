@@ -6,25 +6,8 @@ interface CartProviderProps {
   children: ReactNode;
 }
 
-const MOCK_ITEMS: CartItem[] = [
-  {
-    id_ticket_type: 1,
-    ticket_name: "VIP",
-    event_name: "Festival Rock 2026",
-    unit_price: 150,
-    quantity: 2,
-  },
-  {
-    id_ticket_type: 2,
-    ticket_name: "General",
-    event_name: "Festival Rock 2026",
-    unit_price: 80,
-    quantity: 1,
-  },
-];
-
 export function CartContextProvider({ children }: CartProviderProps) {
-  const [items, setItems] = useState<CartItem[]>(MOCK_ITEMS);
+  const [items, setItems] = useState<CartItem[]>([]);
 
   //Funcion para agregar un nuevo ticket al carrito
   const addToCart = (newItem: CartItem) => {

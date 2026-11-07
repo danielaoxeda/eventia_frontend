@@ -116,6 +116,32 @@ export default function UserHeader() {
                 Mis entradas
               </Link>
 
+              {user?.rol === "ADMIN" && (
+                <Link
+                  to="/admin"
+                  onClick={() => setIsMenuOpen(false)}
+                  className="flex items-center gap-3 px-4 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-50 transition"
+                >
+                  <span className="material-symbols-outlined text-[20px] text-slate-500">
+                    admin_panel_settings
+                  </span>
+                  Panel Administrador
+                </Link>
+              )}
+
+              {user?.rol === "ORGANIZER" && (
+                <Link
+                  to="/organizador"
+                  onClick={() => setIsMenuOpen(false)}
+                  className="flex items-center gap-3 px-4 py-2.5 text-sm font-medium text-slate-700 hover:bg-slate-50 transition"
+                >
+                  <span className="material-symbols-outlined text-[20px] text-slate-500">
+                    dashboard
+                  </span>
+                  Panel Organizador
+                </Link>
+              )}
+
               <div className="my-1 border-t border-slate-100" />
 
               <button

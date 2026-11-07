@@ -1,40 +1,34 @@
+import { useAuth } from "@/context/AuthContext";
 import { useCartContext } from "../hooks/useCartContext";
-
-const CURRENT_USER = {
-  id_user: 1,
-  first_name: "Carlos",
-  last_name: "Gerónimo Zapata",
-  email: "carlos.geronimo@gmail.com",
-};
+import { isPromoUser, PROMO_DISCOUNT_PCT } from "@/features/events/services/events.service";
 
 function SummaryStep() {
   const { items, totalAmount } = useCartContext();
+  const { user } = useAuth();
 
-  //REGLA DE NEGOCIO: EL USUARIO SE APELLIDA GENORIMO
-  const hasGeronimoDiscount = CURRENT_USER.last_name
-    .toLocaleLowerCase()
-    .normalize("NFD")
-    .replace(/[\u0300-\u036f]/g, "")
-    .includes("geronimo");
-
-  //SE APLICA DESCUENTO
-  const discountAmount = hasGeronimoDiscount ? totalAmount * 0.15 : 0;
+  //REGLA DE NEGOCIO: promo 15% si el nombre es Roberto o Geronimo
+  const sessionName = user ? `${user.firstName} ${user.lastName}`.trim() : null;
+  const hasPromo = sessionName !== null && isPromoUser(sessionName);
+  const discountAmount = hasPromo ? totalAmount * (PROMO_DISCOUNT_PCT / 100) : 0;
   const finalTotal = totalAmount - discountAmount;
+
+
 
   return (
     <div className="w-full max-w-xl mx-auto py-2 space-y-5">
       {/* Tarjeta informativa de envío */}
-      <div className="bg-[#f3f4fd] rounded-lg p-3 text-xs text-gray-700 flex items-center">
-        <div>
-          <span className="font-semibold text-gray-900 block">
-            Entradas emitidas a:
-          </span>
-          <span>
-            {CURRENT_USER.first_name} {CURRENT_USER.last_name} •{" "}
-            {CURRENT_USER.email}
-          </span>
+      {user && (
+        <div className="bg-[#f3f4fd] rounded-lg p-3 text-xs text-gray-700 flex items-center">
+          <div>
+            <span className="font-semibold text-gray-900 block">
+              Entradas emitidas a:
+            </span>
+            <span>
+              {user.firstName} {user.lastName} • {user.email}
+            </span>
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Desglose de entradas */}
       <div className="border border-gray-100 rounded-lg p-4 bg-white shadow-sm space-y-3">
@@ -69,9 +63,9 @@ function SummaryStep() {
           <span>S/ {totalAmount.toFixed(2)}</span>
         </div>
 
-        {hasGeronimoDiscount && (
+        {hasPromo && (
           <div className="flex justify-between text-emerald-600 font-medium">
-            <span>Descuento Especial (Apellido Gerónimo - 15%)</span>
+            <span>Descuento Especial Roberto/Geronimo (-{PROMO_DISCOUNT_PCT}%)</span>
             <span>- S/ {discountAmount.toFixed(2)}</span>
           </div>
         )}

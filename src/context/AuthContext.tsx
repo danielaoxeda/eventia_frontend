@@ -4,33 +4,26 @@ import {
   useState,
   type ReactNode,
 } from "react";
-import type { StoredUser } from "../shared/services/mockUserStorage";
 
-// Usuario que devuelve el backend al hacer login/registro
-export interface AuthUserData {
-  id: number;
-  firstName: string;
-  lastName: string;
-  email: string;
-}
+import type { AuthUser } from "@/shared/types/auth.types";
 
 interface AuthContextType {
   isAuthenticated: boolean;
-  user: StoredUser | null;
-  login: (token: string, userData: AuthUserData) => void;
+  user: AuthUser | null;
+  login: (token: string, user: AuthUser) => void;
   logout: () => void;
-  updateUser: (updatedUser: StoredUser) => void;
+  updateUser: (updatedUser: AuthUser) => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-const USER_KEY = "eventia_user";
+const USER_KEY = "authUser";
 
-function getSavedUser(): StoredUser | null {
+function getSavedUser(): AuthUser | null {
   const raw = localStorage.getItem(USER_KEY);
   if (!raw) return null;
   try {
-    return JSON.parse(raw) as StoredUser;
+    return JSON.parse(raw) as AuthUser;
   } catch {
     return null;
   }
@@ -40,16 +33,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [isAuthenticated, setIsAuthenticated] = useState(
     () => localStorage.getItem("accessToken") !== null
   );
-  const [user, setUser] = useState<StoredUser | null>(() => getSavedUser());
+  const [user, setUser] = useState<AuthUser | null>(() => getSavedUser());
 
-  const login = (token: string, userData: AuthUserData) => {
-    console.log("[Eventia] ✅ Guardando sesión para:", userData.email);
+  const login = (token: string, authenticatedUser: AuthUser) => {
+    console.log("[Eventia] ✅ Guardando sesión para:", authenticatedUser.email);
     localStorage.setItem("accessToken", token);
-    // Guardamos los datos reales que mandó el backend (sin contraseña)
-    const storedUser: StoredUser = { ...userData, password: "", rol: "USER" };
-    localStorage.setItem(USER_KEY, JSON.stringify(storedUser));
+    localStorage.setItem(USER_KEY, JSON.stringify(authenticatedUser));
     setIsAuthenticated(true);
-    setUser(storedUser);
+    setUser(authenticatedUser);
   };
 
   const logout = () => {
@@ -60,7 +51,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setUser(null);
   };
 
-  const updateUser = (updatedUser: StoredUser) => {
+  const updateUser = (updatedUser: AuthUser) => {
     localStorage.setItem(USER_KEY, JSON.stringify(updatedUser));
     setUser(updatedUser);
   };

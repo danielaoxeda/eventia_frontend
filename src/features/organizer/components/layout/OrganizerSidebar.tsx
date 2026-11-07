@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { NavLink, Link } from "react-router-dom";
+import { Link, NavLink } from "react-router-dom";
 
 export default function OrganizerSidebar() {
   const [collapsed, setCollapsed] = useState(false);
@@ -27,11 +27,11 @@ export default function OrganizerSidebar() {
     },
   ];
 
-  const externalLinks = [
+  const accessControlLinks = [
     {
-      to: "/catalogo",
-      icon: "storefront",
-      label: "Catálogo Público",
+      to: "/organizador/validar-qr",
+      icon: "qr_code_scanner",
+      label: "Validar QR",
     },
   ];
 
@@ -42,7 +42,11 @@ export default function OrganizerSidebar() {
     >
       <div className="flex flex-col gap-5">
         {/* Brand Header */}
-        <div className="flex items-center gap-3 px-1 py-1">
+        <Link
+          to="/"
+          title="Ir al catálogo"
+          className="flex items-center gap-3 px-1 py-1"
+        >
           <div className="w-9 h-9 rounded-lg bg-primary flex items-center justify-center text-on-primary font-display font-extrabold text-lg shadow-sm flex-shrink-0">
             E
           </div>
@@ -56,7 +60,7 @@ export default function OrganizerSidebar() {
               </span>
             </div>
           )}
-        </div>
+        </Link>
 
         {/* Current Role Badge */}
         {!collapsed && (
@@ -107,22 +111,31 @@ export default function OrganizerSidebar() {
 
           {!collapsed && (
             <span className="text-[0.6875rem] font-bold text-outline px-3 uppercase tracking-wider mt-4 mb-1">
-              Accesos Globales
+              Control de Accesos
             </span>
           )}
-          {externalLinks.map((item) => (
-            <Link
+          {accessControlLinks.map((item) => (
+            <NavLink
               key={item.to}
               to={item.to}
               title={collapsed ? item.label : undefined}
-              className={`flex items-center gap-3 px-3 py-2 rounded-lg text-xs text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface font-medium transition-colors ${collapsed ? "justify-center" : ""
-                }`}
+              className={({ isActive }) =>
+                `flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all text-xs ${
+                  isActive
+                    ? "bg-primary-container text-on-primary-container font-bold shadow-xs"
+                    : "text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface font-medium"
+                } ${collapsed ? "justify-center" : ""}`
+              }
             >
-              <span className="material-symbols-outlined text-[18px] flex-shrink-0">
+              <span className="material-symbols-outlined text-[20px] flex-shrink-0">
                 {item.icon}
               </span>
-              {!collapsed && <span>{item.label}</span>}
-            </Link>
+              {!collapsed && (
+                <div className="flex flex-col flex-1 leading-tight">
+                  <span>{item.label}</span>
+                </div>
+              )}
+            </NavLink>
           ))}
         </nav>
       </div>
