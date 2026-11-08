@@ -40,15 +40,24 @@ export default function LoginForm() {
     try {
       const data = await login(form);
 
-      // El token identifica la sesión; el perfil se carga con GET /auth/me.
-      await authenticate(data.accessToken);
+      await authenticate(
+        data.accessToken,
+        {
+          id: data.id,
+          firstName: data.firstName,
+          lastName: data.lastName,
+          email: data.email,
+          rol: data.rol,
+        },
+        data.expiresIn
+      );
 
       console.log("[Eventia] ➡️ Redirigiendo al inicio...");
       navigate("/");
 
     } catch (error) {
       const err = error as { response?: { status?: number; data?: { message?: string } }; message?: string };
-      if (err?.response?.status === 401) {
+      if (err?.response?.status === 401 || err?.message === "INVALID_CREDENTIALS") {
         console.log("[Eventia] ⚠️ El backend dijo: credenciales incorrectas (401)");
         setError("Correo o contraseña incorrectos.");
       } else if (!err?.response) {

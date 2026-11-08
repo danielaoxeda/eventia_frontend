@@ -141,6 +141,13 @@ cd eventia-frontend
 npm install
 ```
 
+### Variables de entorno
+
+Copia `.env.example` como `.env` y ajusta los valores:
+
+- `VITE_API_URL`: URL base del backend.
+- `VITE_USE_MOCK_DATA`: usa datos mock cuando es `true`; usa `false` para consumir el backend real.
+
 ### Ejecutar en desarrollo
 
 ```bash

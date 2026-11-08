@@ -1,21 +1,43 @@
-import api from "../../../shared/services/api";
-import type { LoginRequest, LoginResponse } from "../types/login.types";
+import api from "@/shared/services/api";
+import type {
+  LoginBackendResponse,
+  LoginRequest,
+  LoginResponse,
+} from "../types/login.types";
 
-// Login real; devuelve solo el token (el perfil se obtiene en /auth/me).
+function splitName(name: string) {
+  const parts = (name || "").trim().split(/\s+/);
+  return {
+    firstName: parts[0] || "",
+    lastName: parts.slice(1).join(" "),
+  };
+}
+
+// Login real; mapea la respuesta enriquecida del backend para el frontend.
 export async function login(data: LoginRequest): Promise<LoginResponse> {
   console.log("[Eventia] 🔑 Intentando iniciar sesión para:", data.email);
 
   try {
-    const { data: backendData } = await api.post("/auth/login", data);
+    const response = await api.post<LoginBackendResponse>("/auth/login", {
+      email: data.email,
+      password: data.password,
+    });
+    const payload = response.data;
+    const { firstName, lastName } = splitName(payload.user?.name ?? "");
 
     console.log("[Eventia] ✅ Login exitoso en el backend para:", data.email);
 
     return {
-      accessToken: backendData.token,
+      id: payload.user.id,
+      firstName,
+      lastName,
+      email: payload.user.email,
+      rol: payload.user.role,
+      accessToken: payload.token,
+      expiresIn: payload.expiresIn,
       message: "Inicio de sesión exitoso",
     };
   } catch (error) {
-    // El interceptor de api.ts ya registró el error; el formulario lo muestra.
     console.log("[Eventia] ⚠️ Login falló, se avisa al usuario.");
     throw error;
   }

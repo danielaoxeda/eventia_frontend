@@ -26,19 +26,46 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
+function clearAuthSession() {
+  localStorage.removeItem("accessToken");
+  localStorage.removeItem("authUser");
+}
+
 api.interceptors.response.use(
   (response) => {
-    console.log(`[Eventia] ✅ ${response.config.method?.toUpperCase()} ${response.config.url} -> ${response.status}`);
+    console.log(
+      `[Eventia] ✅ ${response.config.method?.toUpperCase()} ${response.config.url} -> ${response.status}`
+    );
     return response;
   },
   (error) => {
     const status = error?.response?.status;
+    const requestUrl = String(error?.config?.url ?? "");
     const url = error?.config?.url;
+    const isLoginRequest = requestUrl.includes("/auth/login");
+    const isOnLogin = window.location.pathname === "/login";
+
     if (!error?.response) {
-      console.error(`[Eventia] ❌ ${url} -> SIN RESPUESTA. ¿Está encendido el backend en ${API_URL}?`, error.message);
+      console.error(
+        `[Eventia] ❌ ${url} -> SIN RESPUESTA. ¿Está encendido el backend en ${API_URL}?`,
+        error.message
+      );
     } else {
       console.error(`[Eventia] ❌ ${url} -> Error ${status}:`, error.response.data);
     }
+
+    if (status === 401) {
+      if (!isLoginRequest && !isOnLogin) {
+        const from = `${window.location.pathname}${window.location.search}`;
+        clearAuthSession();
+        window.location.replace(`/login?from=${encodeURIComponent(from)}`);
+      }
+    } else if (status === 403) {
+      if (window.location.pathname !== "/forbidden") {
+        window.location.replace("/forbidden");
+      }
+    }
+
     return Promise.reject(error);
   }
 );
