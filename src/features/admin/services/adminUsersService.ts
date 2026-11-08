@@ -1,4 +1,4 @@
-import api from "../../../shared/services/api";
+import api from "@/shared/services/api";
 import type {
   AdminUser,
   CreateUserFormData,
@@ -7,8 +7,6 @@ import type {
   UserFilters,
   UserFormData,
 } from "../types/admin.types";
-
-const ENDPOINT = "/api/v1/admin/users";
 
 function trimProfile(data: UserFormData): UserFormData {
   return {
@@ -20,14 +18,10 @@ function trimProfile(data: UserFormData): UserFormData {
   };
 }
 
-/**
- * Servicio de organizadores (User con rol ORGANIZER) para el panel de administración.
- * El backend asigna role = ORGANIZER, active = true y gestiona createdAt / updatedAt.
- */
 export const adminUsersService = {
-  /** Listado paginado (page base 0) exclusivo de organizadores, con filtros `search` y `active`. */
+  // Obtiene el listado paginado de organizadores
   async getUsers(params: PageParams<UserFilters>): Promise<PageResponse<AdminUser>> {
-    const response = await api.get<PageResponse<AdminUser>>(ENDPOINT, {
+    const { data } = await api.get<PageResponse<AdminUser>>("/api/admin/users", {
       params: {
         page: params.page,
         size: params.size,
@@ -35,27 +29,33 @@ export const adminUsersService = {
         active: params.active,
       },
     });
-    return response.data;
+    return data;
   },
 
-  /** Alta de organizador con contraseña provisional. */
-  async createUser(data: CreateUserFormData): Promise<AdminUser> {
+  // Registra un nuevo organizador con contraseña provisional
+  async createUser(formData: CreateUserFormData): Promise<AdminUser> {
     const payload: CreateUserFormData = {
-      ...trimProfile(data),
-      password: data.password,
+      ...trimProfile(formData),
+      password: formData.password,
     };
-    const response = await api.post<AdminUser>(ENDPOINT, payload);
-    return response.data;
+    const { data } = await api.post<AdminUser>("/api/admin/users", payload);
+    return data;
   },
 
-  /** Actualiza datos personales; no modifica rol ni contraseña. */
-  async updateUser(id: number, data: UserFormData): Promise<AdminUser> {
-    const response = await api.put<AdminUser>(`${ENDPOINT}/${id}`, trimProfile(data));
-    return response.data;
+  // Actualiza los datos personales de un organizador
+  async updateUser(id: number, formData: UserFormData): Promise<AdminUser> {
+    const { data } = await api.put<AdminUser>(
+      `/api/admin/users/${id}`,
+      trimProfile(formData)
+    );
+    return data;
   },
 
+  // Activa o desactiva la cuenta de un organizador
   async toggleUserStatus(id: number, active: boolean): Promise<AdminUser> {
-    const response = await api.patch<AdminUser>(`${ENDPOINT}/${id}/status`, { active });
-    return response.data;
+    const { data } = await api.patch<AdminUser>(`/api/admin/users/${id}/status`, {
+      active,
+    });
+    return data;
   },
 };

@@ -1,4 +1,4 @@
-import api from "../../../shared/services/api";
+import api from "@/shared/services/api";
 import type {
   AdminCategory,
   CategoryFilters,
@@ -6,8 +6,6 @@ import type {
   PageParams,
   PageResponse,
 } from "../types/admin.types";
-
-const ENDPOINT = "/api/v1/admin/categories";
 
 function trimForm(data: CategoryFormData): CategoryFormData {
   return {
@@ -17,14 +15,10 @@ function trimForm(data: CategoryFormData): CategoryFormData {
   };
 }
 
-/**
- * Servicio de categorías para el panel de administración (Spring Boot).
- * Los campos de auditoría (id, createdAt, updatedAt) los gestiona el backend.
- */
 export const adminCategoriesService = {
-  /** Listado paginado (page base 0) con filtros opcionales `search` y `active`. */
+  // Obtiene el listado paginado de categorías con filtros opcionales
   async getCategories(params: PageParams<CategoryFilters>): Promise<PageResponse<AdminCategory>> {
-    const response = await api.get<PageResponse<AdminCategory>>(ENDPOINT, {
+    const { data } = await api.get<PageResponse<AdminCategory>>("/api/admin/categories", {
       params: {
         page: params.page,
         size: params.size,
@@ -32,21 +26,26 @@ export const adminCategoriesService = {
         active: params.active,
       },
     });
-    return response.data;
+    return data;
   },
 
-  async createCategory(data: CategoryFormData): Promise<AdminCategory> {
-    const response = await api.post<AdminCategory>(ENDPOINT, trimForm(data));
-    return response.data;
+  // Registra una nueva categoría
+  async createCategory(payload: CategoryFormData): Promise<AdminCategory> {
+    const { data } = await api.post<AdminCategory>("/api/admin/categories", trimForm(payload));
+    return data;
   },
 
-  async updateCategory(id: number, data: CategoryFormData): Promise<AdminCategory> {
-    const response = await api.put<AdminCategory>(`${ENDPOINT}/${id}`, trimForm(data));
-    return response.data;
+  // Actualiza los datos de una categoría existente
+  async updateCategory(id: number, payload: CategoryFormData): Promise<AdminCategory> {
+    const { data } = await api.put<AdminCategory>(`/api/admin/categories/${id}`, trimForm(payload));
+    return data;
   },
 
+  // Activa o desactiva una categoría
   async toggleCategoryStatus(id: number, active: boolean): Promise<AdminCategory> {
-    const response = await api.patch<AdminCategory>(`${ENDPOINT}/${id}/status`, { active });
-    return response.data;
+    const { data } = await api.patch<AdminCategory>(`/api/admin/categories/${id}/status`, {
+      active,
+    });
+    return data;
   },
 };

@@ -1,4 +1,4 @@
-import api from "../../../shared/services/api";
+import api from "@/shared/services/api";
 import type {
   ActiveEventResponse,
   DashboardKpiResponse,
@@ -7,35 +7,40 @@ import type {
   TicketFlowResponse,
 } from "../types/admin.types";
 
-const ENDPOINT = "/api/v1/admin/monitoring";
-
-/**
- * Servicio del panel de monitoreo. Consume métricas reales calculadas por Spring Boot
- * a partir de las entidades Order, Ticket, User (ORGANIZER) y Event.
- */
 export const adminMonitoringService = {
+  // Obtiene el resumen completo del panel de monitoreo
   async getDashboardData(): Promise<MonitoringDashboardResponse> {
-    const response = await api.get<MonitoringDashboardResponse>(ENDPOINT);
-    return response.data;
+    const { data } = await api.get<MonitoringDashboardResponse>("/api/admin/monitoring");
+    return data;
   },
 
+  // Obtiene los 4 KPIs principales del dashboard
   async getKpis(): Promise<DashboardKpiResponse> {
-    const response = await api.get<DashboardKpiResponse>(`${ENDPOINT}/kpis`);
-    return response.data;
+    const { data } = await api.get<DashboardKpiResponse>("/api/admin/monitoring/kpis");
+    return data;
   },
 
+  // Obtiene la evolución mensual de ingresos
   async getRevenueTimeline(): Promise<RevenueTimelineResponse[]> {
-    const response = await api.get<RevenueTimelineResponse[]>(`${ENDPOINT}/revenue-timeline`);
-    return response.data;
+    const { data } = await api.get<RevenueTimelineResponse[]>(
+      "/api/admin/monitoring/revenue-timeline"
+    );
+    return data;
   },
 
+  // Obtiene la serie comparativa de tickets emitidos y validados
   async getTicketFlow(): Promise<TicketFlowResponse[]> {
-    const response = await api.get<TicketFlowResponse[]>(`${ENDPOINT}/ticket-flow`);
-    return response.data;
+    const { data } = await api.get<TicketFlowResponse[]>(
+      "/api/admin/monitoring/ticket-flow"
+    );
+    return data;
   },
 
+  // Obtiene los eventos activos con su nivel de ocupación
   async getActiveEvents(): Promise<ActiveEventResponse[]> {
-    const response = await api.get<ActiveEventResponse[]>(`${ENDPOINT}/active-events`);
-    return response.data;
+    const { data } = await api.get<ActiveEventResponse[]>(
+      "/api/admin/monitoring/active-events"
+    );
+    return data;
   },
 };
