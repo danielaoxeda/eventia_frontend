@@ -1,37 +1,20 @@
 import { Search, X } from "lucide-react";
-import type { AdminUser, UserRole, UserStatus } from "../types/admin.types";
 
-type RoleFilter = UserRole | "Todos";
-type StatusFilter = UserStatus | "Todos";
+export type StatusFilter = "Activo" | "Inactivo" | "Todos";
 
 interface UsersFiltersProps {
-  users: AdminUser[];
-  roleFilter: RoleFilter;
   statusFilter: StatusFilter;
   search: string;
-  onRoleFilter: (role: RoleFilter) => void;
   onStatusFilter: (status: StatusFilter) => void;
   onSearch: (value: string) => void;
 }
 
 export default function UsersFilters({
-  users,
-  roleFilter,
   statusFilter,
   search,
-  onRoleFilter,
   onStatusFilter,
   onSearch,
 }: UsersFiltersProps) {
-  const totalOrganizadores = users.filter((u) => u.rol === "Organizador").length;
-  const totalClientes = users.filter((u) => u.rol === "Cliente").length;
-
-  const roleTabs: { key: RoleFilter; label: string; count?: number }[] = [
-    { key: "Todos", label: "Todos", count: users.length },
-    { key: "Organizador", label: "Organizadores", count: totalOrganizadores },
-    { key: "Cliente", label: "Clientes", count: totalClientes },
-  ];
-
   const statusTabs: { key: StatusFilter; label: string }[] = [
     { key: "Todos", label: "Todos" },
     { key: "Activo", label: "Activos" },
@@ -40,35 +23,6 @@ export default function UsersFilters({
 
   return (
     <div className="flex flex-col sm:flex-row sm:items-center gap-3 flex-wrap">
-      {/* Filtro por Rol */}
-      <div className="flex items-center gap-1 bg-surface-container-low rounded-xl p-1 border border-outline-variant/20">
-        {roleTabs.map((tab) => (
-          <button
-            key={tab.key}
-            type="button"
-            onClick={() => onRoleFilter(tab.key)}
-            className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors ${
-              roleFilter === tab.key
-                ? "bg-surface-container-lowest text-primary shadow-xs border border-outline-variant/30"
-                : "text-on-surface-variant hover:text-on-surface"
-            }`}
-          >
-            {tab.label}
-            {tab.count !== undefined && (
-              <span
-                className={`text-[10px] font-bold px-1.5 py-0.5 rounded-md ${
-                  roleFilter === tab.key
-                    ? "bg-primary text-on-primary"
-                    : "bg-surface-container-high text-on-surface-variant"
-                }`}
-              >
-                {tab.count}
-              </span>
-            )}
-          </button>
-        ))}
-      </div>
-
       {/* Filtro por Estado */}
       <div className="flex items-center gap-1 bg-surface-container-low rounded-xl p-1 border border-outline-variant/20">
         {statusTabs.map((tab) => (

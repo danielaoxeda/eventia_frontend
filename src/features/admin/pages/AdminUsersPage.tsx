@@ -1,46 +1,86 @@
 import { useEffect, useState } from "react";
 import UserModal from "../components/UserModal";
-import UsersFilters from "../components/UsersFilters";
+import UsersFilters, { type StatusFilter } from "../components/UsersFilters";
 import UsersHeader from "../components/UsersHeader";
 import UsersTable from "../components/UsersTable";
 import { adminUsersService } from "../services/adminUsersService";
-import type { AdminUser, UserFormData, UserRole, UserStatus } from "../types/admin.types";
+import type {
+  AdminUser,
+  CreateUserFormData,
+  PageResponse,
+  UserFormData,
+} from "../types/admin.types";
+import { getErrorMessage } from "../utils/apiAdapter";
 
-type RoleFilter = UserRole | "Todos";
-type StatusFilter = UserStatus | "Todos";
+const PAGE_SIZE = 7;
+
+const EMPTY_PAGE: PageResponse<AdminUser> = {
+  content: [],
+  totalElements: 0,
+  totalPages: 0,
+  size: PAGE_SIZE,
+  number: 0,
+  first: true,
+  last: true,
+};
 
 /**
- * Página principal de Gestión de Usuarios y Accesos.
- * Conecta los filtros, el catálogo de usuarios y el modal de registro/edición
- * mediante peticiones a la API dummy (json-server db.json).
+ * Página principal de Gestión de Organizadores.
+ * Lista (paginado, base 0), filtra, da de alta y edita organizadores a través del service.
  */
 export default function AdminUsersPage() {
-  const [users, setUsers] = useState<AdminUser[]>([]);
-  const [roleFilter, setRoleFilter] = useState<RoleFilter>("Todos");
+  const [pageData, setPageData] = useState<PageResponse<AdminUser>>(EMPTY_PAGE);
+  const [pageIndex, setPageIndex] = useState(0);
   const [statusFilter, setStatusFilter] = useState<StatusFilter>("Todos");
   const [search, setSearch] = useState("");
+  const [reloadKey, setReloadKey] = useState(0);
+  const [error, setError] = useState<string | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
   const [userToEdit, setUserToEdit] = useState<AdminUser | null>(null);
 
-  // Carga inicial de usuarios al montar la vista
+  // Carga del listado cada vez que cambian página, filtros o se fuerza una recarga
   useEffect(() => {
-    adminUsersService.getUsers().then(setUsers);
-  }, []);
+    let cancelled = false;
+    adminUsersService
+      .getUsers({
+        page: pageIndex,
+        size: PAGE_SIZE,
+        search,
+        active: statusFilter === "Todos" ? undefined : statusFilter === "Activo",
+      })
+      .then((result) => {
+        if (cancelled) return;
+        setPageData(result);
+        setError(null);
+      })
+      .catch((e: unknown) => {
+        if (!cancelled) setError(getErrorMessage(e));
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [pageIndex, search, statusFilter, reloadKey]);
 
-  // Filtrado directo en memoria por rol, estado y término de búsqueda
-  const q = search.trim().toLowerCase();
-  const filteredUsers = users.filter((u) => {
-    if (roleFilter !== "Todos" && u.rol !== roleFilter) return false;
-    if (statusFilter !== "Todos" && u.estado !== statusFilter) return false;
-    if (q && !`${u.nombre} ${u.email} ${u.dni}`.toLowerCase().includes(q)) return false;
-    return true;
-  });
+  const reload = () => setReloadKey((k) => k + 1);
+
+  const handleSearch = (value: string) => {
+    setSearch(value);
+    setPageIndex(0);
+  };
+
+  const handleStatusFilter = (status: StatusFilter) => {
+    setStatusFilter(status);
+    setPageIndex(0);
+  };
 
   // Alterna el estado activo/inactivo de una cuenta
   const handleToggleStatus = async (user: AdminUser) => {
-    const nuevoEstado = user.estado === "Activo" ? "Inactivo" : "Activo";
-    const actualizado = await adminUsersService.toggleUserStatus(user.id, nuevoEstado);
-    setUsers((prev) => prev.map((u) => (u.id === actualizado.id ? actualizado : u)));
+    try {
+      await adminUsersService.toggleUserStatus(user.id, !user.active);
+      reload();
+    } catch (e: unknown) {
+      setError(getErrorMessage(e));
+    }
   };
 
   // Abre el modal en modo edición
@@ -55,16 +95,16 @@ export default function AdminUsersPage() {
     setModalOpen(true);
   };
 
-  // Guarda o actualiza según si se está editando o creando un nuevo organizador
-  const handleSave = async (form: UserFormData) => {
+  // Guarda o actualiza según si se está editando o creando. Si falla, el error llega al modal.
+  const handleSave = async (form: UserFormData | CreateUserFormData) => {
     if (userToEdit) {
-      const actualizado = await adminUsersService.updateUser(userToEdit.id, form);
-      setUsers((prev) => prev.map((u) => (u.id === actualizado.id ? actualizado : u)));
-    } else {
-      const nuevo = await adminUsersService.createUser(form);
-      setUsers((prev) => [nuevo, ...prev]);
+      await adminUsersService.updateUser(userToEdit.id, form);
+    } else if ("password" in form) {
+      await adminUsersService.createUser(form);
+      setPageIndex(0);
     }
     setModalOpen(false);
+    reload();
   };
 
   return (
@@ -72,26 +112,31 @@ export default function AdminUsersPage() {
       {/* Cabecera con botón de alta de organizador */}
       <UsersHeader onNuevoOrganizador={handleNuevoOrganizador} />
 
-      {/* Barra de filtros por rol, estado y búsqueda */}
+      {/* Barra de filtros por estado y búsqueda */}
       <UsersFilters
-        users={users}
-        roleFilter={roleFilter}
         statusFilter={statusFilter}
         search={search}
-        onRoleFilter={setRoleFilter}
-        onStatusFilter={setStatusFilter}
-        onSearch={setSearch}
+        onStatusFilter={handleStatusFilter}
+        onSearch={handleSearch}
       />
 
-      {/* Tabla con datos filtrados y botones de acción */}
+      {error && (
+        <div className="p-3 text-xs rounded-xl bg-error-container/30 border border-error-container text-error font-medium">
+          {error}
+        </div>
+      )}
+
+      {/* Tabla con datos paginados y botones de acción */}
       <UsersTable
-        users={filteredUsers}
+        page={pageData}
+        onPageChange={setPageIndex}
         onToggleStatus={handleToggleStatus}
         onEdit={handleEdit}
       />
 
       {/* Modal interactivo de alta / edición */}
       <UserModal
+        key={`${userToEdit?.id ?? "new"}-${modalOpen}`}
         open={modalOpen}
         userToEdit={userToEdit}
         onClose={() => setModalOpen(false)}
