@@ -1,54 +1,42 @@
-import type { ApiUser } from "@/shared/types/api.types";
 import api from "@/shared/services/api";
 import type {
+  LoginBackendResponse,
   LoginRequest,
   LoginResponse,
 } from "../types/login.types";
 
-export async function login(
-  data: LoginRequest
-): Promise<LoginResponse> {
+function splitName(name: string) {
+  const parts = (name || "").trim().split(/\s+/);
+  return {
+    firstName: parts[0] || "",
+    lastName: parts.slice(1).join(" "),
+  };
+}
+
+export async function login(data: LoginRequest): Promise<LoginResponse> {
   try {
-    const response = await api.get<ApiUser[]>("/users", {
-      params: {
-        email: data.email,
-      },
+    const response = await api.post<LoginBackendResponse>("/auth/login", {
+      email: data.email,
+      password: data.password,
     });
-
-    const users = response.data;
-
-    const user = users[0];
-
-    if (!user) {
-      throw new Error("INVALID_CREDENTIALS");
-    }
-
-    if (user.password !== data.password) {
-      throw new Error("INVALID_CREDENTIALS");
-    }
-
-    // Token simulado.
-
-    const accessToken =
-      `eventia-mock-token-${user.id}-${Date.now()}`;
+    const payload = response.data;
+    const { firstName, lastName } = splitName(payload.user?.name ?? "");
 
     return {
-      id: Number(user.id),
-      firstName: user.firstName,
-      lastName: user.lastName,
-      email: user.email,
-      rol: user.rol,
-      accessToken,
+      id: payload.user.id,
+      firstName,
+      lastName,
+      email: payload.user.email,
+      rol: payload.user.role,
+      accessToken: payload.token,
+      expiresIn: payload.expiresIn,
       message: "Inicio de sesión exitoso",
     };
   } catch (error) {
-    if (
-      error instanceof Error &&
-      error.message === "INVALID_CREDENTIALS"
-    ) {
-      throw error;
+    const status = (error as { response?: { status?: number } })?.response?.status;
+    if (status === 401) {
+      throw new Error("INVALID_CREDENTIALS");
     }
-
     throw new Error("LOGIN_ERROR");
   }
 }

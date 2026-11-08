@@ -3,6 +3,20 @@ export interface LoginRequest {
   password: string;
 }
 
+export interface LoginBackendUser {
+  id: number;
+  name: string;
+  email: string;
+  role: string;
+}
+
+export interface LoginBackendResponse {
+  token: string;
+  tokenType?: string;
+  expiresIn?: number;
+  user: LoginBackendUser;
+}
+
 export interface LoginResponse {
   id: number;
   firstName: string;
@@ -10,5 +24,6 @@ export interface LoginResponse {
   email: string;
   rol: string;
   accessToken: string;
+  expiresIn?: number;
   message: string;
 }

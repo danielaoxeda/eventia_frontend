@@ -2,6 +2,7 @@ import {
   createContext,
   useContext,
   useEffect,
+  useRef,
   useState,
   type ReactNode,
 } from "react";
@@ -21,7 +22,7 @@ interface AuthContextType {
   isAuthenticated: boolean;
   isLoading: boolean;
   user: AuthUser | null;
-  login: (token: string, user?: AuthUser) => void;
+  login: (token: string, user?: AuthUser, expiresIn?: number) => void;
   logout: () => void;
   updateUser: (updatedUser: AuthUser) => void;
 }
@@ -38,18 +39,49 @@ function mapMeToAuthUser(data: MeResponse): AuthUser {
   };
 }
 
+function getTokenExpirationMs(token: string): number | null {
+  try {
+    const payload = token.split(".")[1];
+    if (!payload) return null;
+    const json = JSON.parse(atob(payload.replace(/-/g, "+").replace(/_/g, "/")));
+    return typeof json.exp === "number" ? json.exp * 1000 : null;
+  } catch {
+    return null;
+  }
+}
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [isLoading, setIsLoading] = useState(
     () => localStorage.getItem("accessToken") !== null
   );
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [user, setUser] = useState<AuthUser | null>(null);
+  const logoutTimerRef = useRef<number | null>(null);
+
+  const clearLogoutTimer = () => {
+    if (logoutTimerRef.current) {
+      window.clearTimeout(logoutTimerRef.current);
+      logoutTimerRef.current = null;
+    }
+  };
 
   const clearSession = () => {
+    clearLogoutTimer();
     localStorage.removeItem("accessToken");
     localStorage.removeItem("authUser");
     setIsAuthenticated(false);
     setUser(null);
+  };
+
+  const scheduleLogout = (token: string, expiresIn?: number) => {
+    clearLogoutTimer();
+    const expMs = expiresIn ? Date.now() + expiresIn * 1000 : getTokenExpirationMs(token);
+    if (!expMs) return;
+    const delay = Math.max(expMs - Date.now(), 0);
+    logoutTimerRef.current = window.setTimeout(() => {
+      clearSession();
+      window.location.replace("/login");
+    }, delay);
   };
 
   useEffect(() => {
@@ -64,6 +96,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       .then((response) => {
         setUser(mapMeToAuthUser(response.data));
         setIsAuthenticated(true);
+        scheduleLogout(token);
       })
       .catch((error) => {
         if (error?.response?.status === 401) {
@@ -75,11 +108,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       .finally(() => {
         setIsLoading(false);
       });
+
+    return () => clearLogoutTimer();
   }, []);
 
-  const login = (token: string, authenticatedUser?: AuthUser) => {
+  const login = (token: string, authenticatedUser?: AuthUser, expiresIn?: number) => {
     localStorage.setItem("accessToken", token);
     localStorage.removeItem("authUser");
+    scheduleLogout(token, expiresIn);
     if (authenticatedUser) {
       setUser(authenticatedUser);
       setIsAuthenticated(true);
