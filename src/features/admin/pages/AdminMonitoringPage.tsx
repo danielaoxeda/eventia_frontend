@@ -8,12 +8,6 @@ import { adminMonitoringService } from "../services/adminMonitoringService";
 import type { MonitoringDashboardResponse } from "../types/admin.types";
 import { getErrorMessage } from "../utils/apiAdapter";
 
-/**
- * Panel de Monitoreo Central para Administradores.
- * Presenta 4 KPIs (Ingresos Totales, Órdenes Procesadas, Tickets Emitidos, Organizadores Activos),
- * una cuadrícula de 2 gráficos (Ingresos Históricos y Tickets Emitidos vs Validados)
- * y la supervisión de aforo de los eventos activos.
- */
 export default function AdminMonitoringPage() {
   const [data, setData] = useState<MonitoringDashboardResponse | null>(null);
   const [isRefreshing, setIsRefreshing] = useState(false);
@@ -56,7 +50,6 @@ export default function AdminMonitoringPage() {
 
   return (
     <div className="w-full pb-12 space-y-6">
-      {/* Cabecera con botón para forzar sincronización de datos */}
       <MonitoringHeader onRefresh={handleRefresh} isRefreshing={isRefreshing} />
 
       {error && (
@@ -65,7 +58,6 @@ export default function AdminMonitoringPage() {
         </div>
       )}
 
-      {/* 4 Indicadores Clave de Desempeño (KPIs) superiores */}
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 lg:gap-5">
         <KpiCard kind="totalRevenue" metric={data.kpis.totalRevenue} />
         <KpiCard kind="processedOrders" metric={data.kpis.processedOrders} />
@@ -73,13 +65,11 @@ export default function AdminMonitoringPage() {
         <KpiCard kind="activeOrganizers" metric={data.kpis.activeOrganizers} />
       </div>
 
-      {/* Cuadrícula de 2 columnas para gráficos analíticos */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         <RevenueTimelineChart data={data.revenueTimeline} />
         <TicketFlowChart data={data.ticketFlow} />
       </div>
 
-      {/* Tabla de aforo por evento activo */}
       <ActiveEventsTable events={data.activeEvents} />
     </div>
   );

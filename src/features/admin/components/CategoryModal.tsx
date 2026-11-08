@@ -16,7 +16,6 @@ export default function CategoryModal({
   onClose,
   onSave,
 }: CategoryModalProps) {
-  // El estado se inicializa desde la categoría a editar; la página remonta el modal (key) al abrirlo
   const [name, setName] = useState(categoryToEdit?.name ?? "");
   const [description, setDescription] = useState(categoryToEdit?.description ?? "");
   const [active, setActive] = useState(categoryToEdit?.active ?? true);

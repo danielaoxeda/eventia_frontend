@@ -15,7 +15,6 @@ interface UserFormState extends UserFormData {
   confirmPassword: string;
 }
 
-// El rol ORGANIZER se asigna automáticamente en el servicio; el formulario no lo gestiona
 const EMPTY_FORM: UserFormState = {
   firstName: "",
   lastName: "",
@@ -34,7 +33,6 @@ export default function UserModal({
   onClose,
   onSave,
 }: UserModalProps) {
-  // El estado se inicializa desde el usuario a editar; la página remonta el modal (key) al abrirlo
   const [form, setForm] = useState<UserFormState>(
     userToEdit
       ? {
@@ -51,7 +49,6 @@ export default function UserModal({
   const [error, setError] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
-  // Listener para cerrar el modal al pulsar la tecla Escape
   useEffect(() => {
     if (!open) return;
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -67,7 +64,6 @@ export default function UserModal({
 
   const isEditing = Boolean(userToEdit);
 
-  // Manejador de inputs con filtrado numérico para DNI (8 dígitos) y Teléfono (9 dígitos)
   const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     if (name === "dni") {
@@ -86,7 +82,6 @@ export default function UserModal({
     if (error) setError("");
   };
 
-  // Delega el guardado y muestra el error devuelto por el servidor sin cerrar el modal
   const submit = async (data: UserFormData | CreateUserFormData) => {
     setSubmitting(true);
     try {
@@ -98,7 +93,6 @@ export default function UserModal({
     }
   };
 
-  // Envía el formulario: en altas exige contraseña provisional con confirmación
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     if (form.dni.length !== 8) {

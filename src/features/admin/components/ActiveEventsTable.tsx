@@ -18,36 +18,46 @@ export default function ActiveEventsTable({ events }: ActiveEventsTableProps) {
 
   const getStatusBadge = (status: ActiveEventResponse["status"]) => {
     switch (status) {
-      case "En Curso":
-      case "IN_PROGRESS":
-        return (
-          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-primary-fixed/50 text-primary border border-primary-fixed/60">
-            <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
-            {status}
-          </span>
-        );
-      case "Activo":
-      case "ACTIVE":
       case "PUBLISHED":
         return (
           <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-blue-50 text-blue-700 border border-blue-200">
             <span className="w-1.5 h-1.5 rounded-full bg-blue-600" />
-            {status}
+            Publicado
           </span>
         );
-      case "Próximo":
-      case "UPCOMING":
+      case "PENDING":
+        return (
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-primary-fixed/50 text-primary border border-primary-fixed/60">
+            <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
+            Pendiente
+          </span>
+        );
+      case "DRAFT":
         return (
           <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-surface-container-high text-on-surface-variant border border-outline-variant/40">
             <span className="w-1.5 h-1.5 rounded-full bg-outline" />
-            {status}
+            Borrador
           </span>
         );
-      default:
+      case "HIDDEN":
+        return (
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-surface-container text-on-surface-variant border border-outline-variant/40">
+            <span className="w-1.5 h-1.5 rounded-full bg-outline" />
+            Oculto
+          </span>
+        );
+      case "CANCELLED":
+        return (
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-red-50 text-red-700 border border-red-200">
+            <span className="w-1.5 h-1.5 rounded-full bg-red-600" />
+            Cancelado
+          </span>
+        );
+      case "FINISHED":
         return (
           <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-surface-container text-on-surface-variant">
             <span className="w-1.5 h-1.5 rounded-full bg-outline" />
-            {status}
+            Finalizado
           </span>
         );
     }

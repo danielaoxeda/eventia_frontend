@@ -18,10 +18,6 @@ const EMPTY_PAGE: PageResponse<AdminCategory> = {
   last: true,
 };
 
-/**
- * Página principal de Gestión de Categorías de Eventos.
- * Lista (paginado, base 0), filtra, da de alta y edita categorías a través del service.
- */
 export default function AdminCategoriesPage() {
   const [pageData, setPageData] = useState<PageResponse<AdminCategory>>(EMPTY_PAGE);
   const [pageIndex, setPageIndex] = useState(0);
@@ -32,7 +28,6 @@ export default function AdminCategoriesPage() {
   const [modalOpen, setModalOpen] = useState(false);
   const [categoryToEdit, setCategoryToEdit] = useState<AdminCategory | null>(null);
 
-  // Carga del listado cada vez que cambian página, filtros o se fuerza una recarga
   useEffect(() => {
     let cancelled = false;
     adminCategoriesService
@@ -67,19 +62,16 @@ export default function AdminCategoriesPage() {
     setPageIndex(0);
   };
 
-  // Prepara el modal para registrar una nueva taxonomía
   const handleNuevaCategoria = () => {
     setCategoryToEdit(null);
     setModalOpen(true);
   };
 
-  // Abre el modal cargando la información de la categoría seleccionada
   const handleEdit = (category: AdminCategory) => {
     setCategoryToEdit(category);
     setModalOpen(true);
   };
 
-  // Guarda una nueva categoría o actualiza la existente. Si falla, el error llega al modal.
   const handleSave = async (formData: CategoryFormData) => {
     if (categoryToEdit) {
       await adminCategoriesService.updateCategory(categoryToEdit.id, formData);
@@ -91,7 +83,6 @@ export default function AdminCategoriesPage() {
     reload();
   };
 
-  // Alterna el estado activo/inactivo de la categoría
   const handleToggleStatus = async (category: AdminCategory) => {
     try {
       await adminCategoriesService.toggleCategoryStatus(category.id, !category.active);
@@ -103,7 +94,6 @@ export default function AdminCategoriesPage() {
 
   return (
     <div className="w-full pb-12 space-y-6">
-      {/* Cabecera con botón de acción */}
       <CategoriesHeader onNuevaCategoria={handleNuevaCategoria} />
 
       {error && (
@@ -112,7 +102,6 @@ export default function AdminCategoriesPage() {
         </div>
       )}
 
-      {/* Catálogo con filtros y botones de acción rápida */}
       <CategoriesTable
         page={pageData}
         search={search}
@@ -124,7 +113,6 @@ export default function AdminCategoriesPage() {
         onToggleStatus={handleToggleStatus}
       />
 
-      {/* Modal interactivo de creación y modificación */}
       <CategoryModal
         key={`${categoryToEdit?.id ?? "new"}-${modalOpen}`}
         open={modalOpen}

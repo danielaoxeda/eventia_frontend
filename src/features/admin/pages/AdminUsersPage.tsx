@@ -24,10 +24,6 @@ const EMPTY_PAGE: PageResponse<AdminUser> = {
   last: true,
 };
 
-/**
- * Página principal de Gestión de Organizadores.
- * Lista (paginado, base 0), filtra, da de alta y edita organizadores a través del service.
- */
 export default function AdminUsersPage() {
   const [pageData, setPageData] = useState<PageResponse<AdminUser>>(EMPTY_PAGE);
   const [pageIndex, setPageIndex] = useState(0);
@@ -38,7 +34,6 @@ export default function AdminUsersPage() {
   const [modalOpen, setModalOpen] = useState(false);
   const [userToEdit, setUserToEdit] = useState<AdminUser | null>(null);
 
-  // Carga del listado cada vez que cambian página, filtros o se fuerza una recarga
   useEffect(() => {
     let cancelled = false;
     adminUsersService
@@ -73,7 +68,6 @@ export default function AdminUsersPage() {
     setPageIndex(0);
   };
 
-  // Alterna el estado activo/inactivo de una cuenta
   const handleToggleStatus = async (user: AdminUser) => {
     try {
       await adminUsersService.toggleUserStatus(user.id, !user.active);
@@ -83,19 +77,16 @@ export default function AdminUsersPage() {
     }
   };
 
-  // Abre el modal en modo edición
   const handleEdit = (user: AdminUser) => {
     setUserToEdit(user);
     setModalOpen(true);
   };
 
-  // Abre el modal para registrar un nuevo Organizador
   const handleNuevoOrganizador = () => {
     setUserToEdit(null);
     setModalOpen(true);
   };
 
-  // Guarda o actualiza según si se está editando o creando. Si falla, el error llega al modal.
   const handleSave = async (form: UserFormData | CreateUserFormData) => {
     if (userToEdit) {
       await adminUsersService.updateUser(userToEdit.id, form);
@@ -109,10 +100,8 @@ export default function AdminUsersPage() {
 
   return (
     <div className="w-full pb-12 space-y-6">
-      {/* Cabecera con botón de alta de organizador */}
       <UsersHeader onNuevoOrganizador={handleNuevoOrganizador} />
 
-      {/* Barra de filtros por estado y búsqueda */}
       <UsersFilters
         statusFilter={statusFilter}
         search={search}
@@ -126,7 +115,6 @@ export default function AdminUsersPage() {
         </div>
       )}
 
-      {/* Tabla con datos paginados y botones de acción */}
       <UsersTable
         page={pageData}
         onPageChange={setPageIndex}
@@ -134,7 +122,6 @@ export default function AdminUsersPage() {
         onEdit={handleEdit}
       />
 
-      {/* Modal interactivo de alta / edición */}
       <UserModal
         key={`${userToEdit?.id ?? "new"}-${modalOpen}`}
         open={modalOpen}
