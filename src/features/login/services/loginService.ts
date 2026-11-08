@@ -1,54 +1,22 @@
-import type { ApiUser } from "@/shared/types/api.types";
-import api from "@/shared/services/api";
-import type {
-  LoginRequest,
-  LoginResponse,
-} from "../types/login.types";
+import api from "../../../shared/services/api";
+import type { LoginRequest, LoginResponse } from "../types/login.types";
 
-export async function login(
-  data: LoginRequest
-): Promise<LoginResponse> {
+// Login real; devuelve solo el token (el perfil se obtiene en /auth/me).
+export async function login(data: LoginRequest): Promise<LoginResponse> {
+  console.log("[Eventia] 🔑 Intentando iniciar sesión para:", data.email);
+
   try {
-    const response = await api.get<ApiUser[]>("/users", {
-      params: {
-        email: data.email,
-      },
-    });
+    const { data: backendData } = await api.post("/auth/login", data);
 
-    const users = response.data;
-
-    const user = users[0];
-
-    if (!user) {
-      throw new Error("INVALID_CREDENTIALS");
-    }
-
-    if (user.password !== data.password) {
-      throw new Error("INVALID_CREDENTIALS");
-    }
-
-    // Token simulado.
-
-    const accessToken =
-      `eventia-mock-token-${user.id}-${Date.now()}`;
+    console.log("[Eventia] ✅ Login exitoso en el backend para:", data.email);
 
     return {
-      id: Number(user.id),
-      firstName: user.firstName,
-      lastName: user.lastName,
-      email: user.email,
-      rol: user.rol,
-      accessToken,
+      accessToken: backendData.token,
       message: "Inicio de sesión exitoso",
     };
   } catch (error) {
-    if (
-      error instanceof Error &&
-      error.message === "INVALID_CREDENTIALS"
-    ) {
-      throw error;
-    }
-
-    throw new Error("LOGIN_ERROR");
+    // El interceptor de api.ts ya registró el error; el formulario lo muestra.
+    console.log("[Eventia] ⚠️ Login falló, se avisa al usuario.");
+    throw error;
   }
 }
