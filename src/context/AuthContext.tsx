@@ -7,47 +7,37 @@ import {
   type ReactNode,
 } from "react";
 
-import api from "@/shared/services/api";
+import { getCurrentUser } from "@/shared/services/authService";
 import type { AuthUser } from "@/shared/types/auth.types";
-
-interface MeResponse {
-  id: number;
-  firstName: string;
-  lastName: string;
-  email: string;
-  role: string;
-}
 
 interface AuthContextType {
   isAuthenticated: boolean;
   isLoading: boolean;
   user: AuthUser | null;
-  login: (token: string, user?: AuthUser, expiresIn?: number) => void;
+  login: (token: string, user?: AuthUser, expiresIn?: number) => Promise<void>;
   logout: () => void;
   updateUser: (updatedUser: AuthUser) => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-function mapMeToAuthUser(data: MeResponse): AuthUser {
-  return {
-    id: data.id,
-    firstName: data.firstName,
-    lastName: data.lastName,
-    email: data.email,
-    rol: data.role,
-  };
-}
-
-function getTokenExpirationMs(token: string): number | null {
+function decodeJwtPayload(token: string): Record<string, unknown> | null {
   try {
     const payload = token.split(".")[1];
     if (!payload) return null;
-    const json = JSON.parse(atob(payload.replace(/-/g, "+").replace(/_/g, "/")));
-    return typeof json.exp === "number" ? json.exp * 1000 : null;
+    return JSON.parse(atob(payload.replace(/-/g, "+").replace(/_/g, "/")));
   } catch {
     return null;
   }
+}
+
+function formatEpochSeconds(value: unknown): string {
+  return typeof value === "number" ? new Date(value * 1000).toLocaleString() : String(value ?? "");
+}
+
+function getTokenExpirationMs(token: string): number | null {
+  const json = decodeJwtPayload(token);
+  return json && typeof json.exp === "number" ? json.exp * 1000 : null;
 }
 
 export function AuthProvider({ children }: { children: ReactNode }) {
@@ -79,6 +69,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     if (!expMs) return;
     const delay = Math.max(expMs - Date.now(), 0);
     logoutTimerRef.current = window.setTimeout(() => {
+      console.log("[Eventia] ⏰ Sesión expirada, cerrando sesión");
       clearSession();
       window.location.replace("/login");
     }, delay);
@@ -91,19 +82,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       return;
     }
 
-    api
-      .get<MeResponse>("/auth/me")
-      .then((response) => {
-        setUser(mapMeToAuthUser(response.data));
+    getCurrentUser()
+      .then((authenticatedUser) => {
+        setUser(authenticatedUser);
         setIsAuthenticated(true);
         scheduleLogout(token);
       })
-      .catch((error) => {
-        if (error?.response?.status === 401) {
-          clearSession();
-        } else {
-          clearSession();
-        }
+      .catch(() => {
+        clearSession();
       })
       .finally(() => {
         setIsLoading(false);
@@ -112,17 +98,34 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => clearLogoutTimer();
   }, []);
 
-  const login = (token: string, authenticatedUser?: AuthUser, expiresIn?: number) => {
+  const login = async (token: string, authenticatedUser?: AuthUser, expiresIn?: number) => {
     localStorage.setItem("accessToken", token);
     localStorage.removeItem("authUser");
+
+    // Solo con fines académicos: muestra el token y su payload decodificado.
+    const payload = decodeJwtPayload(token);
+    console.info("[Eventia][JWT][Académico] token:", token);
+    if (payload) {
+      console.info("[Eventia][JWT][Académico] payload:", {
+        sub: payload.sub,
+        role: payload.role,
+        userId: payload.userId,
+        name: payload.name,
+        iat: formatEpochSeconds(payload.iat),
+        exp: formatEpochSeconds(payload.exp),
+      });
+    }
+
     scheduleLogout(token, expiresIn);
     if (authenticatedUser) {
+      console.log("[Eventia] ✅ Sesión iniciada para:", authenticatedUser.email);
       setUser(authenticatedUser);
       setIsAuthenticated(true);
     }
   };
 
   const logout = () => {
+    console.log("[Eventia] 👋 Cerrando sesión");
     clearSession();
   };
 

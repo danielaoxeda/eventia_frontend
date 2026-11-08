@@ -1,21 +1,31 @@
 import { useEffect, useState, type ChangeEvent, type FormEvent } from "react";
 import { ShieldCheck, X } from "lucide-react";
-import type { AdminUser, UserFormData } from "../types/admin.types";
+import type { AdminUser, CreateUserFormData, UserFormData } from "../types/admin.types";
+import { getErrorMessage } from "../utils/apiAdapter";
 
 interface UserModalProps {
   open: boolean;
   userToEdit: AdminUser | null;
   onClose: () => void;
-  onSave: (form: UserFormData) => void;
+  onSave: (form: UserFormData | CreateUserFormData) => Promise<void> | void;
 }
 
-const EMPTY_FORM: UserFormData = {
-  nombre: "",
+interface UserFormState extends UserFormData {
+  password: string;
+  confirmPassword: string;
+}
+
+const EMPTY_FORM: UserFormState = {
+  firstName: "",
+  lastName: "",
   email: "",
   dni: "",
-  telefono: "",
-  rol: "Organizador", // Rol predeterminado para altas desde el panel administrativo
+  cellphone: "",
+  password: "",
+  confirmPassword: "",
 };
+
+const MIN_PASSWORD_LENGTH = 8;
 
 export default function UserModal({
   open,
@@ -23,26 +33,22 @@ export default function UserModal({
   onClose,
   onSave,
 }: UserModalProps) {
-  const [form, setForm] = useState<UserFormData>(EMPTY_FORM);
+  const [form, setForm] = useState<UserFormState>(
+    userToEdit
+      ? {
+          firstName: userToEdit.firstName,
+          lastName: userToEdit.lastName,
+          email: userToEdit.email,
+          dni: userToEdit.dni,
+          cellphone: userToEdit.cellphone ?? "",
+          password: "",
+          confirmPassword: "",
+        }
+      : EMPTY_FORM
+  );
   const [error, setError] = useState("");
+  const [submitting, setSubmitting] = useState(false);
 
-  // Hook 1: Sincroniza los campos cuando se abre el modal o cambia el usuario a editar
-  useEffect(() => {
-    setError("");
-    if (userToEdit) {
-      setForm({
-        nombre: userToEdit.nombre,
-        email: userToEdit.email,
-        dni: userToEdit.dni,
-        telefono: userToEdit.telefono,
-        rol: userToEdit.rol,
-      });
-    } else {
-      setForm(EMPTY_FORM);
-    }
-  }, [userToEdit, open]);
-
-  // Hook 2: Listener para cerrar el modal al pulsar la tecla Escape
   useEffect(() => {
     if (!open) return;
     const handleKeyDown = (e: KeyboardEvent) => {
@@ -58,7 +64,6 @@ export default function UserModal({
 
   const isEditing = Boolean(userToEdit);
 
-  // Manejador de inputs con filtrado numérico para DNI (8 dígitos) y Teléfono (9 dígitos)
   const handleChange = (e: ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     if (name === "dni") {
@@ -67,34 +72,62 @@ export default function UserModal({
       if (error) setError("");
       return;
     }
-    if (name === "telefono") {
+    if (name === "cellphone") {
       const numeric = value.replace(/\D/g, "").slice(0, 9);
-      setForm((prev) => ({ ...prev, telefono: numeric }));
+      setForm((prev) => ({ ...prev, cellphone: numeric }));
       if (error) setError("");
       return;
     }
     setForm((prev) => ({ ...prev, [name]: value }));
+    if (error) setError("");
   };
 
-  // Envía el formulario forzando rol 'Organizador' en altas y asignando clave provisional
-  const handleSubmit = (e: FormEvent) => {
+  const submit = async (data: UserFormData | CreateUserFormData) => {
+    setSubmitting(true);
+    try {
+      await onSave(data);
+    } catch (e: unknown) {
+      setError(getErrorMessage(e));
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
     if (form.dni.length !== 8) {
       setError("El DNI debe tener exactamente 8 dígitos.");
       return;
     }
-    if (form.telefono.length !== 9) {
+    if (form.cellphone.length !== 9) {
       setError("El teléfono debe tener exactamente 9 dígitos.");
       return;
     }
-    setError("");
 
-    const provisionalPassword = `Org${form.dni}!`;
-    onSave({
-      ...form,
-      rol: isEditing ? form.rol : "Organizador",
-      password: provisionalPassword,
-    });
+    const profile: UserFormData = {
+      firstName: form.firstName,
+      lastName: form.lastName,
+      dni: form.dni,
+      email: form.email,
+      cellphone: form.cellphone,
+    };
+
+    if (isEditing) {
+      setError("");
+      await submit(profile);
+      return;
+    }
+
+    if (form.password.length < MIN_PASSWORD_LENGTH) {
+      setError(`La contraseña provisional debe tener al menos ${MIN_PASSWORD_LENGTH} caracteres.`);
+      return;
+    }
+    if (form.password !== form.confirmPassword) {
+      setError("La contraseña y su confirmación no coinciden.");
+      return;
+    }
+    setError("");
+    await submit({ ...profile, password: form.password });
   };
 
   return (
@@ -136,20 +169,36 @@ export default function UserModal({
             </div>
           )}
 
-          {/* Nombre completo */}
-          <div>
-            <label className="block text-xs font-semibold text-on-surface-variant mb-1.5">
-              Nombre completo o Razón Social
-            </label>
-            <input
-              type="text"
-              name="nombre"
-              value={form.nombre}
-              onChange={handleChange}
-              required
-              placeholder="Ej. Live Producciones SAC"
-              className="w-full px-4 py-2.5 text-sm rounded-xl border border-outline-variant/40 bg-surface-container-low text-on-surface placeholder-on-surface-variant/50 outline-none focus:border-primary/60 focus:ring-2 focus:ring-primary/10 transition-all"
-            />
+          {/* Nombres y Apellidos */}
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-xs font-semibold text-on-surface-variant mb-1.5">
+                Nombres
+              </label>
+              <input
+                type="text"
+                name="firstName"
+                value={form.firstName}
+                onChange={handleChange}
+                required
+                placeholder="Ej. Mario"
+                className="w-full px-4 py-2.5 text-sm rounded-xl border border-outline-variant/40 bg-surface-container-low text-on-surface placeholder-on-surface-variant/50 outline-none focus:border-primary/60 focus:ring-2 focus:ring-primary/10 transition-all"
+              />
+            </div>
+            <div>
+              <label className="block text-xs font-semibold text-on-surface-variant mb-1.5">
+                Apellidos
+              </label>
+              <input
+                type="text"
+                name="lastName"
+                value={form.lastName}
+                onChange={handleChange}
+                required
+                placeholder="Ej. Vargas Llosa"
+                className="w-full px-4 py-2.5 text-sm rounded-xl border border-outline-variant/40 bg-surface-container-low text-on-surface placeholder-on-surface-variant/50 outline-none focus:border-primary/60 focus:ring-2 focus:ring-primary/10 transition-all"
+              />
+            </div>
           </div>
 
           {/* Correo electrónico */}
@@ -193,8 +242,8 @@ export default function UserModal({
               <input
                 type="text"
                 inputMode="numeric"
-                name="telefono"
-                value={form.telefono}
+                name="cellphone"
+                value={form.cellphone}
                 onChange={handleChange}
                 required
                 maxLength={9}
@@ -209,18 +258,46 @@ export default function UserModal({
             <span className="text-xs font-semibold text-on-surface">Rol asignado</span>
             <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold bg-primary text-on-primary shadow-xs">
               <ShieldCheck className="w-3.5 h-3.5" />
-              {isEditing ? form.rol : "Organizador"}
+              Organizador
             </span>
           </div>
 
-          {/* Contraseña provisional asignada */}
+          {/* Contraseña provisional y confirmación (solo en altas) */}
           {!isEditing && (
-            <div className="bg-surface-container-low rounded-xl px-4 py-3 border border-outline-variant/30 text-xs">
-              <span className="font-semibold text-on-surface">Contraseña provisional: </span>
-              <span className="font-mono font-bold text-primary">
-                {form.dni ? `Org${form.dni}!` : "Org[DNI]!"}
-              </span>
-              <p className="text-[11px] text-on-surface-variant mt-1">
+            <div className="space-y-3">
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <label className="block text-xs font-semibold text-on-surface-variant mb-1.5">
+                    Contraseña provisional
+                  </label>
+                  <input
+                    type="password"
+                    name="password"
+                    value={form.password}
+                    onChange={handleChange}
+                    required
+                    minLength={MIN_PASSWORD_LENGTH}
+                    autoComplete="new-password"
+                    className="w-full px-4 py-2.5 text-sm rounded-xl border border-outline-variant/40 bg-surface-container-low text-on-surface placeholder-on-surface-variant/50 outline-none focus:border-primary/60 focus:ring-2 focus:ring-primary/10 transition-all"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-semibold text-on-surface-variant mb-1.5">
+                    Confirmar contraseña
+                  </label>
+                  <input
+                    type="password"
+                    name="confirmPassword"
+                    value={form.confirmPassword}
+                    onChange={handleChange}
+                    required
+                    minLength={MIN_PASSWORD_LENGTH}
+                    autoComplete="new-password"
+                    className="w-full px-4 py-2.5 text-sm rounded-xl border border-outline-variant/40 bg-surface-container-low text-on-surface placeholder-on-surface-variant/50 outline-none focus:border-primary/60 focus:ring-2 focus:ring-primary/10 transition-all"
+                  />
+                </div>
+              </div>
+              <p className="text-[11px] text-on-surface-variant">
                 El organizador usará su correo y esta clave provisional para ingresar a su cuenta.
               </p>
             </div>
@@ -231,13 +308,15 @@ export default function UserModal({
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2.5 rounded-xl text-sm font-semibold text-on-surface-variant border border-outline-variant/40 hover:bg-surface-container transition-colors"
+              disabled={submitting}
+              className="px-4 py-2.5 rounded-xl text-sm font-semibold text-on-surface-variant border border-outline-variant/40 hover:bg-surface-container transition-colors disabled:opacity-50"
             >
               Cancelar
             </button>
             <button
               type="submit"
-              className="px-5 py-2.5 rounded-xl text-sm font-bold bg-primary text-on-primary hover:opacity-90 transition-opacity shadow-xs"
+              disabled={submitting}
+              className="px-5 py-2.5 rounded-xl text-sm font-bold bg-primary text-on-primary hover:opacity-90 transition-opacity shadow-xs disabled:opacity-50"
             >
               {isEditing ? "Guardar cambios" : "Registrar Organizador"}
             </button>

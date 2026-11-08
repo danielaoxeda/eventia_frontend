@@ -17,6 +17,7 @@ export interface LoginBackendResponse {
   user: LoginBackendUser;
 }
 
+// Respuesta mapeada para el frontend (accessToken, expiresIn y rol).
 export interface LoginResponse {
   id: number;
   firstName: string;

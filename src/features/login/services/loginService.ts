@@ -13,7 +13,10 @@ function splitName(name: string) {
   };
 }
 
+// Login real; mapea la respuesta enriquecida del backend para el frontend.
 export async function login(data: LoginRequest): Promise<LoginResponse> {
+  console.log("[Eventia] 🔑 Intentando iniciar sesión para:", data.email);
+
   try {
     const response = await api.post<LoginBackendResponse>("/auth/login", {
       email: data.email,
@@ -21,6 +24,8 @@ export async function login(data: LoginRequest): Promise<LoginResponse> {
     });
     const payload = response.data;
     const { firstName, lastName } = splitName(payload.user?.name ?? "");
+
+    console.log("[Eventia] ✅ Login exitoso en el backend para:", data.email);
 
     return {
       id: payload.user.id,
@@ -33,10 +38,7 @@ export async function login(data: LoginRequest): Promise<LoginResponse> {
       message: "Inicio de sesión exitoso",
     };
   } catch (error) {
-    const status = (error as { response?: { status?: number } })?.response?.status;
-    if (status === 401) {
-      throw new Error("INVALID_CREDENTIALS");
-    }
-    throw new Error("LOGIN_ERROR");
+    console.log("[Eventia] ⚠️ Login falló, se avisa al usuario.");
+    throw error;
   }
 }

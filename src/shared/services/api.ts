@@ -1,17 +1,28 @@
 import axios from "axios";
 
+// URL del backend (configurable con VITE_API_URL).
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8080";
+
+console.log(`[Eventia] 🌐 Frontend conectado al backend en: ${API_URL}`);
+
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || "http://localhost:3000",
+  baseURL: API_URL,
   headers: {
     "Content-Type": "application/json",
   },
 });
 
+// Agrega el JWT a las peticiones autenticadas.
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem("accessToken");
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
+  console.log(
+    `[Eventia] 📡 ${config.method?.toUpperCase()} ${config.baseURL}${config.url}${
+      token ? " (con JWT)" : " (sin JWT)"
+    }`
+  );
   return config;
 });
 
@@ -21,12 +32,27 @@ function clearAuthSession() {
 }
 
 api.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    console.log(
+      `[Eventia] ✅ ${response.config.method?.toUpperCase()} ${response.config.url} -> ${response.status}`
+    );
+    return response;
+  },
   (error) => {
     const status = error?.response?.status;
     const requestUrl = String(error?.config?.url ?? "");
+    const url = error?.config?.url;
     const isLoginRequest = requestUrl.includes("/auth/login");
     const isOnLogin = window.location.pathname === "/login";
+
+    if (!error?.response) {
+      console.error(
+        `[Eventia] ❌ ${url} -> SIN RESPUESTA. ¿Está encendido el backend en ${API_URL}?`,
+        error.message
+      );
+    } else {
+      console.error(`[Eventia] ❌ ${url} -> Error ${status}:`, error.response.data);
+    }
 
     if (status === 401) {
       if (!isLoginRequest && !isOnLogin) {
@@ -44,4 +70,4 @@ api.interceptors.response.use(
   }
 );
 
-export default api;
+export default api;

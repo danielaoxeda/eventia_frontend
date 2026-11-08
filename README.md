@@ -1,6 +1,6 @@
 # Eventia — Frontend
 
-> Plataforma web para la gestión y venta de entradas para eventos. Frontend desarrollado con React, TypeScript y Tailwind CSS.
+> Plataforma web para la gestión y venta de entradas para eventos. Frontend desarrollado con React, TypeScript y Tailwind CSS e integrado con una API REST desarrollada en Spring Boot.
 
 ![React](https://img.shields.io/badge/React-18-61DAFB?logo=react\&logoColor=white)
 ![TypeScript](https://img.shields.io/badge/TypeScript-5-3178C6?logo=typescript\&logoColor=white)
@@ -13,35 +13,36 @@
 
 **Eventia S.A.C.** es una plataforma web orientada a la gestión y venta de entradas para eventos.
 
-Este repositorio contiene el **frontend** del proyecto académico, desarrollado con una arquitectura basada en features y preparado para consumir servicios REST.
+Este repositorio contiene el **frontend** del proyecto académico, desarrollado con una arquitectura basada en features y preparado para consumir servicios REST mediante Axios.
 
-Actualmente, la aplicación utiliza una **API Dummy** para simular el consumo de datos. La integración con el backend real se realizará posteriormente.
+La aplicación se encuentra integrada con el **backend de Eventia**, desarrollado con Spring Boot, mediante una API REST. La autenticación utiliza **JWT (JSON Web Token)** para gestionar las sesiones de los usuarios y proteger los recursos que requieren autenticación.
 
 ## ✨ Características
 
-* 🔐 Registro, inicio de sesión y gestión de perfil
-* 🎪 Catálogo, búsqueda y filtrado de eventos
-* 🎟️ Selección y compra de entradas
-* 💳 Checkout y pago simulado
-* 📱 Tickets digitales con código QR
-* 📊 Dashboard para organizadores
-* 🎫 Gestión de eventos, tipos de entrada y tarifas
-* 👥 Gestión de usuarios y roles
-* 📈 Dashboard administrativo y métricas
-* 📷 Validación simulada de tickets mediante QR
+- 🔐 Registro e inicio de sesión mediante API REST
+- 👤 Gestión de sesión y perfil de usuario
+- 🎪 Catálogo, búsqueda y filtrado de eventos
+- 🎟️ Selección y compra de entradas
+- 💳 Checkout y pago simulado
+- 📱 Tickets digitales con código QR
+- 📊 Dashboard para organizadores
+- 🎫 Gestión de eventos, tipos de entrada y tarifas
+- 👥 Gestión de usuarios y roles
+- 📈 Dashboard administrativo y métricas
+- 📷 Validación de tickets mediante QR
 
 ## 🛠️ Tecnologías
 
-| Tecnología   | Uso                               |
-| ------------ | --------------------------------- |
-| React        | Interfaz de usuario               |
-| TypeScript   | Tipado estático                   |
-| Tailwind CSS | Estilos y diseño responsivo       |
-| Axios        | Consumo de API                    |
-| Recharts     | Gráficos y visualización de datos |
-| React Router | Navegación                        |
-| Vite         | Desarrollo y build                |
-| Lucide React | Iconografía                       |
+| **Tecnología** | **Uso** |
+| -------------- | ------- |
+| React | Interfaz de usuario |
+| TypeScript | Tipado estático |
+| Tailwind CSS | Estilos y diseño responsivo |
+| Axios | Consumo de API REST |
+| Recharts | Gráficos y visualización de datos |
+| React Router | Navegación |
+| Vite | Desarrollo y build |
+| Lucide React | Iconografía |
 
 ## 🏗️ Arquitectura
 
@@ -81,13 +82,51 @@ src/
 
 Esta organización permite mantener separadas las funcionalidades del sistema y facilita el desarrollo colaborativo.
 
+## 🔐 Autenticación e integración con el backend
+
+El frontend se comunica con el backend mediante **Axios** y utiliza **JWT** para la autenticación.
+
+El flujo de autenticación principal es:
+
+1. El usuario inicia sesión o se registra desde el frontend.
+2. El frontend envía las credenciales al endpoint correspondiente del backend.
+3. El backend devuelve un **JWT**.
+4. El token se almacena localmente como `accessToken`.
+5. Las peticiones autenticadas incluyen el token mediante el header `Authorization`.
+6. El frontend consulta `/auth/me` para obtener la información actual del usuario autenticado.
+7. La sesión se construye utilizando el perfil y rol devueltos por el backend.
+
+De esta forma, el frontend no define manualmente el rol del usuario, sino que utiliza la información proporcionada por el backend.
+
+## 🔌 API
+
+El frontend utiliza **Axios** para comunicarse con la API REST de Eventia.
+
+La URL base del backend se configura desde el cliente HTTP y las peticiones autenticadas utilizan el siguiente formato:
+
+```text
+Authorization: Bearer <JWT>
+```
+
+### Principales endpoints utilizados
+
+| **Endpoint** | **Método** | **Uso** |
+| ------------ | ---------- | ------- |
+| `/auth/login` | POST | Inicio de sesión |
+| `/auth/register` | POST | Registro de usuario |
+| `/auth/me` | GET | Obtener usuario autenticado |
+| `/events` | GET | Obtener catálogo de eventos |
+
+Los endpoints adicionales del sistema se encuentran organizados por funcionalidad dentro de `features`.
+
 ## 🚀 Instalación
 
 ### Requisitos
 
-* Node.js >= 18
-* npm
-* Git
+- Node.js >= 18
+- npm
+- Git
+- Backend de Eventia ejecutándose localmente
 
 ### Clonar el repositorio
 
@@ -127,14 +166,8 @@ http://localhost:5173
 npm run build
 ```
 
-## 🔌 API
-
-El frontend utiliza **Axios** para la comunicación con servicios HTTP.
-
-Durante el desarrollo se utilizará una **API Dummy**. La estructura de servicios está preparada para reemplazar posteriormente estos endpoints por los del backend de Eventia.
-
 ## 📌 Estado del proyecto
 
 **En desarrollo 🚧**
 
-Actualmente se encuentra en implementación el frontend y sus principales flujos de usuario. La integración con el backend real se realizará en una etapa posterior.
+El frontend se encuentra integrado con el backend de Eventia mediante una API REST. Actualmente se encuentran implementados los principales flujos de autenticación, gestión de sesión y consumo de servicios, mientras continúa el desarrollo e integración de las demás funcionalidades de la plataforma.

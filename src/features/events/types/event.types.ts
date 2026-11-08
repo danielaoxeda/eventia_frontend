@@ -78,9 +78,3 @@ export interface PriceRange {
   min: number;
   max: number;
 }
-export interface PriceRange {
-  id: string;
-  label: string;
-  min: number;
-  max: number;
-}

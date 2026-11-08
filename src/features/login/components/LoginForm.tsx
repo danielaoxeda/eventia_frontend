@@ -40,7 +40,7 @@ export default function LoginForm() {
     try {
       const data = await login(form);
 
-      authenticate(
+      await authenticate(
         data.accessToken,
         {
           id: data.id,
@@ -52,18 +52,19 @@ export default function LoginForm() {
         data.expiresIn
       );
 
+      console.log("[Eventia] ➡️ Redirigiendo al inicio...");
       navigate("/");
 
-      } catch (error) {
-      if (
-        error instanceof Error &&
-        error.message === "INVALID_CREDENTIALS"
-      ) {
+    } catch (error) {
+      const err = error as { response?: { status?: number; data?: { message?: string } }; message?: string };
+      if (err?.response?.status === 401 || err?.message === "INVALID_CREDENTIALS") {
+        console.log("[Eventia] ⚠️ El backend dijo: credenciales incorrectas (401)");
         setError("Correo o contraseña incorrectos.");
+      } else if (!err?.response) {
+        console.log("[Eventia] ⚠️ No hubo respuesta: backend apagado");
+        setError("No se pudo contactar el servidor. ¿Está encendido el backend?");
       } else {
-        setError(
-          "Ocurrió un error inesperado. Inténtalo nuevamente."
-        );
+        setError(err.response.data?.message || "Ocurrió un error inesperado. Inténtalo nuevamente.");
       }
     } finally {
       setLoading(false);
@@ -75,7 +76,6 @@ export default function LoginForm() {
       onSubmit={handleSubmit}
       className="space-y-5"
     >
-      {/* Correo */}
       <div>
         <label
           htmlFor="email"
@@ -102,7 +102,6 @@ export default function LoginForm() {
         </div>
       </div>
 
-      {/* Contraseña */}
       <div>
         <label
           htmlFor="password"
@@ -148,14 +147,12 @@ export default function LoginForm() {
         </div>
       </div>
 
-      {/* Error */}
       {error && (
         <div className="rounded-lg bg-red-50 px-4 py-3 text-sm text-red-600">
           {error}
         </div>
       )}
 
-      {/* Botón */}
       <button
         type="submit"
         disabled={loading}
