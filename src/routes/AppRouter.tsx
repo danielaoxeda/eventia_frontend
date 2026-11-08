@@ -1,12 +1,9 @@
 import { Navigate, Route, Routes } from "react-router-dom";
 import MainLayout from "../layouts/MainLayout";
-import CategoriesPage from "../features/categories/pages/CategoriesPage";
 import CatalogPage from "../features/events/pages/CatalogPage";
 import EventDetailPage from "../features/event-detail/pages/EventDetailPage";
 import LoginPage from "../features/login/pages/LoginPage";
 import RegisterPage from "../features/register/pages/RegisterPage";
-
-import UsersPage from "../features/users/pages/UsersPage";
 import AdminLayout from "../features/admin/components/AdminLayout";
 import AdminMonitoringPage from "../features/admin/pages/AdminMonitoringPage";
 import AdminCategoriesPage from "../features/admin/pages/AdminCategoriesPage";
@@ -107,22 +104,8 @@ export default function AppRouter() {
         <Route path="categorias" element={<AdminCategoriesPage />} />
       </Route>
 
-      <Route
-        path="/admin/users"
-        element={
-          <RequireRole rol="ADMIN">
-            <UsersPage />
-          </RequireRole>
-        }
-      />
-      <Route
-        path="/admin/categories"
-        element={
-          <RequireRole rol="ADMIN">
-            <CategoriesPage />
-          </RequireRole>
-        }
-      />
+      <Route path="/admin/users" element={<Navigate to="/admin/usuarios" replace />} />
+      <Route path="/admin/categories" element={<Navigate to="/admin/categorias" replace />} />
       <Route path="/usuarios-roles-categorias" element={<Navigate to="/admin/users" replace />} />
       <Route path="/usuarios-categorias" element={<Navigate to="/admin/users" replace />} />
 
