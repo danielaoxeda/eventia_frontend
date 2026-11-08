@@ -7,6 +7,8 @@ import type {
   TicketTypeRow,
 } from "../types/event.types";
 import api from "@/shared/services/api";
+// Respaldo local (db.json): se usa solo si el backend está apagado.
+import db from "../../../../db.json";
 
 /** Mes abreviado para la insignia de fecha (ej. "NOV"). */
 const MONTH_CODES = [
@@ -33,6 +35,20 @@ const TAG_BY_CATEGORY: Record<string, string> = {
   "Tecnología & Startups": "Tecnología",
 };
 
+/** Forma de db.json usada solo como respaldo si el backend no responde. */
+interface DbShape {
+  events?: EventRow[];
+  ticket_types?: TicketTypeRow[];
+  categories?: CategoryRow[];
+}
+
+const dbData = db as unknown as DbShape;
+
+/**
+ * Mapea una fila de db.json al modelo del catálogo:
+ * categoría por join, fecha descompuesta, precio mínimo de sus
+ * tipos de entrada y % vendido desde el aforo disponible.
+ */
 function mapEvent(
   row: EventRow,
   tickets: TicketTypeRow[],
@@ -68,18 +84,70 @@ function mapEvent(
   };
 }
 
-export async function getEvents(): Promise<CatalogEvent[]> {
-  const [events, tickets, categories] = await Promise.all([
-    api.get<EventRow[]>("/events"),
-    api.get<TicketTypeRow[]>("/ticket_types"),
-    api.get<CategoryRow[]>("/categories"),
-  ]);
-  return events.data
+/** Eventos de respaldo desde db.json (solo si el backend no responde). */
+function fallbackEvents(): CatalogEvent[] {
+  return (dbData.events ?? [])
     .filter((row) => row.active)
-    .map((row) => mapEvent(row, tickets.data, categories.data));
+    .map((row) =>
+      mapEvent(row, dbData.ticket_types ?? [], dbData.categories ?? []),
+    );
 }
 
-/** Porcentaje de descuento de la promo */
+// --- Lo que manda el backend (GET /events) ---
+interface BackendEvent {
+  id: number;
+  title: string;
+  description: string;
+  date: string; // "2026-11-22"
+  location: string;
+  capacity: number;
+  status: string;
+  category: string;
+  price: number;
+  soldPct: number;
+}
+
+function mapBackendEvent(row: BackendEvent): CatalogEvent {
+  const date = new Date(`${row.date}T00:00:00`);
+  const categoryName = (row.category || "Conciertos") as Category;
+  return {
+    id: row.id,
+    title: row.title,
+    category: categoryName,
+    month: MONTH_CODES[date.getMonth()] ?? "",
+    day: String(date.getDate()).padStart(2, "0"),
+    dateOrder: date.getTime(),
+    venue: row.location,
+    // El backend todavía no envía ciudad: usamos la ubicación como respaldo.
+    city: row.location,
+    price: row.price,
+    soldPct: row.soldPct,
+    image: "",
+    tag: TAG_BY_CATEGORY[categoryName] ?? categoryName,
+  };
+}
+
+/**
+ * Trae los eventos del backend real: GET /events
+ * Si el backend está apagado, usa db.json para que la página no se rompa.
+ */
+export async function getEvents(): Promise<CatalogEvent[]> {
+  console.log("[Eventia] 🎫 Pidiendo eventos al backend (GET /events)...");
+  try {
+    const { data } = await api.get<BackendEvent[]>("/events");
+    const events = (data ?? []).map(mapBackendEvent);
+    console.log(`[Eventia] ✅ Llegaron ${events.length} eventos desde el backend`);
+    return events.length > 0 ? events : fallbackEvents();
+  } catch {
+    console.warn("[Eventia] ⚠️ Backend no disponible, usando datos de respaldo (db.json)");
+    return fallbackEvents();
+  }
+}
+
+/** Alias conservado de la conexión anterior. */
+export const fetchEvents = getEvents;
+
+/** Porcentaje de descuento de la promo (aplica solo a elegibles). */
 export const PROMO_DISCOUNT_PCT = 15;
 
 /**
@@ -112,6 +180,7 @@ export const CATEGORY_ORDER: Category[] = [
   "Gastronomía & Ferias",
 ];
 
+/** Rangos de precio del filtro (montos en soles). */
 export const PRICE_RANGES: PriceRange[] = [
   { id: "ALL", label: "Todos", min: 0, max: Number.POSITIVE_INFINITY },
   { id: "UNDER_60", label: "Menos de S/ 60", min: 0, max: 60 },

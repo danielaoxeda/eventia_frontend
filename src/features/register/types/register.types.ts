@@ -13,10 +13,6 @@ export interface RegisterRequest {
 }
 
 export interface RegisterResponse {
-  id: number;
-  firstName: string;
-  lastName: string;
-  email: string;
   accessToken?: string;
   message?: string;
 }

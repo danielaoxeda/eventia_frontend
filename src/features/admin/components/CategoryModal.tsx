@@ -1,6 +1,7 @@
 import { useEffect, useState, type FormEvent } from "react";
 import { Save, X } from "lucide-react";
-import type { AdminCategory, CategoryFormData, CategoryStatus } from "../types/admin.types";
+import type { AdminCategory, CategoryFormData } from "../types/admin.types";
+import { getErrorMessage } from "../utils/apiAdapter";
 
 interface CategoryModalProps {
   open: boolean;
@@ -15,25 +16,11 @@ export default function CategoryModal({
   onClose,
   onSave,
 }: CategoryModalProps) {
-  const [nombre, setNombre] = useState("");
-  const [descripcion, setDescripcion] = useState("");
-  const [estado, setEstado] = useState<CategoryStatus>("Activa");
+  const [name, setName] = useState(categoryToEdit?.name ?? "");
+  const [description, setDescription] = useState(categoryToEdit?.description ?? "");
+  const [active, setActive] = useState(categoryToEdit?.active ?? true);
   const [error, setError] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
-
-  useEffect(() => {
-    if (categoryToEdit) {
-      setNombre(categoryToEdit.nombre);
-      setDescripcion(categoryToEdit.descripcion);
-      setEstado(categoryToEdit.estado);
-      setError(null);
-    } else {
-      setNombre("");
-      setDescripcion("");
-      setEstado("Activa");
-      setError(null);
-    }
-  }, [categoryToEdit, open]);
 
   useEffect(() => {
     if (!open) return;
@@ -52,7 +39,7 @@ export default function CategoryModal({
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    if (!nombre.trim()) {
+    if (!name.trim()) {
       setError("El nombre de la categoría es obligatorio.");
       return;
     }
@@ -60,18 +47,20 @@ export default function CategoryModal({
     setSubmitting(true);
     try {
       await onSave({
-        nombre: nombre.trim(),
-        descripcion: descripcion.trim(),
-        estado,
+        name: name.trim(),
+        description: description.trim(),
+        active,
       });
       onClose();
+    } catch (e: unknown) {
+      setError(getErrorMessage(e));
     } finally {
       setSubmitting(false);
     }
   };
 
-  const handleToggleEstado = () => {
-    setEstado((prev) => (prev === "Activa" ? "Inactiva" : "Activa"));
+  const handleToggleActive = () => {
+    setActive((prev) => !prev);
   };
 
   return (
@@ -86,7 +75,7 @@ export default function CategoryModal({
           <div>
             <span className="text-[11px] font-bold text-primary tracking-wider uppercase block mb-1">
               {isEditing
-                ? `Editando Registro #${categoryToEdit?.numeroId}`
+                ? `Editando Registro #${categoryToEdit?.id}`
                 : "Nuevo Registro"}
             </span>
             <h2 className="text-xl font-bold text-on-surface">
@@ -129,8 +118,9 @@ export default function CategoryModal({
             <input
               id="modal-category-name"
               type="text"
-              value={nombre}
-              onChange={(e) => setNombre(e.target.value)}
+              value={name}
+              onChange={(e) => setName(e.target.value)}
+              maxLength={100}
               placeholder="Ej. Conciertos & Festivales"
               className="w-full px-3.5 py-2.5 rounded-xl border border-outline-variant/40 bg-surface text-on-surface text-sm placeholder:text-on-surface-variant/50 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
               disabled={submitting}
@@ -151,8 +141,8 @@ export default function CategoryModal({
             <textarea
               id="modal-category-description"
               rows={3}
-              value={descripcion}
-              onChange={(e) => setDescripcion(e.target.value)}
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
               placeholder="Define el alcance de eventos cubiertos por este segmento..."
               maxLength={250}
               className="w-full px-3.5 py-2.5 rounded-xl border border-outline-variant/40 bg-surface text-on-surface text-sm placeholder:text-on-surface-variant/50 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all resize-none"
@@ -160,7 +150,7 @@ export default function CategoryModal({
             />
             <div className="mt-1 flex items-center justify-between text-[11px] text-on-surface-variant">
               <span>Máximo 250 caracteres recomendados para catálogos.</span>
-              <span>{descripcion.length}/250</span>
+              <span>{description.length}/250</span>
             </div>
           </div>
 
@@ -170,7 +160,7 @@ export default function CategoryModal({
                 Estado de Publicación
               </span>
               <span className="text-[11px] text-on-surface-variant">
-                {estado === "Activa"
+                {active
                   ? "Visible en plataforma (Activa)"
                   : "Oculto en plataforma (Inactiva)"}
               </span>
@@ -179,16 +169,16 @@ export default function CategoryModal({
             <button
               type="button"
               role="switch"
-              aria-checked={estado === "Activa"}
-              onClick={handleToggleEstado}
+              aria-checked={active}
+              onClick={handleToggleActive}
               disabled={submitting}
               className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-primary/30 ${
-                estado === "Activa" ? "bg-primary" : "bg-outline-variant/40"
+                active ? "bg-primary" : "bg-outline-variant/40"
               }`}
             >
               <span
                 className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-md ring-0 transition duration-200 ease-in-out ${
-                  estado === "Activa" ? "translate-x-5" : "translate-x-0"
+                  active ? "translate-x-5" : "translate-x-0"
                 }`}
               />
             </button>
