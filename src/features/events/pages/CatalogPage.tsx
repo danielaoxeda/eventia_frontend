@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import Footer from "../../../shared/layouts/Footer";
 import CatalogFilterBar from "../components/CatalogFilterBar";
 import CatalogToolbar from "../components/CatalogToolbar";
@@ -21,15 +21,7 @@ const PAGE_SIZE = 6;
 
 /* Página del catálogo público de eventos */
 export default function CatalogPage() {
-  const [search, setSearch] = useState("");
-  const [month, setMonth] = useState("ALL");
-  const [location, setLocation] = useState("ALL");
-  const [priceRangeId, setPriceRangeId] = useState("ALL");
-  const [category, setCategory] = useState<Category | "ALL">("ALL");
-  const [sort, setSort] = useState<SortKey>("popular");
-  const [view, setView] = useState<ViewMode>("grid");
-  const [page, setPage] = useState(1);
-
+  // Eventos que llegan del backend (GET /events)
   const [events, setEvents] = useState<CatalogEvent[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -37,6 +29,9 @@ export default function CatalogPage() {
 
   useEffect(() => {
     let active = true;
+    setLoading(true);
+    setError(null);
+
     getEvents()
       .then((data) => {
         if (active) {
@@ -46,7 +41,9 @@ export default function CatalogPage() {
       })
       .catch(() => {
         if (active) {
-          setError("Revisa que el servidor esté activo (npm run server).");
+          setError(
+            "No se pudieron cargar los eventos. Verifica que el backend esté activo.",
+          );
           setLoading(false);
         }
       });
@@ -56,12 +53,29 @@ export default function CatalogPage() {
     };
   }, [reload]);
 
+  const [search, setSearch] = useState("");
+  const [month, setMonth] = useState("ALL");
+  const [location, setLocation] = useState("ALL");
+  const [priceRangeId, setPriceRangeId] = useState("ALL");
+  const [category, setCategory] = useState<Category | "ALL">("ALL");
+  const [sort, setSort] = useState<SortKey>("popular");
+  const [view, setView] = useState<ViewMode>("grid");
+  const [page, setPage] = useState(1);
+
   // Opciones derivadas de los datos del servicio (sin valores fijos).
-  const months = Array.from(new Set(events.map((event) => event.month)));
-  const locations = Array.from(new Set(events.map((event) => event.venue)));
-  const categories = CATEGORY_ORDER.filter((name) =>
-    events.some((event) => event.category === name),
+  const months = useMemo(
+    () => Array.from(new Set(events.map((event) => event.month))),
+    [events]
   );
+  const locations = useMemo(
+    () => Array.from(new Set(events.map((event) => event.venue))),
+    [events]
+  );
+  const categories = useMemo(
+    () => CATEGORY_ORDER.filter((name) => events.some((event) => event.category === name)),
+    [events]
+  );
+
   const priceRange =
     PRICE_RANGES.find((range) => range.id === priceRangeId) ?? PRICE_RANGES[0];
 
@@ -96,28 +110,25 @@ export default function CatalogPage() {
 
   const query = search.trim().toLowerCase();
 
-  const result = events.filter((event) => {
-    if (category !== "ALL" && event.category !== category) return false;
-    if (month !== "ALL" && event.month !== month) return false;
-    if (location !== "ALL" && event.venue !== location) return false;
-    if (event.price < priceRange.min || event.price >= priceRange.max)
-      return false;
-    if (
-      query &&
-      !`${event.title} ${event.venue} ${event.city}`
-        .toLowerCase()
-        .includes(query)
-    )
-      return false;
-    return true;
-  });
+  // Filtrado + orden memorizados: solo se recalculan si cambia un filtro.
+  const filtered = useMemo(() => {
+    const result = events.filter((event) => {
+      if (category !== "ALL" && event.category !== category) return false;
+      if (month !== "ALL" && event.month !== month) return false;
+      if (location !== "ALL" && event.venue !== location) return false;
+      if (event.price < priceRange.min || event.price >= priceRange.max) return false;
+      if (query && !`${event.title} ${event.venue} ${event.city}`.toLowerCase().includes(query))
+        return false;
+      return true;
+    });
 
-  const filtered = [...result].sort((a, b) => {
-    if (sort === "date") return a.dateOrder - b.dateOrder;
-    if (sort === "price-asc") return a.price - b.price;
-    if (sort === "price-desc") return b.price - a.price;
-    return b.soldPct - a.soldPct;
-  });
+    return [...result].sort((a, b) => {
+      if (sort === "date") return a.dateOrder - b.dateOrder;
+      if (sort === "price-asc") return a.price - b.price;
+      if (sort === "price-desc") return b.price - a.price;
+      return b.soldPct - a.soldPct;
+    });
+  }, [events, category, month, location, priceRange, query, sort]);
 
   // Paginación defensiva: la página actual nunca sale del rango válido.
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
@@ -151,9 +162,7 @@ export default function CatalogPage() {
         <h1 className="font-display font-extrabold text-2xl">
           No se pudieron cargar los eventos
         </h1>
-        <p className="text-sm text-on-surface-variant">
-          Revisa que el servidor esté activo (<code>npm run server</code>).
-        </p>
+        <p className="text-sm text-on-surface-variant">{error}</p>
         <button
           onClick={handleRetry}
           className="mt-2 px-4 py-2 bg-primary text-on-primary text-sm font-bold rounded-lg"
