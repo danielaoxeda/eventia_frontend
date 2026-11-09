@@ -97,3 +97,16 @@ export interface AuditLogEntry {
   metadata?: string;
 }
 
+export interface OrganizerLiveSaleNotification {
+  organizerId: number;
+  eventTitle: string;
+  ticketTypeName: string;
+  quantity: number;
+  unitPrice: number;
+  subtotal: number;
+  buyerName: string;
+  message: string;
+  timestamp: string;
+  updatedDashboard?: OrganizerDashboardData;
+}
+

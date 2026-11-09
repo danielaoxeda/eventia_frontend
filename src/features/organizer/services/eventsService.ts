@@ -1,6 +1,5 @@
 import apiClient from "../../../shared/services/api";
 import type { OrganizerEvent } from "../types/organizer.types";
-import { USE_MOCK_DATA, MOCK_EVENTS } from "./organizerMock";
 import {
   mapApiEventToOrganizer,
   toApiEventRequest,
@@ -27,10 +26,6 @@ async function resolveCategoryId(category?: string | number): Promise<number> {
 
 export const eventsService = {
   async getEvents(): Promise<OrganizerEvent[]> {
-    if (USE_MOCK_DATA) {
-      await new Promise((r) => setTimeout(r, 80));
-      return [...MOCK_EVENTS];
-    }
     const response = await apiClient.get<{ content?: ApiEventSummary[] } | ApiEventSummary[]>(
       "/api/events/organizer",
       { params: { includeInactive: true, size: 100 } }
@@ -39,25 +34,11 @@ export const eventsService = {
   },
 
   async getEventById(id: string): Promise<OrganizerEvent | null> {
-    if (USE_MOCK_DATA) {
-      await new Promise((r) => setTimeout(r, 60));
-      const event = MOCK_EVENTS.find((e) => e.id === id);
-      return event ? { ...event } : null;
-    }
     const response = await apiClient.get<ApiEventDetail>(`/api/events/${id}`);
     return response.data ? mapApiEventToOrganizer(response.data) : null;
   },
 
   async toggleEventStatus(id: string, newStatus: OrganizerEvent["status"]): Promise<OrganizerEvent> {
-    if (USE_MOCK_DATA) {
-      await new Promise((r) => setTimeout(r, 100));
-      const index = MOCK_EVENTS.findIndex((e) => e.id === id);
-      if (index !== -1) {
-        MOCK_EVENTS[index].status = newStatus;
-        return { ...MOCK_EVENTS[index] };
-      }
-      throw new Error("Evento no encontrado");
-    }
     await apiClient.patch(`/api/events/${id}/status`, null, {
       params: { status: toBackendEventStatus(newStatus) },
     });
@@ -67,34 +48,25 @@ export const eventsService = {
   },
 
   async deactivateEvent(id: string, _reason: string): Promise<OrganizerEvent> {
-    if (USE_MOCK_DATA) {
-      await new Promise((r) => setTimeout(r, 120));
-      const index = MOCK_EVENTS.findIndex((e) => e.id === id);
-      if (index !== -1) {
-        MOCK_EVENTS[index].active = false;
-        MOCK_EVENTS[index].status = "inactive";
-        return { ...MOCK_EVENTS[index] };
-      }
-      throw new Error("Evento no encontrado");
-    }
     await apiClient.patch(`/api/events/${id}/active`, null, { params: { active: false } });
     const detail = await this.getEventById(id);
     if (!detail) throw new Error("Evento no encontrado");
     return detail;
   },
 
-  async updateEvent(id: string, data: Partial<OrganizerEvent> & { categoryId?: number; description?: string; startTime?: string; endTime?: string; location?: string }): Promise<OrganizerEvent> {
-    if (USE_MOCK_DATA) {
-      await new Promise((r) => setTimeout(r, 150));
-      const index = MOCK_EVENTS.findIndex((e) => e.id === id);
-      if (index !== -1) {
-        MOCK_EVENTS[index] = { ...MOCK_EVENTS[index], ...data };
-        return { ...MOCK_EVENTS[index] };
-      }
-      throw new Error("Evento no encontrado");
+  async updateEvent(
+    id: string,
+    data: Partial<OrganizerEvent> & {
+      categoryId?: number;
+      description?: string;
+      startTime?: string;
+      endTime?: string;
+      location?: string;
     }
+  ): Promise<OrganizerEvent> {
     const current = await apiClient.get<ApiEventDetail>(`/api/events/${id}`).then((r) => r.data);
-    const categoryId = data.categoryId ?? (await resolveCategoryId((data as any).category ?? current.categoryName));
+    const categoryId =
+      data.categoryId ?? (await resolveCategoryId((data as any).category ?? current.categoryName));
     const payload = toApiEventRequest({
       title: data.title ?? current.title,
       description: (data as any).description ?? current.description ?? "",
@@ -130,32 +102,6 @@ export const eventsService = {
     description?: string;
     location?: string;
   }): Promise<OrganizerEvent> {
-    if (USE_MOCK_DATA) {
-      await new Promise((r) => setTimeout(r, 180));
-      const year = new Date().getFullYear();
-      const randomCodeNum = Math.floor(1000 + Math.random() * 9000);
-      const newEvent: OrganizerEvent = {
-        id: `EVT-${year}-LIM-${randomCodeNum}`,
-        code: `EVT-${randomCodeNum}`,
-        title: data.title || "Nuevo Evento",
-        category: data.category || "Música & Conciertos",
-        venue: data.venue || "Por definir",
-        city: data.city || "Lima",
-        date: data.date || new Date().toISOString().split("T")[0],
-        time: data.time || "20:00",
-        bannerUrl:
-          data.bannerUrl ||
-          "https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=600&auto=format&fit=crop&q=80",
-        status: data.status || "published",
-        active: data.active ?? true,
-        capacity: data.capacity || 0,
-        ticketsSold: 0,
-        totalRevenue: 0,
-        featured: data.featured ?? false,
-      };
-      MOCK_EVENTS.unshift(newEvent);
-      return newEvent;
-    }
     const categoryId = data.categoryId ?? (await resolveCategoryId(data.category));
     const payload = toApiEventRequest({ ...data, categoryId });
     const response = await apiClient.post<ApiEventDetail>("/api/events", payload);
