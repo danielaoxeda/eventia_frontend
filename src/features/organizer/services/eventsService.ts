@@ -1,49 +1,52 @@
 import apiClient from "../../../shared/services/api";
 import type { OrganizerEvent } from "../types/organizer.types";
 import { USE_MOCK_DATA, MOCK_EVENTS } from "./organizerMock";
+import {
+  mapApiEventToOrganizer,
+  toApiEventRequest,
+  toBackendEventStatus,
+  unwrapPage,
+  type ApiEventDetail,
+  type ApiEventSummary,
+} from "./organizerMappers";
+
+async function resolveCategoryId(category?: string | number): Promise<number> {
+  if (typeof category === "number" && Number.isFinite(category)) return category;
+  if (typeof category === "string" && /^\d+$/.test(category)) return Number(category);
+  if (!category) return 1;
+  try {
+    const res = await apiClient.get<Array<{ id: number | string; name: string }>>("/api/categories");
+    const found = (res.data || []).find((c) => c.name?.toLowerCase() === category.toLowerCase());
+    if (found?.id != null) return Number(found.id);
+  } catch {
+    // fallback below
+  }
+  return 1;
+}
 
 export const eventsService = {
-  /**
-   * Obtiene la lista completa de eventos del organizador
-   */
   async getEvents(): Promise<OrganizerEvent[]> {
     if (USE_MOCK_DATA) {
       await new Promise((r) => setTimeout(r, 80));
       return [...MOCK_EVENTS];
     }
-
-    try {
-      const response = await apiClient.get<OrganizerEvent[]>("/events");
-      return response.data;
-    } catch (err) {
-      console.warn("API offline, cargando eventos mock locales:", err);
-      return [...MOCK_EVENTS];
-    }
+    const response = await apiClient.get<{ content?: ApiEventSummary[] } | ApiEventSummary[]>(
+      "/api/events/organizer",
+      { params: { includeInactive: true, size: 100 } }
+    );
+    return unwrapPage(response.data).map(mapApiEventToOrganizer);
   },
 
-  /**
-   * Obtiene el detalle de un evento por su ID
-   */
   async getEventById(id: string): Promise<OrganizerEvent | null> {
     if (USE_MOCK_DATA) {
       await new Promise((r) => setTimeout(r, 60));
       const event = MOCK_EVENTS.find((e) => e.id === id);
       return event ? { ...event } : null;
     }
-
-    try {
-      const response = await apiClient.get<OrganizerEvent>(`/events/${id}`);
-      return response.data;
-    } catch (err) {
-      console.warn("API offline, cargando detalle mock local:", err);
-      const event = MOCK_EVENTS.find((e) => e.id === id);
-      return event ? { ...event } : null;
-    }
+    const response = await apiClient.get<ApiEventDetail>(`/api/events/${id}`);
+    return response.data ? mapApiEventToOrganizer(response.data) : null;
   },
 
-  /**
-   * Cambia el estado publicado/oculto de un evento
-   */
   async toggleEventStatus(id: string, newStatus: OrganizerEvent["status"]): Promise<OrganizerEvent> {
     if (USE_MOCK_DATA) {
       await new Promise((r) => setTimeout(r, 100));
@@ -54,16 +57,14 @@ export const eventsService = {
       }
       throw new Error("Evento no encontrado");
     }
-
-    const response = await apiClient.patch<OrganizerEvent>(`/events/${id}`, {
-      status: newStatus,
+    await apiClient.patch(`/api/events/${id}/status`, null, {
+      params: { status: toBackendEventStatus(newStatus) },
     });
-    return response.data;
+    const detail = await this.getEventById(id);
+    if (!detail) throw new Error("Evento no encontrado");
+    return detail;
   },
 
-  /**
-   * Inactiva un evento (soft delete - Regla RN04)
-   */
   async deactivateEvent(id: string, _reason: string): Promise<OrganizerEvent> {
     if (USE_MOCK_DATA) {
       await new Promise((r) => setTimeout(r, 120));
@@ -75,18 +76,13 @@ export const eventsService = {
       }
       throw new Error("Evento no encontrado");
     }
-
-    const response = await apiClient.patch<OrganizerEvent>(`/events/${id}`, {
-      active: false,
-      status: "inactive",
-    });
-    return response.data;
+    await apiClient.patch(`/api/events/${id}/active`, null, { params: { active: false } });
+    const detail = await this.getEventById(id);
+    if (!detail) throw new Error("Evento no encontrado");
+    return detail;
   },
 
-  /**
-   * Actualiza los datos de un evento
-   */
-  async updateEvent(id: string, data: Partial<OrganizerEvent>): Promise<OrganizerEvent> {
+  async updateEvent(id: string, data: Partial<OrganizerEvent> & { categoryId?: number; description?: string; startTime?: string; endTime?: string; location?: string }): Promise<OrganizerEvent> {
     if (USE_MOCK_DATA) {
       await new Promise((r) => setTimeout(r, 150));
       const index = MOCK_EVENTS.findIndex((e) => e.id === id);
@@ -96,57 +92,76 @@ export const eventsService = {
       }
       throw new Error("Evento no encontrado");
     }
-
-    const response = await apiClient.patch<OrganizerEvent>(`/events/${id}`, data);
-    return response.data;
+    const current = await apiClient.get<ApiEventDetail>(`/api/events/${id}`).then((r) => r.data);
+    const categoryId = data.categoryId ?? (await resolveCategoryId((data as any).category ?? current.categoryName));
+    const payload = toApiEventRequest({
+      title: data.title ?? current.title,
+      description: (data as any).description ?? current.description ?? "",
+      date: data.date ?? current.date,
+      startTime: (data as any).startTime ?? data.time ?? current.startTime ?? "09:00",
+      endTime: (data as any).endTime ?? current.endTime ?? "11:00",
+      venue: data.venue ?? current.location ?? "",
+      location: (data as any).location ?? data.venue ?? current.location ?? "",
+      capacity: data.capacity ?? current.capacity ?? 0,
+      bannerUrl: data.bannerUrl ?? current.bannerUrl ?? undefined,
+      status: data.status ?? mapApiEventToOrganizer(current).status,
+      categoryId,
+    });
+    const response = await apiClient.put<ApiEventDetail>(`/api/events/${id}`, payload);
+    return mapApiEventToOrganizer(response.data);
   },
 
-  /**
-   * Crea un nuevo evento
-   */
   async createEvent(data: {
     title: string;
     category?: string;
+    categoryId?: number;
     venue?: string;
     city?: string;
     date?: string;
     time?: string;
+    startTime?: string;
+    endTime?: string;
     bannerUrl?: string;
     status?: OrganizerEvent["status"];
     active?: boolean;
     capacity?: number;
     featured?: boolean;
     description?: string;
+    location?: string;
   }): Promise<OrganizerEvent> {
-    const year = new Date().getFullYear();
-    const randomCodeNum = Math.floor(1000 + Math.random() * 9000);
-    const newEvent: OrganizerEvent = {
-      id: `EVT-${year}-LIM-${randomCodeNum}`,
-      code: `EVT-${randomCodeNum}`,
-      title: data.title || "Nuevo Evento",
-      category: data.category || "Música & Conciertos",
-      venue: data.venue || "Arena 1 Costa Verde, San Miguel",
-      city: data.city || "Lima",
-      date: data.date || new Date().toISOString().split("T")[0],
-      time: data.time || "20:00",
-      bannerUrl:
-        data.bannerUrl ||
-        "https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=600&auto=format&fit=crop&q=80",
-      status: data.status || "published",
-      active: data.active ?? true,
-      capacity: data.capacity || 5000,
-      ticketsSold: 0,
-      totalRevenue: 0,
-      featured: data.featured ?? false,
-    };
-
     if (USE_MOCK_DATA) {
       await new Promise((r) => setTimeout(r, 180));
+      const year = new Date().getFullYear();
+      const randomCodeNum = Math.floor(1000 + Math.random() * 9000);
+      const newEvent: OrganizerEvent = {
+        id: `EVT-${year}-LIM-${randomCodeNum}`,
+        code: `EVT-${randomCodeNum}`,
+        title: data.title || "Nuevo Evento",
+        category: data.category || "Música & Conciertos",
+        venue: data.venue || "Por definir",
+        city: data.city || "Lima",
+        date: data.date || new Date().toISOString().split("T")[0],
+        time: data.time || "20:00",
+        bannerUrl:
+          data.bannerUrl ||
+          "https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=600&auto=format&fit=crop&q=80",
+        status: data.status || "published",
+        active: data.active ?? true,
+        capacity: data.capacity || 0,
+        ticketsSold: 0,
+        totalRevenue: 0,
+        featured: data.featured ?? false,
+      };
       MOCK_EVENTS.unshift(newEvent);
       return newEvent;
     }
-
-    const response = await apiClient.post<OrganizerEvent>("/events", newEvent);
-    return response.data;
+    const categoryId = data.categoryId ?? (await resolveCategoryId(data.category));
+    const payload = toApiEventRequest({ ...data, categoryId });
+    const response = await apiClient.post<ApiEventDetail>("/api/events", payload);
+    const created = mapApiEventToOrganizer(response.data);
+    if (data.active === false) {
+      return this.deactivateEvent(created.id, "Creado inactivo");
+    }
+    return created;
   },
 };

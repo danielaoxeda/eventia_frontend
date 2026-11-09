@@ -1,37 +1,31 @@
 import api from "../../../shared/services/api";
-import type { TicketItem, QrValidationResult } from "../types/organizer.types";
+import type { QrValidationResult, TicketQrStatus } from "../types/organizer.types";
 
 /**
- * Servicio de validación de entradas QR para el organizador.
- * Consume la colección 'tickets' de la API y actualiza el estado a USADO.
+ * Validación QR del organizador. Intenta endpoint backend y cae a respuesta segura.
  */
 export const qrValidationService = {
-  /**
-   * Consulta el ticket por QR y actualiza su estado si está VIGENTE.
-   */
   async validateTicket(qrCode: string): Promise<QrValidationResult> {
+    const code = qrCode.trim();
+    if (!code) return { valido: false, estado: "INVALIDO" };
     try {
-      const { data } = await api.get<TicketItem[]>(
-        `/tickets?qr_code=${encodeURIComponent(qrCode.trim())}`
-      );
-
-      const ticket = data?.[0];
-
-      // Si no existe en el sistema
-      if (!ticket) {
+      const { data } = await api.post<any>("/api/organizer/tickets/validate", { qrCode: code });
+      const estado = (data?.estado || data?.status || "INVALIDO") as TicketQrStatus | "INVALIDO";
+      const valido = !!data?.valido || estado === "USADO" || estado === "VIGENTE";
+      return { valido, estado };
+    } catch {
+      try {
+        const { data } = await api.get<any[]>(`/tickets?qr_code=${encodeURIComponent(code)}`);
+        const ticket = data?.[0];
+        if (!ticket) return { valido: false, estado: "INVALIDO" };
+        if (ticket.status === "VIGENTE") {
+          await api.patch(`/tickets/${ticket.id}`, { status: "USADO" });
+          return { valido: true, estado: "USADO" };
+        }
+        return { valido: false, estado: ticket.status as TicketQrStatus };
+      } catch {
         return { valido: false, estado: "INVALIDO" };
       }
-
-      // Si está VIGENTE: se marca como USADO en la API y se acepta el ingreso
-      if (ticket.status === "VIGENTE") {
-        await api.patch(`/tickets/${ticket.id}`, { status: "USADO" });
-        return { valido: true, estado: "USADO" };
-      }
-
-      // Si ya es USADO o ANULADO: se rechaza retornando su estado
-      return { valido: false, estado: ticket.status };
-    } catch {
-      return { valido: false, estado: "INVALIDO" };
     }
   },
 };

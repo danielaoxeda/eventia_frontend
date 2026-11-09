@@ -4,7 +4,8 @@ import type {
   TicketType,
 } from "../types/organizer.types";
 
-export const USE_MOCK_DATA = import.meta.env.VITE_USE_MOCK_DATA !== "false";
+// Mock solo si se habilita explícitamente. Por defecto usa el backend real.
+export const USE_MOCK_DATA = import.meta.env.VITE_USE_MOCK_DATA === "true";
 
 export const MOCK_EVENTS: OrganizerEvent[] = [
   {
