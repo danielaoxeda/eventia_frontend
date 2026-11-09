@@ -7,7 +7,7 @@ import type {
   ZoneDistributionDataPoint,
 } from "../types/organizer.types";
 
-type ApiPage<T> = { content: T[] } | T[];
+export type ApiPage<T> = { content?: T[] } | T[];
 
 export interface ApiEventSummary {
   id: number | string;

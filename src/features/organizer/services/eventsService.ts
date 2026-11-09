@@ -16,7 +16,8 @@ async function resolveCategoryId(category?: string | number): Promise<number> {
   if (!category) return 1;
   try {
     const res = await apiClient.get<Array<{ id: number | string; name: string }>>("/api/categories");
-    const found = (res.data || []).find((c) => c.name?.toLowerCase() === category.toLowerCase());
+    const targetCategory = String(category).toLowerCase();
+    const found = (res.data || []).find((c) => c.name?.toLowerCase() === targetCategory);
     if (found?.id != null) return Number(found.id);
   } catch {
     // fallback below
