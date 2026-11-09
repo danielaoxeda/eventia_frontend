@@ -21,6 +21,7 @@ function trimProfile(data: UserFormData): UserFormData {
 export const adminUsersService = {
   // Obtiene el listado paginado de organizadores
   async getUsers(params: PageParams<UserFilters>): Promise<PageResponse<AdminUser>> {
+    console.log("[AdminUsers] Consultando organizadores");
     const { data } = await api.get<PageResponse<AdminUser>>("/api/admin/users", {
       params: {
         page: params.page,
@@ -34,6 +35,7 @@ export const adminUsersService = {
 
   // Registra un nuevo organizador con contraseña provisional
   async createUser(formData: CreateUserFormData): Promise<AdminUser> {
+    console.log("[AdminUsers] Registrando organizador:", formData.email.trim());
     const payload: CreateUserFormData = {
       ...trimProfile(formData),
       password: formData.password,
@@ -44,6 +46,7 @@ export const adminUsersService = {
 
   // Actualiza los datos personales de un organizador
   async updateUser(id: number, formData: UserFormData): Promise<AdminUser> {
+    console.log("[AdminUsers] Actualizando organizador id:", id);
     const { data } = await api.put<AdminUser>(
       `/api/admin/users/${id}`,
       trimProfile(formData)
@@ -53,6 +56,7 @@ export const adminUsersService = {
 
   // Activa o desactiva la cuenta de un organizador
   async toggleUserStatus(id: number, active: boolean): Promise<AdminUser> {
+    console.log("[AdminUsers] Cambiando estado de organizador id:", id, "activo:", active);
     const { data } = await api.patch<AdminUser>(`/api/admin/users/${id}/status`, {
       active,
     });

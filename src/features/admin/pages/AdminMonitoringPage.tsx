@@ -58,6 +58,7 @@ export default function AdminMonitoringPage() {
         </div>
       )}
 
+      {/* Tarjetas de KPIs principales */}
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 lg:gap-5">
         <KpiCard kind="totalRevenue" metric={data.kpis.totalRevenue} />
         <KpiCard kind="processedOrders" metric={data.kpis.processedOrders} />
@@ -66,10 +67,16 @@ export default function AdminMonitoringPage() {
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Gráfico 1: Evolución mensual de ingresos */}
         <RevenueTimelineChart data={data.revenueTimeline} />
-        <TicketFlowChart data={data.ticketFlow} />
+        {/* Gráfico 2: Comparativa de tickets emitidos vs órdenes */}
+        <TicketFlowChart
+          data={data.ticketFlow}
+          revenueTimeline={data.revenueTimeline}
+        />
       </div>
 
+      {/* Tabla de eventos activos */}
       <ActiveEventsTable events={data.activeEvents} />
     </div>
   );

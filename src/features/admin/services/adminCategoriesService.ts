@@ -18,6 +18,7 @@ function trimForm(data: CategoryFormData): CategoryFormData {
 export const adminCategoriesService = {
   // Obtiene el listado paginado de categorías con filtros opcionales
   async getCategories(params: PageParams<CategoryFilters>): Promise<PageResponse<AdminCategory>> {
+    console.log("[AdminCategories] Consultando categorias");
     const { data } = await api.get<PageResponse<AdminCategory>>("/api/admin/categories", {
       params: {
         page: params.page,
@@ -31,18 +32,21 @@ export const adminCategoriesService = {
 
   // Registra una nueva categoría
   async createCategory(payload: CategoryFormData): Promise<AdminCategory> {
+    console.log("[AdminCategories] Creando categoria:", payload.name.trim());
     const { data } = await api.post<AdminCategory>("/api/admin/categories", trimForm(payload));
     return data;
   },
 
   // Actualiza los datos de una categoría existente
   async updateCategory(id: number, payload: CategoryFormData): Promise<AdminCategory> {
+    console.log("[AdminCategories] Actualizando categoria id:", id);
     const { data } = await api.put<AdminCategory>(`/api/admin/categories/${id}`, trimForm(payload));
     return data;
   },
 
   // Activa o desactiva una categoría
   async toggleCategoryStatus(id: number, active: boolean): Promise<AdminCategory> {
+    console.log("[AdminCategories] Cambiando estado de categoria id:", id, "activo:", active);
     const { data } = await api.patch<AdminCategory>(`/api/admin/categories/${id}/status`, {
       active,
     });
