@@ -10,6 +10,7 @@ import type {
 export const adminMonitoringService = {
   // Obtiene el resumen completo del panel de monitoreo
   async getDashboardData(): Promise<MonitoringDashboardResponse> {
+    console.log("[AdminMonitoring] Consultando metricas del dashboard");
     const { data } = await api.get<MonitoringDashboardResponse>("/api/admin/monitoring");
     return data;
   },
@@ -28,7 +29,7 @@ export const adminMonitoringService = {
     return data;
   },
 
-  // Obtiene la serie comparativa de tickets emitidos y validados
+  // Obtiene el flujo mensual de tickets emitidos
   async getTicketFlow(): Promise<TicketFlowResponse[]> {
     const { data } = await api.get<TicketFlowResponse[]>(
       "/api/admin/monitoring/ticket-flow"
