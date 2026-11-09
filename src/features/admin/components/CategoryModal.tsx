@@ -39,15 +39,20 @@ export default function CategoryModal({
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
-    if (!name.trim()) {
+    const trimmedName = name.trim();
+    if (!trimmedName) {
       setError("El nombre de la categoría es obligatorio.");
+      return;
+    }
+    if (trimmedName.length < 3) {
+      setError("El nombre de la categoría debe tener al menos 3 caracteres.");
       return;
     }
     setError(null);
     setSubmitting(true);
     try {
       await onSave({
-        name: name.trim(),
+        name: trimmedName,
         description: description.trim(),
         active,
       });
