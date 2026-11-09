@@ -1,14 +1,10 @@
 import type {
   CatalogEvent,
   Category,
-  CategoryRow,
-  EventRow,
-  PriceRange,
-  TicketTypeRow,
+  PriceRange
 } from "../types/event.types";
 import api from "@/shared/services/api";
 // Respaldo local (db.json): se usa solo si el backend no responde.
-import db from "../../../../db.json";
 
 const MONTH_CODES = ["ENE", "FEB", "MAR", "ABR", "MAY", "JUN", "JUL", "AGO", "SET", "OCT", "NOV", "DIC"];
 
@@ -20,41 +16,6 @@ const TAG_BY_CATEGORY: Record<string, string> = {
   "Tecnología & Startups": "Tecnología",
 };
 
-interface DbShape {
-  events?: EventRow[];
-  ticket_types?: TicketTypeRow[];
-  categories?: CategoryRow[];
-}
-
-const dbData = db as unknown as DbShape;
-
-function mapEvent(row: EventRow, tickets: TicketTypeRow[], categories: CategoryRow[]): CatalogEvent {
-  const date = new Date(`${row.date}T00:00:00`);
-  const eventId = Number(row.id);
-  const categoryName = (categories.find((item) => item.id === row.id_category)?.name ?? "Conciertos") as Category;
-  const eventTickets = tickets.filter((ticket) => ticket.id_event === eventId);
-  const soldPct = row.capacity > 0 ? Math.round(((row.capacity - row.available_capacity) / row.capacity) * 100) : 0;
-  return {
-    id: eventId,
-    title: row.title,
-    category: categoryName,
-    month: MONTH_CODES[date.getMonth()] ?? "",
-    day: String(date.getDate()).padStart(2, "0"),
-    dateOrder: date.getTime(),
-    venue: row.location,
-    city: row.city,
-    price: eventTickets.length > 0 ? Math.min(...eventTickets.map((ticket) => ticket.price)) : 0,
-    soldPct,
-    image: "",
-    tag: TAG_BY_CATEGORY[categoryName] ?? categoryName,
-  };
-}
-
-function fallbackEvents(): CatalogEvent[] {
-  return (dbData.events ?? [])
-    .filter((row) => row.active)
-    .map((row) => mapEvent(row, dbData.ticket_types ?? [], dbData.categories ?? []));
-}
 
 interface BackendEvent {
   id: number;
@@ -93,11 +54,19 @@ function mapBackendEvent(row: BackendEvent): CatalogEvent {
 
 export async function getEvents(): Promise<CatalogEvent[]> {
   try {
-    const { data } = await api.get<BackendEvent[]>("/events", { skipAuthRedirect: true } as any);
-    return (data ?? []).map(mapBackendEvent);
-  } catch {
-    console.warn("[Eventia] Backend no disponible, usando datos de respaldo (db.json)");
-    return fallbackEvents();
+    // Pedimos hasta 100 eventos (o el número que consideres) para el filtrado en cliente
+    const { data } = await api.get<{ content: BackendEvent[] }>("/api/events", { 
+      params: { size: 100 },
+      skipAuthRedirect: true 
+    } as any);
+    
+    // Extraemos la propiedad 'content' donde está realmente el arreglo
+    const eventsArray = data?.content ?? [];
+    
+    return eventsArray.map(mapBackendEvent);
+  } catch (error) {
+    console.error("[Eventia] Error al conectar con el backend real:", error);
+    throw error;
   }
 }
 
