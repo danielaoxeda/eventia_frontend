@@ -11,27 +11,20 @@ export default function OrganizerSidebar() {
       label: "Dashboard & Métricas",
     },
     {
+      to: "/organizador/eventos",
+      icon: "calendar_month",
+      label: "Mis Eventos",
+      end: true,
+    },
+    {
       to: "/organizador/eventos/nuevo",
       icon: "add_circle",
-      label: "Crear Nuevo Evento",
+      label: "Crear Evento",
     },
     {
-      to: "/organizador/eventos/EVT-2025-LIM-9812/editar",
-      icon: "calendar_month",
-      label: "Gestión de Eventos",
-    },
-    {
-      to: "/organizador/eventos/EVT-2025-LIM-9812/entradas",
+      to: "/organizador/eventos/entradas",
       icon: "confirmation_number",
-      label: "Tarifas y Entradas",
-    },
-  ];
-
-  const accessControlLinks = [
-    {
-      to: "/organizador/validar-qr",
-      icon: "qr_code_scanner",
-      label: "Validar QR",
+      label: "Entradas / Tarifas",
     },
   ];
 
@@ -90,40 +83,12 @@ export default function OrganizerSidebar() {
             <NavLink
               key={item.to}
               to={item.to}
+              end={item.end}
               title={collapsed ? item.label : undefined}
               className={({ isActive }) =>
                 `flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all text-xs ${isActive
                   ? "bg-primary-container text-on-primary-container font-bold shadow-xs"
                   : "text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface font-medium"
-                } ${collapsed ? "justify-center" : ""}`
-              }
-            >
-              <span className="material-symbols-outlined text-[20px] flex-shrink-0">
-                {item.icon}
-              </span>
-              {!collapsed && (
-                <div className="flex flex-col flex-1 leading-tight">
-                  <span>{item.label}</span>
-                </div>
-              )}
-            </NavLink>
-          ))}
-
-          {!collapsed && (
-            <span className="text-[0.6875rem] font-bold text-outline px-3 uppercase tracking-wider mt-4 mb-1">
-              Control de Accesos
-            </span>
-          )}
-          {accessControlLinks.map((item) => (
-            <NavLink
-              key={item.to}
-              to={item.to}
-              title={collapsed ? item.label : undefined}
-              className={({ isActive }) =>
-                `flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all text-xs ${
-                  isActive
-                    ? "bg-primary-container text-on-primary-container font-bold shadow-xs"
-                    : "text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface font-medium"
                 } ${collapsed ? "justify-center" : ""}`
               }
             >

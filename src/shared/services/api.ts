@@ -1,3 +1,15 @@
+<<<<<<< HEAD
+import axios from "axios";
+
+const api = axios.create({
+  baseURL: import.meta.env.VITE_API_URL || "http://localhost:8080",
+  headers: {
+    "Content-Type": "application/json",
+  },
+});
+
+export default api;
+=======
 import axios from "axios";
 
 // URL del backend (configurable con VITE_API_URL).
@@ -54,14 +66,16 @@ api.interceptors.response.use(
       console.error(`[Eventia] ❌ ${url} -> Error ${status}:`, error.response.data);
     }
 
+    const skipAuthRedirect = Boolean((error?.config as any)?.skipAuthRedirect);
+
     if (status === 401) {
-      if (!isLoginRequest && !isOnLogin) {
+      if (!skipAuthRedirect && !isLoginRequest && !isOnLogin) {
         const from = `${window.location.pathname}${window.location.search}`;
         clearAuthSession();
         window.location.replace(`/login?from=${encodeURIComponent(from)}`);
       }
     } else if (status === 403) {
-      if (window.location.pathname !== "/forbidden") {
+      if (!skipAuthRedirect && window.location.pathname !== "/forbidden") {
         window.location.replace("/forbidden");
       }
     }
@@ -71,3 +85,4 @@ api.interceptors.response.use(
 );
 
 export default api;
+>>>>>>> feat/organizer-frontend-modules

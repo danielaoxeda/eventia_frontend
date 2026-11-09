@@ -11,7 +11,7 @@ const ROLE_PILL: Record<Role, string> = {
 const ROLE_ICON: Record<Role, string> = {
   Administrador: "shield_person",
   Organizador: "campaign",
-  Staff: "qr_code_scanner",
+  Staff: "badge",
   Cliente: "shopping_bag",
 };
 

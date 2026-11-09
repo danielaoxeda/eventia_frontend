@@ -96,7 +96,7 @@ export default function ReadOnlyUserInfo({ user }: ReadOnlyUserInfoProps) {
               type="text"
               readOnly
               disabled
-              value={user.documentNumber || "48120573"}
+              value={user.documentNumber || "No disponible"}
               className="w-full rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2.5 text-sm font-medium text-slate-700 cursor-not-allowed select-none focus:outline-none"
             />
             <Lock className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
@@ -111,7 +111,7 @@ export default function ReadOnlyUserInfo({ user }: ReadOnlyUserInfoProps) {
           <div className="relative">
             <div className="flex items-center gap-2 w-full rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2.5 text-sm font-medium text-slate-700 cursor-not-allowed select-none">
               <Phone className="h-4 w-4 text-slate-400 shrink-0" />
-              <span>{user.phoneNumber || "+51 987 654 321"}</span>
+              <span>{user.phoneNumber || "No disponible"}</span>
             </div>
             <Lock className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
           </div>
@@ -125,7 +125,7 @@ export default function ReadOnlyUserInfo({ user }: ReadOnlyUserInfoProps) {
           <div className="relative">
             <div className="flex items-center gap-2 w-full rounded-xl border border-slate-200 bg-slate-50 px-3.5 py-2.5 text-sm font-medium text-slate-700 cursor-not-allowed select-none">
               <Calendar className="h-4 w-4 text-slate-400 shrink-0" />
-              <span>{user.birthDate || "15/05/1992"}</span>
+              <span>{user.birthDate || "No disponible"}</span>
             </div>
             <Lock className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-400" />
           </div>

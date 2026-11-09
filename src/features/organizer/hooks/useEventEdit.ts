@@ -7,10 +7,7 @@ export function useEventEdit(id?: string) {
   const [event, setEvent] = useState<OrganizerEvent | null>(null);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [syncing, setSyncing] = useState(false);
   const [deactivating, setDeactivating] = useState(false);
-
-  // Form state
   const [formData, setFormData] = useState<EventFormData>({
     title: "",
     category: "",
@@ -18,7 +15,7 @@ export function useEventEdit(id?: string) {
     venue: "",
     address: "",
     eventDate: "",
-    doorsOpen: "16:30",
+    doorsOpen: "",
     showStart: "20:00",
     salesClose: "22:00",
     description: "",
@@ -27,53 +24,36 @@ export function useEventEdit(id?: string) {
     bannerMobileUrl: "",
     isPublic: true,
   });
-
-  // Modals state
   const [showDeactivateModal, setShowDeactivateModal] = useState(false);
-  const [showPreviewModal, setShowPreviewModal] = useState(false);
-
-  // Toast state
   const [toast, setToast] = useState({ visible: false, message: "" });
-  const showToast = useCallback((message: string) => {
-    setToast({ visible: true, message });
-  }, []);
-  const hideToast = useCallback(() => {
-    setToast({ visible: false, message: "" });
-  }, []);
+  const showToast = useCallback((message: string) => setToast({ visible: true, message }), []);
+  const hideToast = useCallback(() => setToast({ visible: false, message: "" }), []);
 
-  // Cargar datos del evento
   useEffect(() => {
     async function loadEvent() {
       if (!id) return;
       setLoading(true);
       try {
-        const eventData = await organizerService.getEventById(id);
-
+        const eventData = await organizerService.getEventById(id) as any;
         if (eventData) {
           setEvent(eventData);
           setFormData({
-            title: eventData.title,
-            category: eventData.category,
-            capacity: eventData.capacity,
-            venue: eventData.venue,
-            address: `${eventData.venue}, ${eventData.city}`,
-            eventDate: eventData.date,
-            doorsOpen: "16:30",
-            showStart: eventData.time,
-            salesClose: "22:00",
-            description: `${eventData.title} es uno de los eventos más esperados de la temporada. El ingreso está estrictamente reservado a mayores de 18 años portando su Documento Nacional de Identidad (DNI) físico o Carné de Extranjería original.`,
-            restrictions: [
-              "Toda entrada debe estar nominada con DNI/RUC válido antes de las 12:00 hrs del día del evento.",
-              "Se aplicará validación de QR dinámico anti-captura de pantalla.",
-              "Prohibido el reingreso una vez validado el acceso en puerta exterior.",
-            ],
-            bannerDesktopUrl: eventData.bannerUrl,
-            bannerMobileUrl: eventData.bannerUrl,
-            isPublic: eventData.active && eventData.status !== "hidden" && eventData.status !== "draft",
+            title: eventData.title || "",
+            category: eventData.category || "",
+            capacity: Number(eventData.capacity || 0),
+            venue: eventData.venue || eventData.location || "",
+            address: "",
+            eventDate: eventData.date || "",
+            doorsOpen: "",
+            showStart: eventData.startTime || eventData.time || "20:00",
+            salesClose: eventData.endTime || "22:00",
+            description: eventData.description || "",
+            restrictions: [],
+            bannerDesktopUrl: eventData.bannerUrl || "",
+            bannerMobileUrl: "",
+            isPublic: eventData.active !== false && eventData.status !== "hidden" && eventData.status !== "draft",
           });
         }
-      } catch (error) {
-        console.error("Error loading event:", error);
       } finally {
         setLoading(false);
       }
@@ -81,12 +61,10 @@ export function useEventEdit(id?: string) {
     loadEvent();
   }, [id]);
 
-  // Actualizar campo
   const handleFieldChange = (field: string, value: string | number) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
-  // Guardar cambios
   const handleSave = async () => {
     if (!event || !id) return;
     setSaving(true);
@@ -94,54 +72,35 @@ export function useEventEdit(id?: string) {
       const updated = await organizerService.updateEvent(id, {
         title: formData.title,
         category: formData.category,
-        capacity: formData.capacity,
+        capacity: Number(formData.capacity),
         venue: formData.venue,
+        location: formData.venue,
         date: formData.eventDate,
         time: formData.showStart,
+        startTime: formData.showStart,
+        endTime: formData.salesClose || formData.showStart,
         bannerUrl: formData.bannerDesktopUrl,
-      });
+        description: formData.description,
+      } as any);
       setEvent(updated);
-      showToast("¡Cambios guardados con éxito!");
-    } catch (error) {
-      showToast("Error al guardar los cambios.");
+      showToast("Cambios guardados.");
+    } catch (error: any) {
+      showToast(error?.response?.data?.message || "Error al guardar los cambios.");
     } finally {
       setSaving(false);
     }
   };
 
-  // Sincronizar
-  const handleSync = async () => {
-    setSyncing(true);
-    await new Promise((r) => setTimeout(r, 800));
-    setSyncing(false);
-    showToast("Borrador sincronizado.");
-  };
-
-  // Alternar visibilidad
-  const handleToggleVisibility = () => {
-    setFormData((prev) => {
-      const newIsPublic = !prev.isPublic;
-      showToast(
-        newIsPublic
-          ? "Evento activado y visible en cartelera pública."
-          : "Evento pausado. Oculto para compradores, datos intactos."
-      );
-      return { ...prev, isPublic: newIsPublic };
-    });
-  };
-
-  // Desactivar evento
   const handleDeactivate = async (reason: string) => {
     if (!event || !id) return;
     setDeactivating(true);
     try {
       const updated = await organizerService.deactivateEvent(id, reason);
       setEvent(updated);
-      setFormData((prev) => ({ ...prev, isPublic: false }));
       setShowDeactivateModal(false);
       showToast("Evento inactivado.");
-    } catch (error) {
-      showToast("Error al inactivar el evento.");
+    } catch (error: any) {
+      showToast(error?.response?.data?.message || "Error al inactivar el evento.");
     } finally {
       setDeactivating(false);
     }
@@ -153,19 +112,19 @@ export function useEventEdit(id?: string) {
     event,
     loading,
     saving,
-    syncing,
+    syncing: false,
     deactivating,
     formData,
     showDeactivateModal,
     setShowDeactivateModal,
-    showPreviewModal,
-    setShowPreviewModal,
+    showPreviewModal: false,
+    setShowPreviewModal: (_v: boolean) => {},
     toast,
     statusConfig,
     handleFieldChange,
     handleSave,
-    handleSync,
-    handleToggleVisibility,
+    handleSync: async () => {},
+    handleToggleVisibility: () => {},
     handleDeactivate,
     showToast,
     hideToast,
