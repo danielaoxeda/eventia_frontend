@@ -2,9 +2,18 @@ import type { ReactNode } from "react";
 import { Navigate } from "react-router-dom";
 import { useAuth } from "@/context/AuthContext";
 
+function AuthLoading() {
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-surface">
+      <div className="h-8 w-8 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+    </div>
+  );
+}
+
 /** Ruta privada: exige sesión iniciada; sin ella manda a /login. */
 export function RequireAuth({ children }: { children: ReactNode }) {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, isLoading } = useAuth();
+  if (isLoading) return <AuthLoading />;
   if (!isAuthenticated) return <Navigate to="/login" replace />;
   return children;
 }
@@ -17,7 +26,8 @@ export function RequireRole({
   rol: string;
   children: ReactNode;
 }) {
-  const { isAuthenticated, user } = useAuth();
+  const { isAuthenticated, isLoading, user } = useAuth();
+  if (isLoading) return <AuthLoading />;
   if (!isAuthenticated) return <Navigate to="/login" replace />;
   if (user?.rol !== rol) return <Navigate to="/forbidden" replace />;
   return children;
@@ -25,7 +35,8 @@ export function RequireRole({
 
 /** Para /login y /registro: si ya hay sesión, vuelve al catálogo. */
 export function RedirectIfAuth({ children }: { children: ReactNode }) {
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, isLoading } = useAuth();
+  if (isLoading) return <AuthLoading />;
   if (isAuthenticated) return <Navigate to="/" replace />;
   return children;
 }

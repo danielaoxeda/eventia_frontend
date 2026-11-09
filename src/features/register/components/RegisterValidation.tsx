@@ -82,6 +82,9 @@ export function validateRegisterForm(
     return "Ingresa un correo electrónico válido.";
   }
 
+  // Correo duplicado: ya NO se revisa en el navegador (localStorage).
+  // Ahora lo revisa el backend al registrar (POST /auth/register).
+
   // =========================
   // CONTRASEÑA
   // =========================

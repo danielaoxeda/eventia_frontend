@@ -97,29 +97,3 @@ export interface AuditLogEntry {
   metadata?: string;
 }
 
-// Control de Acceso y Validación QR
-export type TicketQrStatus = "VIGENTE" | "USADO" | "ANULADO";
-
-/**
- * Modelo de ticket para control de accesos
- */
-export interface TicketItem {
-  id: string;
-  id_order: string;
-  id_user: number;
-  event_title: string;
-  ticket_type: string;
-  event_date: string;
-  venue: string;
-  qr_code: string;
-  status: TicketQrStatus;
-}
-
-/**
- * Resultado directo de la validación
- */
-export interface QrValidationResult {
-  valido: boolean;
-  estado: TicketQrStatus | "INVALIDO";
-}
-

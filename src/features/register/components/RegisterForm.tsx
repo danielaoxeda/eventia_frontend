@@ -132,21 +132,25 @@ export default function RegisterForm() {
   setLoading(true);
 
   try {
-    const response = await register(form);
+    await register(form);
 
     setSuccess(
-      `¡Cuenta creada con éxito! Bienvenido, ${response.firstName}. Redirigiendo al inicio de sesión...`
+      `¡Cuenta creada con éxito! Bienvenido, ${form.firstName}. Redirigiendo al inicio de sesión...`
     );
 
     setTimeout(() => {
       navigate("/login");
     }, 1500);
   } catch (err) {
-    console.error(err);
-
-    setError(
-      "Ocurrió un error al registrar la cuenta. Inténtalo nuevamente."
-    );
+    // El interceptor de api.ts ya registró el error.
+    const e = err as { response?: { status?: number; data?: { message?: string } }; message?: string };
+    if (!e?.response) {
+      console.log("[Eventia] ⚠️ No hubo respuesta: backend apagado");
+      setError("No se pudo contactar el servidor. ¿Está encendido el backend?");
+    } else {
+      console.log(`[Eventia] ⚠️ Registro rechazado por el backend (${e.response.status})`);
+      setError(e.response.data?.message || "Ocurrió un error al registrar la cuenta. Inténtalo nuevamente.");
+    }
   } finally {
     setLoading(false);
   }
@@ -154,7 +158,6 @@ export default function RegisterForm() {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
-      {/* Título */}
       <div>
         <h1 className="text-3xl font-extrabold tracking-tight text-slate-900">
           Crea tu cuenta en Eventia
@@ -165,13 +168,11 @@ export default function RegisterForm() {
         </p>
       </div>
 
-      {/* Datos personales */}
       <PersonalDataSection
         form={form}
         onChange={handleChange}
       />
 
-      {/* Credenciales */}
       <CredentialsSection
         form={form}
         onChange={handleChange}
@@ -186,13 +187,11 @@ export default function RegisterForm() {
         strength={strength}
       />
 
-      {/* Mensajes */}
       <RegisterMessages
         error={error}
         success={success}
       />
 
-      {/* Botón */}
       <button
         type="submit"
         disabled={loading}
@@ -208,7 +207,6 @@ export default function RegisterForm() {
         )}
       </button>
 
-      {/* Login */}
       <div className="text-center pt-2">
         <p className="text-xs font-medium text-slate-500">
           ¿Ya tienes una cuenta en Eventia?{" "}
