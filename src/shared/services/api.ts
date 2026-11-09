@@ -54,14 +54,16 @@ api.interceptors.response.use(
       console.error(`[Eventia] ❌ ${url} -> Error ${status}:`, error.response.data);
     }
 
+    const skipAuthRedirect = Boolean((error?.config as any)?.skipAuthRedirect);
+
     if (status === 401) {
-      if (!isLoginRequest && !isOnLogin) {
+      if (!skipAuthRedirect && !isLoginRequest && !isOnLogin) {
         const from = `${window.location.pathname}${window.location.search}`;
         clearAuthSession();
         window.location.replace(`/login?from=${encodeURIComponent(from)}`);
       }
     } else if (status === 403) {
-      if (window.location.pathname !== "/forbidden") {
+      if (!skipAuthRedirect && window.location.pathname !== "/forbidden") {
         window.location.replace("/forbidden");
       }
     }
