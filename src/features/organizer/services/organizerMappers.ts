@@ -114,7 +114,7 @@ export function toBackendEventStatus(status?: string | null): string {
   }
 }
 
-export function mapApiEventToOrganizer(event: ApiEventSummary | ApiEventDetail): OrganizerEvent {
+export function mapApiEventToOrganizer(event: ApiEventSummary | ApiEventDetail): OrganizerEvent & { description?: string; startTime?: string; endTime?: string; location?: string } {
   const id = String(event.id);
   const ticketsSold = Number(event.ticketsSold ?? 0);
   const capacity = Number(event.capacity ?? 0);
@@ -142,7 +142,11 @@ export function mapApiEventToOrganizer(event: ApiEventSummary | ApiEventDetail):
     capacity,
     ticketsSold,
     totalRevenue: Number(event.totalRevenue ?? 0),
-  };
+    description: (event as ApiEventDetail).description ?? undefined,
+    startTime: (event.startTime || "").slice(0, 5) || undefined,
+    endTime: (event.endTime || "").slice(0, 5) || undefined,
+    location: event.location || undefined,
+  } as any;
 }
 
 export function toApiEventRequest(data: {
