@@ -95,6 +95,18 @@ export default function UserModal({
 
   const handleSubmit = async (e: FormEvent) => {
     e.preventDefault();
+    const firstName = form.firstName.trim();
+    const lastName = form.lastName.trim();
+    const email = form.email.trim().toLowerCase();
+
+    if (!firstName || !lastName) {
+      setError("Los nombres y apellidos son obligatorios.");
+      return;
+    }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      setError("Ingresa un correo electrónico válido.");
+      return;
+    }
     if (form.dni.length !== 8) {
       setError("El DNI debe tener exactamente 8 dígitos.");
       return;
@@ -105,10 +117,10 @@ export default function UserModal({
     }
 
     const profile: UserFormData = {
-      firstName: form.firstName,
-      lastName: form.lastName,
+      firstName,
+      lastName,
       dni: form.dni,
-      email: form.email,
+      email,
       cellphone: form.cellphone,
     };
 
