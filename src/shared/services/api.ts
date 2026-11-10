@@ -1,7 +1,7 @@
 import axios from "axios";
 
 // URL del backend (configurable con VITE_API_URL).
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8080";
+const API_URL = import.meta.env.VITE_API_URL || "http://64.236.240.204:8080";
 
 console.log(`[Eventia] 🌐 Frontend conectado al backend en: ${API_URL}`);
 
