@@ -93,7 +93,7 @@ function mapBackendEvent(row: BackendEvent): CatalogEvent {
 
 export async function getEvents(): Promise<CatalogEvent[]> {
   try {
-    const { data } = await api.get<BackendEvent[]>("/events", { skipAuthRedirect: true } as any);
+    const { data } = await api.get<BackendEvent[]>("/api/events", { skipAuthRedirect: true } as any);
     return (data ?? []).map(mapBackendEvent);
   } catch {
     console.warn("[Eventia] Backend no disponible, usando datos de respaldo (db.json)");
