@@ -1,4 +1,4 @@
-import { Client, IMessage, Frame } from "@stomp/stompjs";
+import { Client } from "@stomp/stompjs";
 import SockJS from "sockjs-client";
 
 const WS_URL = import.meta.env.VITE_WS_URL ?? "http://localhost:8080/ws-eventia";
@@ -37,13 +37,17 @@ class OrganizerWebSocketService {
       connectHeaders: {
         Authorization: `Bearer ${authToken}`,
       },
-      debug: (msg) => {
+      debug: (msg: string) => {
         if (import.meta.env.DEV) console.log("[STOMP]", msg);
       },
-      onConnect: (frame: Frame) => {
+      onConnect: (frame: any) => {
         this.isConnecting = false;
         this.reconnectAttempts = 0;
-        console.log("[STOMP] Conectado al broker de eventos (session=", frame.headers["session"] ?? "?", ")");
+        console.log(
+          "[STOMP] Conectado al broker de eventos (session=",
+          frame?.headers?.["session"] ?? "?",
+          ")"
+        );
 
         // Suscribirse al topic del dashboard del organizador autenticado
         const destination = `/topic/organizers/${organizerId}/dashboard`;
@@ -51,9 +55,9 @@ class OrganizerWebSocketService {
           this.onNotification?.(notification);
         });
       },
-      onStompError: (frame: Frame) => {
+      onStompError: (frame: any) => {
         this.isConnecting = false;
-        console.error("[STOMP] Error del broker:", frame.headers["message"]);
+        console.error("[STOMP] Error del broker:", frame?.headers?.["message"]);
         this.scheduleReconnect(authToken, organizerId);
       },
       onWebSocketError: (event: Event) => {
@@ -73,7 +77,7 @@ class OrganizerWebSocketService {
   private subscribe(destination: string, handler: OnNotificationHandler): () => void {
     if (!this.client) return () => {};
 
-    const subscription = this.client.subscribe(destination, (message: IMessage) => {
+    const subscription = this.client.subscribe(destination, (message: any) => {
       try {
         const notification: LiveSaleNotification = JSON.parse(message.body);
         handler(notification);
@@ -93,13 +97,17 @@ class OrganizerWebSocketService {
   private scheduleReconnect(authToken: string, organizerId: number): void {
     if (this.reconnectTimeout) clearTimeout(this.reconnectTimeout);
     if (this.reconnectAttempts >= this.maxReconnectAttempts) {
-      console.warn("[STOMP] Máximo de reintentos alcanzado. No se reconectará automáticamente.");
+      console.warn(
+        "[STOMP] Máximo de reintentos alcanzado. No se reconectará automáticamente."
+      );
       return;
     }
     this.reconnectAttempts++;
     const delay = Math.min(1000 * Math.pow(2, this.reconnectAttempts), 30000);
     this.reconnectTimeout = setTimeout(() => {
-      console.log(`[STOMP] Reconectando (intento ${this.reconnectAttempts}/${this.maxReconnectAttempts})...`);
+      console.log(
+        `[STOMP] Reconectando (intento ${this.reconnectAttempts}/${this.maxReconnectAttempts})...`
+      );
       this.connect(authToken, organizerId);
     }, delay);
   }
