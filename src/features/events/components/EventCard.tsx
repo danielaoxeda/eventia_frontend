@@ -60,12 +60,14 @@ export default function EventCard({ event, view }: EventCardProps) {
         </div>
 
         <div className="flex items-end justify-between gap-2 flex-wrap min-w-0">
-          <div className="flex flex-col min-w-0">
-            <span className="text-[11px] text-outline uppercase font-medium">Desde</span>
-            <span className="font-display font-bold text-xl sm:text-[1.4rem] text-primary whitespace-nowrap">
-              {formatPrice(event.price)}
-            </span>
-          </div>
+          {event.price && event.price > 0 ? (
+            <div className="flex flex-col min-w-0">
+              <span className="text-[11px] text-outline uppercase font-medium">Desde</span>
+              <span className="font-display font-bold text-xl sm:text-[1.4rem] text-primary whitespace-nowrap">
+                {formatPrice(event.price)}
+              </span>
+            </div>
+          ) : null}
           <Link
             // Navega al detalle; el checkout valida ahí la promo con la sesión.
             to={`/event/${event.id}`}
