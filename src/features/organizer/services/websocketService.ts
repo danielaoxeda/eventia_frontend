@@ -3,8 +3,8 @@ import { Client } from "@stomp/stompjs";
 const WS_URL =
   import.meta.env.VITE_WS_URL ??
   (location.protocol === "https:" ? "wss://" : "ws://") +
-    location.host +
-    "/ws-eventia";
+    location.hostname +
+    ":8080/ws-eventia";
 
 export interface LiveSaleNotification {
   organizerId: number;
