@@ -1,7 +1,10 @@
 import { Client } from "@stomp/stompjs";
-import SockJS from "sockjs-client";
 
-const WS_URL = import.meta.env.VITE_WS_URL ?? "http://localhost:8080/ws-eventia";
+const WS_URL =
+  import.meta.env.VITE_WS_URL ??
+  (location.protocol === "https:" ? "wss://" : "ws://") +
+    location.host +
+    "/ws-eventia";
 
 export interface LiveSaleNotification {
   organizerId: number;
@@ -31,9 +34,10 @@ class OrganizerWebSocketService {
 
     this.isConnecting = true;
 
-    const socket = new SockJS(WS_URL);
+    // WebSocket nativo del navegador (sin SockJS, que no es compatible con Vite/ESM)
+    const socket = new WebSocket(WS_URL);
     this.client = new Client({
-      webSocketFactory: () => socket as any,
+      webSocketFactory: () => socket,
       connectHeaders: {
         Authorization: `Bearer ${authToken}`,
       },
@@ -49,7 +53,6 @@ class OrganizerWebSocketService {
           ")"
         );
 
-        // Suscribirse al topic del dashboard del organizador autenticado
         const destination = `/topic/organizers/${organizerId}/dashboard`;
         this.subscribe(destination, (notification) => {
           this.onNotification?.(notification);
@@ -117,7 +120,7 @@ class OrganizerWebSocketService {
       clearTimeout(this.reconnectTimeout);
       this.reconnectTimeout = null;
     }
-    this.reconnectAttempts = this.maxReconnectAttempts; // evitar reconexión automática
+    this.reconnectAttempts = this.maxReconnectAttempts;
     this.subscriptions.forEach((unsubscribe) => unsubscribe());
     this.subscriptions.clear();
     if (this.client) {
@@ -131,7 +134,6 @@ class OrganizerWebSocketService {
     return this.client?.connected ?? false;
   }
 
-  // Callback inyectado desde el hook
   onNotification?: OnNotificationHandler;
 }
 
