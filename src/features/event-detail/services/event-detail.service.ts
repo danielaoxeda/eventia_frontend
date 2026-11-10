@@ -1,4 +1,3 @@
-import axios from "axios";
 import api from "@/shared/services/api";
 import type { EventDetailData, TicketTier } from "../types/event-detail.types";
 
@@ -50,6 +49,12 @@ function mapTier(ticket: ApiTicketType, index: number): TicketTier | null {
   };
 }
 
+/**
+ * Obtiene el detalle de un evento exclusivamente desde el backend
+ * (GET /api/events/{id} + GET /api/events/{id}/ticket-types).
+ * No usa rutas legacy ni datos locales: si el evento no existe (404),
+ * retorna null para que la UI muestre "Evento no disponible".
+ */
 export async function getEventDetail(eventId: string): Promise<EventDetailData | null> {
   try {
     const publicOpts = { skipAuthRedirect: true } as any;
@@ -79,41 +84,8 @@ export async function getEventDetail(eventId: string): Promise<EventDetailData |
       tiers: (ticketsRes.data || []).map(mapTier).filter((t): t is TicketTier => !!t),
     };
   } catch (error) {
-    if (axios.isAxiosError(error) && [401, 403, 404].includes(error.response?.status ?? 0)) return null;
-    // Compatibilidad con rutas legacy si el entorno no expone /api
-    try {
-      const publicOpts = { skipAuthRedirect: true } as any;
-      const [eventRes, ticketsRes] = await Promise.all([
-        api.get<any>(`/events/${eventId}`, publicOpts),
-        api.get<any[]>(`/ticket_types`, { params: { id_event: eventId }, ...publicOpts }),
-      ]);
-      const row = eventRes.data;
-      if (!row || row.active === false) return null;
-      const date = new Date(`${row.date}T00:00:00`);
-      const day = String(date.getDate()).padStart(2, "0");
-      return {
-        id: Number(row.id),
-        title: row.title,
-        venue: row.location,
-        city: row.city || row.location || "",
-        dateLabel: `${day} ${MONTH_NAMES[date.getMonth()] ?? ""} ${date.getFullYear()}`,
-        month: MONTH_CODES[date.getMonth()] ?? "",
-        day,
-        eventDate: `${row.date}T${(row.start_time || row.startTime || "00:00").slice(0, 5)}:00`,
-        tiers: (ticketsRes.data || []).map((ticket: any, index: number) => ({
-          id: Number(ticket.id),
-          name: ticket.name,
-          description: `${ticket.stock ?? ticket.availableCapacity ?? 0} entradas disponibles`,
-          note: Number(ticket.stock ?? ticket.availableCapacity ?? 0) < 100 ? `¡Últimas ${ticket.stock ?? ticket.availableCapacity ?? 0}!` : "Disponibilidad regular",
-          price: Number(ticket.price ?? 0),
-          regularPrice: Math.max(Number(ticket.price ?? 0), Math.round(Number(ticket.price ?? 0) / 0.85)),
-          dot: TIER_DOTS[index % TIER_DOTS.length],
-        })),
-      };
-    } catch {
-      if (axios.isAxiosError(error) && error.response?.status === 404) return null;
-      return null;
-    }
+    // 404 = evento no existe en la base de datos
+    return null;
   }
 }
 

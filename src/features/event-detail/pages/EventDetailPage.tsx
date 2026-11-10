@@ -21,7 +21,7 @@ import { useCartContext } from "@/features/checkout/hooks/useCartContext";
 
 /**
  * Ficha del evento: hero, mapa de zonas y checkout lateral.
- * Todo sale de db.json vía el servicio según el `:id` de la ruta.
+ * Todo sale del backend (GET /api/events/{id} + ticket-types).
  * El descuento de la promo depende del nombre de sesión.
  */
 export default function EventDetailPage() {

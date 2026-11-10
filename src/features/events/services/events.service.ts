@@ -1,14 +1,9 @@
 import type {
   CatalogEvent,
   Category,
-  CategoryRow,
-  EventRow,
   PriceRange,
-  TicketTypeRow,
 } from "../types/event.types";
 import api from "@/shared/services/api";
-// Respaldo local (db.json): se usa solo si el backend no responde.
-import db from "../../../../db.json";
 
 const MONTH_CODES = ["ENE", "FEB", "MAR", "ABR", "MAY", "JUN", "JUL", "AGO", "SET", "OCT", "NOV", "DIC"];
 
@@ -19,42 +14,6 @@ const TAG_BY_CATEGORY: Record<string, string> = {
   "Gastronomía & Ferias": "Gastronomía",
   "Tecnología & Startups": "Tecnología",
 };
-
-interface DbShape {
-  events?: EventRow[];
-  ticket_types?: TicketTypeRow[];
-  categories?: CategoryRow[];
-}
-
-const dbData = db as unknown as DbShape;
-
-function mapEvent(row: EventRow, tickets: TicketTypeRow[], categories: CategoryRow[]): CatalogEvent {
-  const date = new Date(`${row.date}T00:00:00`);
-  const eventId = Number(row.id);
-  const categoryName = (categories.find((item) => item.id === row.id_category)?.name ?? "Conciertos") as Category;
-  const eventTickets = tickets.filter((ticket) => ticket.id_event === eventId);
-  const soldPct = row.capacity > 0 ? Math.round(((row.capacity - row.available_capacity) / row.capacity) * 100) : 0;
-  return {
-    id: eventId,
-    title: row.title,
-    category: categoryName,
-    month: MONTH_CODES[date.getMonth()] ?? "",
-    day: String(date.getDate()).padStart(2, "0"),
-    dateOrder: date.getTime(),
-    venue: row.location,
-    city: row.city,
-    price: eventTickets.length > 0 ? Math.min(...eventTickets.map((ticket) => ticket.price)) : 0,
-    soldPct,
-    image: "",
-    tag: TAG_BY_CATEGORY[categoryName] ?? categoryName,
-  };
-}
-
-function fallbackEvents(): CatalogEvent[] {
-  return (dbData.events ?? [])
-    .filter((row) => row.active)
-    .map((row) => mapEvent(row, dbData.ticket_types ?? [], dbData.categories ?? []));
-}
 
 interface BackendEvent {
   id: number;
@@ -91,14 +50,14 @@ function mapBackendEvent(row: BackendEvent): CatalogEvent {
   };
 }
 
+/**
+ * Obtiene el catálogo público de eventos exclusivamente desde el backend
+ * (GET /api/events). No usa datos locales ni fallbacks de db.json: si el
+ * backend no responde, se propaga el error para que la UI lo muestre.
+ */
 export async function getEvents(): Promise<CatalogEvent[]> {
-  try {
-    const { data } = await api.get<BackendEvent[]>("/api/events", { skipAuthRedirect: true } as any);
-    return (data ?? []).map(mapBackendEvent);
-  } catch {
-    console.warn("[Eventia] Backend no disponible, usando datos de respaldo (db.json)");
-    return fallbackEvents();
-  }
+  const { data } = await api.get<BackendEvent[]>("/api/events", { skipAuthRedirect: true } as any);
+  return (data ?? []).map(mapBackendEvent);
 }
 
 export const fetchEvents = getEvents;
