@@ -1,10 +1,11 @@
 import { Link } from "react-router-dom";
+import { CheckCircle2, AlertCircle } from "lucide-react";
 import { useOrganizerDashboard } from "../hooks/useOrganizerDashboard";
 import DashboardKpiGrid from "../components/dashboard/DashboardKpiGrid";
 import SalesChart from "../components/dashboard/SalesChart";
 
 export default function OrganizerDashboardPage() {
-  const { data, loading, refreshing, loadData } = useOrganizerDashboard();
+  const { data, loading, refreshing, wsConnected, loadData } = useOrganizerDashboard();
 
   if (loading) {
     return (
@@ -39,6 +40,20 @@ export default function OrganizerDashboardPage() {
           </p>
         </div>
         <div className="flex items-center gap-2.5">
+          {/* Indicador de estado WebSocket */}
+          <div className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold transition-colors ${
+            wsConnected
+              ? "bg-green-50 text-green-800 border border-green-200"
+              : "bg-amber-50 text-amber-800 border border-amber-200"
+          }`}>
+            {wsConnected ? (
+              <CheckCircle2 className="h-3.5 w-3.5 fill-current" />
+            ) : (
+              <AlertCircle className="h-3.5 w-3.5 fill-current" />
+            )}
+            <span>{wsConnected ? "Tiempo real activado" : "Tiempo real desconectado"}</span>
+          </div>
+
           <button
             type="button"
             onClick={loadData}
