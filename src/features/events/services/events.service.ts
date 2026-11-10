@@ -54,10 +54,15 @@ function mapBackendEvent(row: BackendEvent): CatalogEvent {
  * Obtiene el catálogo público de eventos exclusivamente desde el backend
  * (GET /api/events). No usa datos locales ni fallbacks de db.json: si el
  * backend no responde, se propaga el error para que la UI lo muestre.
+ *
+ * El backend devuelve una respuesta paginada de Spring
+ * ({ content: [...], totalElements, ... }), por lo que se extrae el
+ * array de contenido cuando viene envuelto.
  */
 export async function getEvents(): Promise<CatalogEvent[]> {
-  const { data } = await api.get<BackendEvent[]>("/api/events", { skipAuthRedirect: true } as any);
-  return (data ?? []).map(mapBackendEvent);
+  const { data } = await api.get<any>("/api/events", { skipAuthRedirect: true } as any);
+  const events: BackendEvent[] = Array.isArray(data) ? data : data?.content ?? [];
+  return events.map(mapBackendEvent);
 }
 
 export const fetchEvents = getEvents;
