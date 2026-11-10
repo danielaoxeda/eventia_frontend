@@ -4,6 +4,7 @@ interface EventPanelProps {
   eventStatus: EventStatus;
   isPublic: boolean;
   onToggleVisibility: () => void;
+  onPublish?: () => void;
   onSave: () => void;
   onPreview: () => void;
   onDeactivate: () => void;
@@ -14,6 +15,7 @@ export default function EventPanel({
   eventStatus,
   isPublic,
   onToggleVisibility,
+  onPublish,
   onSave,
   onPreview,
   onDeactivate,
@@ -57,6 +59,18 @@ export default function EventPanel({
 
       {/* Action Buttons */}
       <div className="flex flex-col gap-2 pt-1">
+        {eventStatus !== "published" && !isInactive && onPublish && (
+          <button
+            type="button"
+            onClick={onPublish}
+            disabled={saving}
+            className="w-full py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold flex items-center justify-center gap-2 transition-all shadow-sm"
+          >
+            <span className="material-symbols-outlined text-[18px]">rocket_launch</span>
+            <span>Publicar en Cartelera</span>
+          </button>
+        )}
+
         <button
           type="button"
           onClick={onSave}

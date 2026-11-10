@@ -3,8 +3,8 @@ import { Client, type IMessage } from "@stomp/stompjs";
 import type { OrganizerDashboardData, OrganizerLiveSaleNotification } from "../types/organizer.types";
 import { mapApiDashboardToOrganizer, type ApiOrganizerDashboard } from "../services/organizerMappers";
 
-// Construye la URL de WebSocket nativa: http://localhost:8080 -> ws://localhost:8080/ws-eventia
-const API_URL = import.meta.env.VITE_API_URL || "http://localhost:8080";
+// Construye la URL de WebSocket nativa: http://64.236.240.204:8080 -> ws://64.236.240.204:8080/ws-eventia
+const API_URL = import.meta.env.VITE_API_URL || "http://64.236.240.204:8080";
 const WS_URL = API_URL.replace(/^http/, "ws") + "/ws-eventia";
 
 interface UseOrganizerDashboardSocketProps {

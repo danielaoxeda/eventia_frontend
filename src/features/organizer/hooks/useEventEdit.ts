@@ -106,6 +106,31 @@ export function useEventEdit(id?: string) {
     }
   };
 
+  const handleToggleVisibility = async () => {
+    if (!event || !id) return;
+    const nextStatus = event.status === "published" ? "draft" : "published";
+    try {
+      const updated = await organizerService.toggleEventStatus(id, nextStatus);
+      setEvent(updated);
+      setFormData((prev) => ({ ...prev, isPublic: nextStatus === "published" }));
+      showToast(nextStatus === "published" ? "Evento publicado en cartelera." : "Evento ocultado de la cartelera.");
+    } catch (error: any) {
+      showToast(error?.response?.data?.message || "Error al cambiar la visibilidad.");
+    }
+  };
+
+  const handlePublish = async () => {
+    if (!event || !id) return;
+    try {
+      const updated = await organizerService.toggleEventStatus(id, "published");
+      setEvent(updated);
+      setFormData((prev) => ({ ...prev, isPublic: true }));
+      showToast("¡Evento publicado en la cartelera principal!");
+    } catch (error: any) {
+      showToast(error?.response?.data?.message || "Error al publicar el evento.");
+    }
+  };
+
   const statusConfig = event ? getStatusConfig(event.status, event.active) : null;
 
   return {
@@ -124,7 +149,8 @@ export function useEventEdit(id?: string) {
     handleFieldChange,
     handleSave,
     handleSync: async () => {},
-    handleToggleVisibility: () => {},
+    handleToggleVisibility,
+    handlePublish,
     handleDeactivate,
     showToast,
     hideToast,

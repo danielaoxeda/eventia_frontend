@@ -4,11 +4,8 @@ import type { CartItem } from "../types/chekout.types";
 export async function createPurchase(
   items: CartItem[],
   _userId: number,
-  discountPct: number,
+  _discountPct: number,
 ): Promise<void> {
-  const subtotal = items.reduce((acc, item) => acc + item.unit_price * item.quantity, 0);
-  const discountTotal = (subtotal * discountPct) / 100;
-  
   const payload = {
     paymentMethod: "CREDIT_CARD",
     items: items.map((item) => ({

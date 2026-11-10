@@ -27,5 +27,10 @@ export function useOrganizerEvents() {
     await loadEvents();
   }, [loadEvents]);
 
-  return { events, loading, refreshing, loadEvents, deactivateEvent };
+  const publishEvent = useCallback(async (id: string) => {
+    await organizerService.toggleEventStatus(id, "published");
+    await loadEvents();
+  }, [loadEvents]);
+
+  return { events, loading, refreshing, loadEvents, deactivateEvent, publishEvent };
 }

@@ -77,7 +77,7 @@ export function useCreateEvent() {
         active: true,
         description: formData.description,
       });
-      showToast(asDraft ? "Borrador creado." : "Evento creado.");
+      showToast(asDraft ? "Borrador guardado." : "¡Evento creado y publicado en cartelera!");
       setTimeout(() => navigate(`/organizador/eventos/${createdEvent.id}/editar`), 700);
     } catch (error: any) {
       showToast(error?.response?.data?.message || "Error al crear el evento. Verifica los datos y tu sesión.");

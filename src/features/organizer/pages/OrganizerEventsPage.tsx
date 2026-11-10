@@ -4,8 +4,20 @@ import EventsTable from "../components/dashboard/EventsTable";
 import { useOrganizerEvents } from "../hooks/useOrganizerEvents";
 
 export default function OrganizerEventsPage() {
-  const { events, loading, refreshing, loadEvents, deactivateEvent } = useOrganizerEvents();
+  const { events, loading, refreshing, loadEvents, deactivateEvent, publishEvent } = useOrganizerEvents();
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [publishingId, setPublishingId] = useState<string | null>(null);
+
+  const handlePublish = async (id: string) => {
+    try {
+      setPublishingId(id);
+      await publishEvent(id);
+    } catch (err: any) {
+      alert(err?.response?.data?.message || "Error al publicar el evento.");
+    } finally {
+      setPublishingId(null);
+    }
+  };
 
   const handleDelete = async (id: string) => {
     if (!window.confirm("¿Eliminar/inactivar este evento? Se aplicará baja lógica (RN04).")) return;
@@ -59,9 +71,9 @@ export default function OrganizerEventsPage() {
         </div>
       </div>
 
-      <EventsTable events={events} onRefresh={loadEvents} />
+      <EventsTable events={events} onRefresh={loadEvents} onPublish={handlePublish} />
 
-      {/* Acciones rápidas por evento (eliminar/inactivar) - complementa la tabla */}
+      {/* Acciones rápidas por evento (eliminar/inactivar/publicar) - complementa la tabla */}
       <div className="bg-surface-container-lowest rounded-xl border border-outline-variant/20 shadow-sm overflow-hidden">
         <div className="px-4 sm:px-5 py-3 border-b border-surface-container">
           <h2 className="font-display text-sm font-bold text-on-surface">Acciones de gestión</h2>
@@ -78,6 +90,16 @@ export default function OrganizerEventsPage() {
                   <div className="text-[11px] text-outline">{evt.code} · {evt.date} · {evt.status}{!evt.active ? " · inactivo" : ""}</div>
                 </div>
                 <div className="flex items-center gap-2 flex-shrink-0">
+                  {evt.status !== "published" && evt.active && (
+                    <button
+                      type="button"
+                      onClick={() => handlePublish(evt.id)}
+                      disabled={publishingId === evt.id}
+                      className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-primary text-on-primary hover:bg-primary-container disabled:opacity-50"
+                    >
+                      {publishingId === evt.id ? "Publicando..." : "Publicar"}
+                    </button>
+                  )}
                   <Link to={`/organizador/eventos/${evt.id}/editar`} className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-surface-container hover:bg-surface-container-high text-on-surface">Editar</Link>
                   <Link to={`/organizador/eventos/${evt.id}/entradas`} className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-surface-container hover:bg-surface-container-high text-on-surface">Entradas</Link>
                   <button

@@ -25,6 +25,8 @@ export default function EventEditPage() {
     handleFieldChange,
     handleSave,
     handleSync,
+    handleToggleVisibility,
+    handlePublish,
     handleDeactivate,
     hideToast,
   } = useEventEdit(id);
@@ -102,9 +104,10 @@ export default function EventEditPage() {
           <EventPanel
             eventStatus={event.status}
             isPublic={formData.isPublic}
-            onToggleVisibility={() => {}}
+            onToggleVisibility={handleToggleVisibility}
+            onPublish={handlePublish}
             onSave={handleSave}
-            onPreview={() => {}}
+            onPreview={() => window.open(`/evento/${id}`, "_blank")}
             onDeactivate={() => setShowDeactivateModal(true)}
             saving={saving}
           />

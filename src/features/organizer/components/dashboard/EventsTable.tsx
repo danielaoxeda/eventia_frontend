@@ -7,9 +7,10 @@ import { formatPEN, formatNumber, formatDate, calculateOccupancy } from "../../u
 interface EventsTableProps {
   events: OrganizerEvent[];
   onRefresh?: () => void;
+  onPublish?: (id: string) => void;
 }
 
-export default function EventsTable({ events }: EventsTableProps) {
+export default function EventsTable({ events, onPublish }: EventsTableProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const [filterStatus, setFilterStatus] = useState<string>("all");
 
@@ -213,6 +214,16 @@ export default function EventsTable({ events }: EventsTableProps) {
                     {/* Actions */}
                     <td className="py-3.5 px-4 text-center whitespace-nowrap">
                       <div className="flex items-center justify-center gap-1">
+                        {onPublish && evt.status !== "published" && evt.active && (
+                          <button
+                            type="button"
+                            onClick={() => onPublish(evt.id)}
+                            title="Publicar en cartelera pública"
+                            className="p-1.5 rounded-lg text-emerald-600 hover:bg-emerald-50 hover:text-emerald-700 transition-colors"
+                          >
+                            <span className="material-symbols-outlined text-[18px]">rocket_launch</span>
+                          </button>
+                        )}
                         <Link
                           to={`/organizador/eventos/${evt.id}/editar`}
                           title="Editar información de evento (RF07)"

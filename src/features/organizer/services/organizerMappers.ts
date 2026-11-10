@@ -105,12 +105,12 @@ export function toBackendEventStatus(status?: string | null): string {
     case "sold_out":
       return "PUBLISHED";
     case "hidden":
-      return "HIDDEN";
+    case "draft":
+      return "PENDING";
     case "inactive":
       return "CANCELLED";
-    case "draft":
     default:
-      return "DRAFT";
+      return "PUBLISHED";
   }
 }
 

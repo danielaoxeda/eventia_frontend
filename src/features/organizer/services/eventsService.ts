@@ -106,6 +106,13 @@ export const eventsService = {
     const payload = toApiEventRequest({ ...data, categoryId });
     const response = await apiClient.post<ApiEventDetail>("/api/events", payload);
     const created = mapApiEventToOrganizer(response.data);
+    if ((data.status === "published" || !data.status) && created.status !== "published") {
+      try {
+        return await this.toggleEventStatus(created.id, "published");
+      } catch (err) {
+        console.warn("Could not auto-publish event:", err);
+      }
+    }
     if (data.active === false) {
       return this.deactivateEvent(created.id, "Creado inactivo");
     }
