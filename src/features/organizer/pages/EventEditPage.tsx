@@ -7,7 +7,6 @@ import EventFormDescription from "../components/event-edit/EventFormDescription"
 import EventFormBanners from "../components/event-edit/EventFormBanners";
 import EventPanel from "../components/event-edit/EventPanel";
 import DeactivateModal from "../components/common/DeactivateModal";
-import PreviewModal from "../components/event-edit/PreviewModal";
 import Toast from "../components/common/Toast";
 
 export default function EventEditPage() {
@@ -21,14 +20,11 @@ export default function EventEditPage() {
     formData,
     showDeactivateModal,
     setShowDeactivateModal,
-    showPreviewModal,
-    setShowPreviewModal,
     toast,
     statusConfig,
     handleFieldChange,
     handleSave,
     handleSync,
-    handleToggleVisibility,
     handleDeactivate,
     hideToast,
   } = useEventEdit(id);
@@ -80,13 +76,11 @@ export default function EventEditPage() {
             category={formData.category}
             capacity={formData.capacity}
             venue={formData.venue}
-            address={formData.address}
             onChange={handleFieldChange}
           />
 
           <EventFormSchedule
             eventDate={formData.eventDate}
-            doorsOpen={formData.doorsOpen}
             showStart={formData.showStart}
             salesClose={formData.salesClose}
             onChange={handleFieldChange}
@@ -99,7 +93,7 @@ export default function EventEditPage() {
 
           <EventFormBanners
             bannerDesktopUrl={formData.bannerDesktopUrl}
-            bannerMobileUrl={formData.bannerMobileUrl}
+            onChange={handleFieldChange}
           />
         </div>
 
@@ -108,12 +102,19 @@ export default function EventEditPage() {
           <EventPanel
             eventStatus={event.status}
             isPublic={formData.isPublic}
-            onToggleVisibility={handleToggleVisibility}
+            onToggleVisibility={() => {}}
             onSave={handleSave}
-            onPreview={() => setShowPreviewModal(true)}
+            onPreview={() => {}}
             onDeactivate={() => setShowDeactivateModal(true)}
             saving={saving}
           />
+          <div className="bg-surface-container-lowest rounded-xl border border-outline-variant/20 p-4">
+            <h3 className="text-sm font-bold text-on-surface">Accesos rápidos</h3>
+            <div className="mt-3 flex flex-col gap-2">
+              <Link to={`/organizador/eventos/${id}/entradas`} className="text-xs font-semibold text-primary hover:underline">Gestionar entradas/tarifas</Link>
+              <Link to="/organizador/eventos" className="text-xs font-semibold text-primary hover:underline">Volver a Mis Eventos</Link>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -127,13 +128,6 @@ export default function EventEditPage() {
         loading={deactivating}
       />
 
-      <PreviewModal
-        event={event}
-        isOpen={showPreviewModal}
-        onClose={() => setShowPreviewModal(false)}
-      />
-
-      {/* Toast Notification */}
       <Toast message={toast.message} visible={toast.visible} onClose={hideToast} />
     </div>
   );

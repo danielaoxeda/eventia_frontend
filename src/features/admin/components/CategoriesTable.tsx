@@ -1,41 +1,40 @@
-import { useState } from "react";
 import { ChevronLeft, ChevronRight, Layers, PenLine, PowerOff, RotateCcw, Search, X } from "lucide-react";
-import type { AdminCategory, CategoryStatus } from "../types/admin.types";
+import type { AdminCategory, PageResponse } from "../types/admin.types";
+import { formatDateTime } from "../utils/adminFormatters";
 import StatusBadge from "./StatusBadge";
 
+export type StatusFilter = "Activa" | "Inactiva" | "Todas";
+
 interface CategoriesTableProps {
-  categories: AdminCategory[];
+  page: PageResponse<AdminCategory>;
+  search: string;
+  statusFilter: StatusFilter;
+  onSearchChange: (value: string) => void;
+  onStatusFilterChange: (status: StatusFilter) => void;
+  onPageChange: (page: number) => void;
   onEdit: (category: AdminCategory) => void;
   onToggleStatus: (category: AdminCategory) => void;
 }
 
-const ITEMS_PER_PAGE = 8;
-type StatusFilter = CategoryStatus | "Todas";
-
 export default function CategoriesTable({
-  categories,
+  page,
+  search,
+  statusFilter,
+  onSearchChange,
+  onStatusFilterChange,
+  onPageChange,
   onEdit,
   onToggleStatus,
 }: CategoriesTableProps) {
-  const [currentPage, setCurrentPage] = useState(1);
-  const [search, setSearch] = useState("");
-  const [statusFilter, setStatusFilter] = useState<StatusFilter>("Todas");
-
-  const q = search.trim().toLowerCase();
-  const filteredCategories = categories.filter((c) => {
-    if (statusFilter !== "Todas" && c.estado !== statusFilter) return false;
-    if (q && !`${c.nombre} ${c.descripcion}`.toLowerCase().includes(q)) return false;
-    return true;
-  });
-
-  const totalPages = Math.max(1, Math.ceil(filteredCategories.length / ITEMS_PER_PAGE));
-  const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
-  const currentCategories = filteredCategories.slice(startIndex, startIndex + ITEMS_PER_PAGE);
+  // page.number es base 0 (Spring Page<T>); la UI muestra base 1
+  const currentPage = page.number + 1;
+  const totalPages = Math.max(1, page.totalPages);
+  const startIndex = page.number * page.size;
+  const currentCategories = page.content;
 
   const resetFilters = () => {
-    setSearch("");
-    setStatusFilter("Todas");
-    setCurrentPage(1);
+    onSearchChange("");
+    onStatusFilterChange("Todas");
   };
 
   return (
@@ -62,17 +61,14 @@ export default function CategoriesTable({
               <input
                 type="text"
                 value={search}
-                onChange={(e) => {
-                  setSearch(e.target.value);
-                  setCurrentPage(1);
-                }}
+                onChange={(e) => onSearchChange(e.target.value)}
                 placeholder="Buscar categoría..."
                 className="pl-9 pr-8 py-1.5 rounded-xl border border-outline-variant/40 bg-surface text-xs text-on-surface placeholder:text-on-surface-variant/50 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all w-48 sm:w-60"
               />
               {search && (
                 <button
                   type="button"
-                  onClick={() => setSearch("")}
+                  onClick={() => onSearchChange("")}
                   className="absolute right-2.5 top-1/2 -translate-y-1/2 text-on-surface-variant hover:text-on-surface"
                 >
                   <X className="w-3.5 h-3.5" />
@@ -85,10 +81,7 @@ export default function CategoriesTable({
                 <button
                   key={st}
                   type="button"
-                  onClick={() => {
-                    setStatusFilter(st);
-                    setCurrentPage(1);
-                  }}
+                  onClick={() => onStatusFilterChange(st)}
                   className={`px-2.5 py-1 rounded-lg font-semibold transition-colors ${
                     statusFilter === st
                       ? "bg-primary text-on-primary shadow-xs"
@@ -101,7 +94,7 @@ export default function CategoriesTable({
             </div>
 
             <span className="px-3 py-1.5 bg-surface-container text-on-surface-variant text-xs font-semibold rounded-full border border-outline-variant/30 shrink-0">
-              {filteredCategories.length} Registros
+              {page.totalElements} Registros
             </span>
           </div>
         </div>
@@ -141,23 +134,23 @@ export default function CategoriesTable({
                     className="hover:bg-surface-container/30 transition-colors"
                   >
                     <td className="py-4 px-5 font-semibold text-on-surface-variant whitespace-nowrap">
-                      #{category.numeroId}
+                      #{category.id}
                     </td>
 
                     <td className="py-4 px-5 font-bold text-sm text-on-surface whitespace-nowrap">
-                      {category.nombre}
+                      {category.name}
                     </td>
 
                     <td className="py-4 px-5 text-on-surface-variant leading-relaxed">
-                      {category.descripcion || "—"}
+                      {category.description || "—"}
                     </td>
 
                     <td className="py-4 px-5 whitespace-nowrap">
-                      <StatusBadge status={category.estado} />
+                      <StatusBadge active={category.active} activeLabel="Activa" inactiveLabel="Inactiva" />
                     </td>
 
                     <td className="py-4 px-5 text-xs text-on-surface-variant font-mono whitespace-nowrap">
-                      {category.ultimaActualizacion}
+                      {formatDateTime(category.updatedAt)}
                     </td>
 
                     <td className="py-4 px-5 whitespace-nowrap text-right">
@@ -172,7 +165,7 @@ export default function CategoriesTable({
                           <span>Editar</span>
                         </button>
 
-                        {category.estado === "Activa" ? (
+                        {category.active ? (
                           <button
                             type="button"
                             onClick={() => onToggleStatus(category)}
@@ -207,43 +200,43 @@ export default function CategoriesTable({
         <span>
           Mostrando{" "}
           <span className="font-bold text-primary">
-            {filteredCategories.length > 0 ? startIndex + 1 : 0}–
-            {Math.min(startIndex + ITEMS_PER_PAGE, filteredCategories.length)}
+            {page.totalElements > 0 ? startIndex + 1 : 0}–
+            {startIndex + page.content.length}
           </span>{" "}
-          de <span className="font-bold">{filteredCategories.length}</span> registros
+          de <span className="font-bold">{page.totalElements}</span> registros
         </span>
 
         {totalPages > 1 && (
           <div className="flex items-center gap-2">
             <button
               type="button"
-              onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-              disabled={currentPage === 1}
+              onClick={() => onPageChange(page.number - 1)}
+              disabled={page.first}
               className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg border border-outline-variant/40 text-xs font-semibold disabled:opacity-40 disabled:cursor-not-allowed hover:bg-surface-container transition-colors"
             >
               <ChevronLeft className="w-3.5 h-3.5" />
               Anterior
             </button>
 
-            {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+            {Array.from({ length: totalPages }, (_, i) => i + 1).map((pageNumber) => (
               <button
-                key={page}
+                key={pageNumber}
                 type="button"
-                onClick={() => setCurrentPage(page)}
+                onClick={() => onPageChange(pageNumber - 1)}
                 className={`w-7 h-7 rounded-lg text-xs font-bold transition-colors ${
-                  currentPage === page
+                  currentPage === pageNumber
                     ? "bg-primary text-on-primary"
                     : "border border-outline-variant/40 text-on-surface-variant hover:bg-surface-container"
                 }`}
               >
-                {page}
+                {pageNumber}
               </button>
             ))}
 
             <button
               type="button"
-              onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-              disabled={currentPage === totalPages}
+              onClick={() => onPageChange(page.number + 1)}
+              disabled={page.last}
               className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg border border-outline-variant/40 text-xs font-semibold disabled:opacity-40 disabled:cursor-not-allowed hover:bg-surface-container transition-colors"
             >
               Siguiente

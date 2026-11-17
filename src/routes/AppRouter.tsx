@@ -1,12 +1,9 @@
 import { Navigate, Route, Routes } from "react-router-dom";
 import MainLayout from "../layouts/MainLayout";
-import CategoriesPage from "../features/categories/pages/CategoriesPage";
 import CatalogPage from "../features/events/pages/CatalogPage";
 import EventDetailPage from "../features/event-detail/pages/EventDetailPage";
 import LoginPage from "../features/login/pages/LoginPage";
 import RegisterPage from "../features/register/pages/RegisterPage";
-
-import UsersPage from "../features/users/pages/UsersPage";
 import AdminLayout from "../features/admin/components/AdminLayout";
 import AdminMonitoringPage from "../features/admin/pages/AdminMonitoringPage";
 import AdminCategoriesPage from "../features/admin/pages/AdminCategoriesPage";
@@ -19,10 +16,10 @@ import ScrollToTop from "@/shared/components/ScrollToTop";
 
 import OrganizerLayout from "../features/organizer/components/layout/OrganizerLayout";
 import OrganizerDashboardPage from "../features/organizer/pages/OrganizerDashboardPage";
+import OrganizerEventsPage from "../features/organizer/pages/OrganizerEventsPage";
 import EventEditPage from "../features/organizer/pages/EventEditPage";
 import EventCreatePage from "../features/organizer/pages/EventCreatePage";
 import EventTicketsPage from "../features/organizer/pages/EventTicketsPage";
-import QrValidatorPage from "../features/organizer/pages/QrValidatorPage";
 import { RequireAuth, RequireRole, RedirectIfAuth } from "./RequireAuth";
 import ForbiddenPage from "./ForbiddenPage";
 
@@ -107,22 +104,8 @@ export default function AppRouter() {
         <Route path="categorias" element={<AdminCategoriesPage />} />
       </Route>
 
-      <Route
-        path="/admin/users"
-        element={
-          <RequireRole rol="ADMIN">
-            <UsersPage />
-          </RequireRole>
-        }
-      />
-      <Route
-        path="/admin/categories"
-        element={
-          <RequireRole rol="ADMIN">
-            <CategoriesPage />
-          </RequireRole>
-        }
-      />
+      <Route path="/admin/users" element={<Navigate to="/admin/usuarios" replace />} />
+      <Route path="/admin/categories" element={<Navigate to="/admin/categorias" replace />} />
       <Route path="/usuarios-roles-categorias" element={<Navigate to="/admin/users" replace />} />
       <Route path="/usuarios-categorias" element={<Navigate to="/admin/users" replace />} />
 
@@ -137,11 +120,11 @@ export default function AppRouter() {
       >
         <Route index element={<Navigate to="dashboard" replace />} />
         <Route path="dashboard" element={<OrganizerDashboardPage />} />
+        <Route path="eventos" element={<OrganizerEventsPage />} />
         <Route path="eventos/nuevo" element={<EventCreatePage />} />
         <Route path="eventos/:id/editar" element={<EventEditPage />} />
         <Route path="eventos/:id/entradas" element={<EventTicketsPage />} />
         <Route path="eventos/entradas" element={<EventTicketsPage />} />
-        <Route path="validar-qr" element={<QrValidatorPage />} />
       </Route>
 
       {/* 403: sesión con rol insuficiente */}

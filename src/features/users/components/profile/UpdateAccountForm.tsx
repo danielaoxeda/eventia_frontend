@@ -186,7 +186,9 @@ export default function UpdateAccountForm({
         );
       } else {
         setError(
-          "Ocurrió un error al actualizar los datos. Inténtalo de nuevo."
+          err instanceof Error && err.message && err.message !== "NOT_AVAILABLE"
+            ? err.message
+            : "Ocurrió un error al actualizar los datos. Inténtalo de nuevo."
         );
       }
     } finally {

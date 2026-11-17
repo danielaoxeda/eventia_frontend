@@ -1,110 +1,77 @@
 import api from "@/shared/services/api";
-import type { ApiUser } from "@/shared/types/api.types";
+import { getCurrentUser } from "@/shared/services/authService";
 import type { AuthUser } from "@/shared/types/auth.types";
 
 export interface UpdateAccountData {
   email?: string;
   currentPassword?: string;
   password?: string;
+  firstName?: string;
+  lastName?: string;
+  cellphone?: string;
+  phoneNumber?: string;
+}
+
+function mapUser(raw: any): AuthUser {
+  return {
+    id: Number(raw.id),
+    firstName: raw.firstName ?? raw.nombre ?? "",
+    lastName: raw.lastName ?? raw.apellido ?? "",
+    email: raw.email ?? "",
+    rol: raw.rol ?? raw.role ?? "USER",
+    documentType: raw.documentType ?? raw.tipoDocumento ?? undefined,
+    documentNumber: raw.documentNumber ?? raw.numeroDocumento ?? raw.dni ?? undefined,
+    birthDate: raw.birthDate ?? raw.fechaNacimiento ?? undefined,
+    phoneNumber: raw.phoneNumber ?? raw.telefono ?? raw.cellphone ?? undefined,
+  };
 }
 
 export async function updateAccount(
-  userId: number,
+  _userId: number,
   data: UpdateAccountData
 ): Promise<AuthUser> {
-  try {
-    // Obtener el usuario actual desde JSON Server
-    const response = await api.get<ApiUser>(
-      `/users/${userId}`
-    );
-
-    const user = response.data;
-
-    // Validar contraseña actual cuando se quiere cambiar
-    // la contraseña
-    if (data.password) {
-      if (
-        !data.currentPassword ||
-        user.password !== data.currentPassword
-      ) {
-        throw new Error("INVALID_CURRENT_PASSWORD");
-      }
-    }
-
-    // Verificar que el nuevo correo no pertenezca
-    // a otro usuario
-    if (
-      data.email &&
-      data.email.toLowerCase() !== user.email.toLowerCase()
-    ) {
-      const existingUsers = await api.get<ApiUser[]>(
-        "/users",
-        {
-          params: {
-            email: data.email,
-          },
-        }
-      );
-
-      const emailInUse = existingUsers.data.some(
-        (existingUser) =>
-          String(existingUser.id) !== String(user.id)
-      );
-
-      if (emailInUse) {
-        throw new Error("EMAIL_IN_USE");
-      }
-    }
-
-    // Preparar únicamente los campos que cambiarán
-    const changes: Partial<ApiUser> = {};
-
-    if (data.email) {
-      changes.email = data.email.trim();
-    }
-
-    if (data.password) {
-      changes.password = data.password;
-    }
-
-    // Actualizar el usuario en JSON Server
-    const updatedResponse = await api.patch<ApiUser>(
-      `/users/${userId}`,
-      changes
-    );
-
-    const updatedUser = updatedResponse.data;
-
-    // Convertir ApiUser -> AuthUser
-    // No enviamos la contraseña al contexto
-    return {
-      id: Number(updatedUser.id),
-      firstName: updatedUser.firstName,
-      lastName: updatedUser.lastName,
-      email: updatedUser.email,
-      rol: updatedUser.rol,
-      documentType: updatedUser.documentType,
-      documentNumber: updatedUser.documentNumber,
-      birthDate: updatedUser.birthDate,
-      phoneNumber: updatedUser.phoneNumber,
-    };
-  } catch (error) {
-    // Errores que queremos conservar
-    if (
-      error instanceof Error &&
-      (
-        error.message === "INVALID_CURRENT_PASSWORD" ||
-        error.message === "EMAIL_IN_USE"
-      )
-    ) {
-      throw error;
-    }
-
-    console.error(
-      "Error al actualizar la cuenta:",
-      error
-    );
-
-    throw new Error("UPDATE_ACCOUNT_ERROR");
+  const payload: Record<string, unknown> = {};
+  if (data.email) payload.email = data.email.trim().toLowerCase();
+  if (data.firstName) payload.firstName = data.firstName;
+  if (data.lastName) payload.lastName = data.lastName;
+  if (data.cellphone || data.phoneNumber) payload.cellphone = data.cellphone ?? data.phoneNumber;
+  if (data.password) {
+    payload.password = data.password;
+    payload.newPassword = data.password;
+    payload.currentPassword = data.currentPassword;
   }
+
+  const attempts: Array<[string, "put" | "patch" | "post"]> = [
+    ["/api/users/me", "put"],
+    ["/api/users/me", "patch"],
+    ["/api/auth/me", "patch"],
+    ["/api/auth/profile", "patch"],
+    ["/auth/me", "patch"],
+    ["/users/me", "put"],
+  ];
+
+  let lastErr: any;
+  for (const [path, method] of attempts) {
+    try {
+      const res = await (api as any)[method](path, payload);
+      const body = res?.data;
+      if (body && (body.id || body.email || body.user)) return mapUser(body.user ?? body);
+      return await getCurrentUser();
+    } catch (err: any) {
+      lastErr = err;
+      const status = err?.response?.status;
+      if (status === 400 || status === 409 || status === 422) {
+        const msg = String(err?.response?.data?.message || err?.response?.data?.error || "").toLowerCase();
+        if (msg.includes("contrase") && (msg.includes("actual") || msg.includes("incorrect") || msg.includes("invalid"))) throw new Error("INVALID_CURRENT_PASSWORD");
+        if (msg.includes("email") && (msg.includes("uso") || msg.includes("exist") || msg.includes("duplic"))) throw new Error("EMAIL_IN_USE");
+        throw new Error(err?.response?.data?.message || "VALIDATION_ERROR");
+      }
+      if (status && ![404, 405, 501].includes(status)) throw err;
+    }
+  }
+  const status = lastErr?.response?.status;
+  if ([404, 405, 501].includes(status)) {
+    throw new Error("La actualización de perfil no está disponible en el backend todavía.");
+  }
+  throw new Error(lastErr?.response?.data?.message || "No se pudo actualizar el perfil.");
 }

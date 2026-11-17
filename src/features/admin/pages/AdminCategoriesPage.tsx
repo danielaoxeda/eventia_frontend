@@ -1,80 +1,120 @@
 import { useEffect, useState } from "react";
 import CategoriesHeader from "../components/CategoriesHeader";
-import CategoriesTable from "../components/CategoriesTable";
+import CategoriesTable, { type StatusFilter } from "../components/CategoriesTable";
 import CategoryModal from "../components/CategoryModal";
 import { adminCategoriesService } from "../services/adminCategoriesService";
-import type { AdminCategory, CategoryFormData } from "../types/admin.types";
+import type { AdminCategory, CategoryFormData, PageResponse } from "../types/admin.types";
+import { getErrorMessage } from "../utils/apiAdapter";
 
-/**
- * Página principal de Gestión de Categorías de Eventos.
- * Permite listar, filtrar, dar de alta y editar taxonomías con sincronización
- * hacia la API dummy (json-server db.json).
- */
+const PAGE_SIZE = 8;
+
+const EMPTY_PAGE: PageResponse<AdminCategory> = {
+  content: [],
+  totalElements: 0,
+  totalPages: 0,
+  size: PAGE_SIZE,
+  number: 0,
+  first: true,
+  last: true,
+};
+
 export default function AdminCategoriesPage() {
-  const [categories, setCategories] = useState<AdminCategory[]>([]);
+  const [pageData, setPageData] = useState<PageResponse<AdminCategory>>(EMPTY_PAGE);
+  const [pageIndex, setPageIndex] = useState(0);
+  const [search, setSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState<StatusFilter>("Todas");
+  const [reloadKey, setReloadKey] = useState(0);
+  const [error, setError] = useState<string | null>(null);
   const [modalOpen, setModalOpen] = useState(false);
   const [categoryToEdit, setCategoryToEdit] = useState<AdminCategory | null>(null);
 
-  // Carga inicial del catálogo desde la API dummy
   useEffect(() => {
-    adminCategoriesService.getCategories().then(setCategories);
-  }, []);
+    let cancelled = false;
+    adminCategoriesService
+      .getCategories({
+        page: pageIndex,
+        size: PAGE_SIZE,
+        search,
+        active: statusFilter === "Todas" ? undefined : statusFilter === "Activa",
+      })
+      .then((result) => {
+        if (cancelled) return;
+        setPageData(result);
+        setError(null);
+      })
+      .catch((e: unknown) => {
+        if (!cancelled) setError(getErrorMessage(e));
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [pageIndex, search, statusFilter, reloadKey]);
 
-  // Prepara el modal para registrar una nueva taxonomía
+  const reload = () => setReloadKey((k) => k + 1);
+
+  const handleSearchChange = (value: string) => {
+    setSearch(value);
+    setPageIndex(0);
+  };
+
+  const handleStatusFilterChange = (status: StatusFilter) => {
+    setStatusFilter(status);
+    setPageIndex(0);
+  };
+
   const handleNuevaCategoria = () => {
     setCategoryToEdit(null);
     setModalOpen(true);
   };
 
-  // Abre el modal cargando la información de la categoría seleccionada
   const handleEdit = (category: AdminCategory) => {
     setCategoryToEdit(category);
     setModalOpen(true);
   };
 
-  // Guarda una nueva categoría o actualiza la existente
   const handleSave = async (formData: CategoryFormData) => {
     if (categoryToEdit) {
-      const actualizada = await adminCategoriesService.updateCategory(
-        categoryToEdit.id,
-        formData
-      );
-      setCategories((prev) =>
-        prev.map((c) => (c.id === actualizada.id ? actualizada : c))
-      );
+      await adminCategoriesService.updateCategory(categoryToEdit.id, formData);
     } else {
-      const nueva = await adminCategoriesService.createCategory(formData);
-      setCategories((prev) => [nueva, ...prev]);
+      await adminCategoriesService.createCategory(formData);
+      setPageIndex(0);
     }
     setModalOpen(false);
+    reload();
   };
 
-  // Alterna visibilidad pública (Activa <-> Inactiva)
   const handleToggleStatus = async (category: AdminCategory) => {
-    const nuevoEstado = category.estado === "Activa" ? "Inactiva" : "Activa";
-    const actualizada = await adminCategoriesService.toggleCategoryStatus(
-      category.id,
-      nuevoEstado
-    );
-    setCategories((prev) =>
-      prev.map((c) => (c.id === actualizada.id ? actualizada : c))
-    );
+    try {
+      await adminCategoriesService.toggleCategoryStatus(category.id, !category.active);
+      reload();
+    } catch (e: unknown) {
+      setError(getErrorMessage(e));
+    }
   };
 
   return (
     <div className="w-full pb-12 space-y-6">
-      {/* Cabecera con botón de acción */}
       <CategoriesHeader onNuevaCategoria={handleNuevaCategoria} />
 
-      {/* Catálogo con filtros y botones de acción rápida */}
+      {error && (
+        <div className="p-3 text-xs rounded-xl bg-error-container/30 border border-error-container text-error font-medium">
+          {error}
+        </div>
+      )}
+
       <CategoriesTable
-        categories={categories}
+        page={pageData}
+        search={search}
+        statusFilter={statusFilter}
+        onSearchChange={handleSearchChange}
+        onStatusFilterChange={handleStatusFilterChange}
+        onPageChange={setPageIndex}
         onEdit={handleEdit}
         onToggleStatus={handleToggleStatus}
       />
 
-      {/* Modal interactivo de creación y modificación */}
       <CategoryModal
+        key={`${categoryToEdit?.id ?? "new"}-${modalOpen}`}
         open={modalOpen}
         categoryToEdit={categoryToEdit}
         onClose={() => setModalOpen(false)}

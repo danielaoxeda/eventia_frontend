@@ -4,10 +4,6 @@ interface UsersHeaderProps {
   onNuevoOrganizador: () => void;
 }
 
-/**
- * Cabecera principal de la vista de usuarios.
- * Muestra el título descriptivo y el botón para registrar un nuevo Organizador.
- */
 export default function UsersHeader({ onNuevoOrganizador }: UsersHeaderProps) {
   return (
     <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 pt-2">

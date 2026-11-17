@@ -1,114 +1,4 @@
-/**
- * Definiciones de tipos para el módulo de Administración (Backoffice).
- * Modela categorías, usuarios (organizadores/clientes) y métricas de monitoreo.
- */
-
-// Estado operativo de una categoría en la plataforma
-export type CategoryStatus = "Activa" | "Inactiva";
-
-// Modelo de datos de una Categoría en el catálogo del Admin
-export interface AdminCategory {
-  id: string;
-  numeroId: number;
-  nombre: string;
-  descripcion: string;
-  estado: CategoryStatus;
-  ultimaActualizacion: string;
-}
-
-// Datos transferidos desde el formulario para crear o editar una categoría
-export interface CategoryFormData {
-  nombre: string;
-  descripcion: string;
-  estado: CategoryStatus;
-}
-
-// Roles de usuario en el sistema: Solo 'Organizador' puede ser creado desde este panel
-export type UserRole = "Organizador" | "Cliente";
-export type UserStatus = "Activo" | "Inactivo";
-
-// Modelo de usuario visualizado en la tabla de administración
-export interface AdminUser {
-  id: string;
-  codigo: string;
-  nombre: string;
-  email: string;
-  iniciales: string;
-  dni: string;
-  telefono: string;
-  rol: UserRole;
-  fechaRegistro: string;
-  estado: UserStatus;
-  password?: string;
-}
-
-// Datos para registrar o actualizar un usuario (restringido a Organizador para nuevas altas)
-export interface UserFormData {
-  nombre: string;
-  email: string;
-  dni: string;
-  telefono: string;
-  rol: "Organizador" | UserRole;
-  password?: string;
-}
-
-// Variantes visuales para las tarjetas de métricas
-export type MetricColorVariant = "indigo" | "blue" | "purple" | "rose";
-export type EventStatus = "En Curso" | "Activo" | "Próximo" | "Finalizado";
-
-// Indicador clave de rendimiento (KPI)
-export interface KpiMetric {
-  id: string;
-  label: string;
-  value: string;
-  subtext?: string;
-  badge?: {
-    text: string;
-    positive: boolean;
-  };
-  iconName: "wallet" | "receipt" | "ticket" | "users";
-  colorVariant: MetricColorVariant;
-}
-
-// Punto de datos para el gráfico de ingresos en el tiempo
-export interface SalesTrend {
-  day: string;
-  ingresos: number;
-  formatted: string;
-}
-
-// Emisión mensual de entradas para el gráfico de barras
-export interface MonthlyTicket {
-  month: string;
-  tickets: number;
-  displayLabel: string;
-  highlight?: boolean;
-}
-
-// Evento en supervisión operativa por la administración
-export interface ActiveEvent {
-  id: string;
-  titulo: string;
-  categoria: string;
-  organizador: string;
-  ruc: string;
-  entradasVendidas: number;
-  aforoTotal: number;
-  recaudacion: number;
-  tasaComision: number;
-  comision: number;
-  estado: EventStatus;
-}
-
-// Estructura completa retornada por el endpoint de monitoreo
-export interface MonitoringDashboardData {
-  kpis: KpiMetric[];
-  salesTrend: SalesTrend[];
-  monthlyTickets: MonthlyTicket[];
-  activeEvents: ActiveEvent[];
-  totalActiveEventsCount: number;
-}
-
+// Respuesta paginada compatible con Page<T> de Spring Boot
 export interface PageResponse<T> {
   content: T[];
   totalElements: number;
@@ -119,5 +9,109 @@ export interface PageResponse<T> {
   last: boolean;
 }
 
-export type SalesDataPoint = SalesTrend;
-export type MonthlyTicketData = MonthlyTicket;
+export type PageParams<TFilters extends object = object> = {
+  page: number;
+  size: number;
+} & TFilters;
+
+export interface AdminCategory {
+  id: number;
+  name: string;
+  description: string | null;
+  active: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface CategoryFormData {
+  name: string;
+  description: string;
+  active: boolean;
+}
+
+export interface CategoryFilters {
+  search?: string;
+  active?: boolean;
+}
+
+export type UserRole = "ADMIN" | "ORGANIZER" | "USER";
+
+export interface AdminUser {
+  id: number;
+  firstName: string;
+  lastName: string;
+  dni: string;
+  email: string;
+  cellphone: string | null;
+  active: boolean;
+  role: UserRole;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface UserFormData {
+  firstName: string;
+  lastName: string;
+  dni: string;
+  email: string;
+  cellphone: string;
+}
+
+export interface CreateUserFormData extends UserFormData {
+  password: string;
+}
+
+export interface UserFilters {
+  search?: string;
+  active?: boolean;
+}
+
+export interface KpiMetric {
+  value: number;
+  percentageChange: number;
+  previousMonthValue: number;
+}
+
+export interface DashboardKpiResponse {
+  totalRevenue: KpiMetric;
+  processedOrders: KpiMetric;
+  issuedTickets: KpiMetric;
+  activeOrganizers: KpiMetric;
+}
+
+export interface RevenueTimelineResponse {
+  period: string;
+  revenue: number;
+  ordersCount: number;
+}
+
+export interface TicketFlowResponse {
+  period: string;
+  issuedTickets: number;
+  redeemedTickets: number;
+}
+
+export type EventStatus =
+  | "PENDING"
+  | "DRAFT"
+  | "PUBLISHED"
+  | "HIDDEN"
+  | "CANCELLED"
+  | "FINISHED";
+
+export interface ActiveEventResponse {
+  id: number;
+  title: string;
+  categoryName: string;
+  organizerName: string;
+  ticketsSold: number;
+  capacity: number;
+  status: EventStatus;
+}
+
+export interface MonitoringDashboardResponse {
+  kpis: DashboardKpiResponse;
+  revenueTimeline: RevenueTimelineResponse[];
+  ticketFlow: TicketFlowResponse[];
+  activeEvents: ActiveEventResponse[];
+}

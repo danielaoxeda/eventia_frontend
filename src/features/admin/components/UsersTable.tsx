@@ -1,38 +1,33 @@
-import { ChevronLeft, ChevronRight, PenLine, PowerOff, RotateCcw } from "lucide-react";
-import { useState } from "react";
-import type { AdminUser } from "../types/admin.types";
+import { Building2, ChevronLeft, ChevronRight, PenLine, PowerOff, RotateCcw } from "lucide-react";
+import type { AdminUser, PageResponse } from "../types/admin.types";
+import { formatDate, getInitials } from "../utils/adminFormatters";
 import StatusBadge from "./StatusBadge";
 
 interface UsersTableProps {
-  users: AdminUser[];
+  page: PageResponse<AdminUser>;
+  onPageChange: (page: number) => void;
   onToggleStatus: (user: AdminUser) => void;
   onEdit: (user: AdminUser) => void;
 }
 
-const ITEMS_PER_PAGE = 7;
+export default function UsersTable({ page, onPageChange, onToggleStatus, onEdit }: UsersTableProps) {
+  // page.number es base 0 (Spring Page<T>); la UI muestra base 1
+  const currentPage = page.number + 1;
+  const totalPages = Math.max(1, page.totalPages);
+  const startIndex = page.number * page.size;
+  const currentUsers = page.content;
 
-export default function UsersTable({ users, onToggleStatus, onEdit }: UsersTableProps) {
-  const [currentPage, setCurrentPage] = useState(1);
-
-  const totalPages = Math.ceil(users.length / ITEMS_PER_PAGE) || 1;
-  const startIndex = (currentPage - 1) * ITEMS_PER_PAGE;
-  const currentUsers = users.slice(startIndex, startIndex + ITEMS_PER_PAGE);
-
-  const getRolBadge = (rol: AdminUser["rol"]) => {
-    if (rol === "Organizador") {
+  // El listado administrativo solo muestra organizadores (rol ORGANIZER)
+  const getRolBadge = (role: AdminUser["role"]) => {
+    if (role === "ORGANIZER") {
       return (
         <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold bg-primary-fixed/50 text-primary border border-primary-fixed/60">
-          <span className="material-symbols-outlined text-[14px]">business</span>
+          <Building2 className="w-3.5 h-3.5" />
           Organizador
         </span>
       );
     }
-    return (
-      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold bg-surface-container-high text-on-surface-variant border border-outline-variant/30">
-        <span className="material-symbols-outlined text-[14px]">person</span>
-        Cliente
-      </span>
-    );
+    return null;
   };
 
   return (
@@ -66,17 +61,14 @@ export default function UsersTable({ users, onToggleStatus, onEdit }: UsersTable
                   <td className="py-4 px-5">
                     <div className="flex items-center gap-3">
                       <div className="w-9 h-9 rounded-full bg-primary-fixed text-primary flex items-center justify-center font-bold text-xs shrink-0 border border-primary-fixed/60">
-                        {user.iniciales}
+                        {getInitials(user.firstName, user.lastName)}
                       </div>
                       <div>
                         <div className="font-bold text-on-surface text-sm leading-tight">
-                          {user.nombre}
+                          {user.firstName} {user.lastName}
                         </div>
                         <div className="text-xs text-primary font-medium mt-0.5">
                           {user.email}
-                        </div>
-                        <div className="text-[11px] text-on-surface-variant font-mono">
-                          {user.codigo}
                         </div>
                       </div>
                     </div>
@@ -87,17 +79,17 @@ export default function UsersTable({ users, onToggleStatus, onEdit }: UsersTable
                   </td>
 
                   <td className="py-4 px-5 text-sm text-on-surface-variant font-medium">
-                    {user.telefono}
+                    {user.cellphone || "—"}
                   </td>
 
-                  <td className="py-4 px-5">{getRolBadge(user.rol)}</td>
+                  <td className="py-4 px-5">{getRolBadge(user.role)}</td>
 
                   <td className="py-4 px-5 text-sm text-on-surface-variant font-medium">
-                    {user.fechaRegistro}
+                    {formatDate(user.createdAt)}
                   </td>
 
                   <td className="py-4 px-5">
-                    <StatusBadge status={user.estado} />
+                    <StatusBadge active={user.active} />
                   </td>
 
                   <td className="py-4 px-5">
@@ -112,7 +104,7 @@ export default function UsersTable({ users, onToggleStatus, onEdit }: UsersTable
                         Editar
                       </button>
 
-                      {user.estado === "Activo" ? (
+                      {user.active ? (
                         <button
                           type="button"
                           onClick={() => onToggleStatus(user)}
@@ -146,41 +138,41 @@ export default function UsersTable({ users, onToggleStatus, onEdit }: UsersTable
         <span>
           Mostrando{" "}
           <span className="font-bold text-primary">
-            {Math.min(startIndex + 1, users.length)}–{Math.min(startIndex + ITEMS_PER_PAGE, users.length)}
+            {page.totalElements > 0 ? startIndex + 1 : 0}–{startIndex + page.content.length}
           </span>{" "}
-          de <span className="font-bold">{users.length}</span> usuarios
+          de <span className="font-bold">{page.totalElements}</span> usuarios
         </span>
 
         <div className="flex items-center gap-2">
           <button
             type="button"
-            onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-            disabled={currentPage === 1}
+            onClick={() => onPageChange(page.number - 1)}
+            disabled={page.first}
             className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg border border-outline-variant/40 text-xs font-semibold disabled:opacity-40 disabled:cursor-not-allowed hover:bg-surface-container transition-colors"
           >
             <ChevronLeft className="w-3.5 h-3.5" />
             Anterior
           </button>
 
-          {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
+          {Array.from({ length: totalPages }, (_, i) => i + 1).map((pageNumber) => (
             <button
-              key={page}
+              key={pageNumber}
               type="button"
-              onClick={() => setCurrentPage(page)}
+              onClick={() => onPageChange(pageNumber - 1)}
               className={`w-7 h-7 rounded-lg text-xs font-bold transition-colors ${
-                currentPage === page
+                currentPage === pageNumber
                   ? "bg-primary text-on-primary"
                   : "border border-outline-variant/40 text-on-surface-variant hover:bg-surface-container"
               }`}
             >
-              {page}
+              {pageNumber}
             </button>
           ))}
 
           <button
             type="button"
-            onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-            disabled={currentPage === totalPages}
+            onClick={() => onPageChange(page.number + 1)}
+            disabled={page.last}
             className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg border border-outline-variant/40 text-xs font-semibold disabled:opacity-40 disabled:cursor-not-allowed hover:bg-surface-container transition-colors"
           >
             Siguiente

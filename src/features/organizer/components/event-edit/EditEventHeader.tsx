@@ -22,9 +22,9 @@ export default function EditEventHeader({
     <div className="flex flex-wrap items-center justify-between gap-4 bg-surface-container-lowest p-4 rounded-xl shadow-sm">
       <div className="flex items-center gap-4">
         <Link
-          to="/organizador/dashboard"
+          to="/organizador/eventos"
           className="w-10 h-10 rounded-lg bg-surface-container flex items-center justify-center text-on-surface hover:bg-surface-container-high transition-colors"
-          title="Volver al Dashboard"
+          title="Volver a Mis Eventos"
         >
           <span className="material-symbols-outlined text-[20px]">arrow_back</span>
         </Link>

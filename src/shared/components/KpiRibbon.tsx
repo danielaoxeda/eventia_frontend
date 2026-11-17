@@ -18,7 +18,7 @@ export default function KpiRibbon({ activeCategories, totalCategories }: KpiRibb
       value: "38 Operadores",
       detail: "Costa Verde & Jockey Club",
       detailClass: "text-primary",
-      icon: "qr_code_scanner",
+      icon: "badge",
       iconClass: "bg-surface-container-high",
     },
     {

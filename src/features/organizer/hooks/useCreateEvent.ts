@@ -1,130 +1,98 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
+import apiClient from "../../../shared/services/api";
 import { organizerService } from "../services/organizerService";
 import type { EventFormData, OrganizerEvent } from "../types/organizer.types";
+
+type CategoryOption = { id: number | string; name: string };
 
 export function useCreateEvent() {
   const navigate = useNavigate();
   const [creating, setCreating] = useState(false);
-  const [showPreviewModal, setShowPreviewModal] = useState(false);
+  const [categories, setCategories] = useState<CategoryOption[]>([]);
   const [toast, setToast] = useState({ visible: false, message: "" });
 
-  const [formData, setFormData] = useState<EventFormData>({
+  const [formData, setFormData] = useState<EventFormData & { categoryId?: number | string; description: string }>({
     title: "",
-    category: "Música & Conciertos",
+    category: "",
+    categoryId: "",
     capacity: 0,
-    venue: "Arena 1 Costa Verde, San Miguel",
+    venue: "",
     address: "",
     eventDate: "",
     doorsOpen: "17:00",
     showStart: "20:00",
     salesClose: "22:00",
     description: "",
-    restrictions: [
-      "Ingreso exclusivo para mayores de 18 años con documento de identidad original.",
-      "Toda entrada debe nominarse con DNI/Pasaporte antes del ingreso.",
-      "Prohibido el ingreso de alimentos, bebidas y objetos punzocortantes.",
-    ],
-    bannerDesktopUrl:
-      "https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=1200&auto=format&fit=crop&q=80",
-    bannerMobileUrl:
-      "https://images.unsplash.com/photo-1470225620780-dba8ba36b745?w=600&auto=format&fit=crop&q=80",
+    restrictions: [],
+    bannerDesktopUrl: "",
+    bannerMobileUrl: "",
     isPublic: true,
   });
 
-  const showToast = useCallback((message: string) => {
-    setToast({ visible: true, message });
+  useEffect(() => {
+    apiClient.get<CategoryOption[]>("/api/categories").then((res) => {
+      const active = (res.data || []).filter((c: any) => c.active !== false);
+      setCategories(active);
+      if (active[0]) setFormData((p) => ({ ...p, categoryId: active[0].id, category: active[0].name }));
+    }).catch(() => setCategories([]));
   }, []);
 
-  const hideToast = useCallback(() => {
-    setToast({ visible: false, message: "" });
-  }, []);
+  const showToast = useCallback((message: string) => setToast({ visible: true, message }), []);
+  const hideToast = useCallback(() => setToast({ visible: false, message: "" }), []);
 
   const handleFieldChange = (field: string, value: string | number) => {
-    setFormData((prev) => ({ ...prev, [field]: value }));
-  };
-
-  const handleToggleVisibility = () => {
-    setFormData((prev) => ({ ...prev, isPublic: !prev.isPublic }));
+    setFormData((prev) => {
+      if (field === "categoryId") {
+        const cat = categories.find((c) => String(c.id) === String(value));
+        return { ...prev, categoryId: value, category: cat?.name || prev.category };
+      }
+      return { ...prev, [field]: value };
+    });
   };
 
   const handleCreate = async (asDraft = false) => {
-    if (!formData.title.trim()) {
-      showToast("Por favor ingresa el nombre del evento.");
-      return;
-    }
-    if (!formData.eventDate) {
-      showToast("Por favor selecciona una fecha válida para el evento.");
-      return;
-    }
-    if (formData.capacity <= 0) {
-      showToast("El aforo total debe ser mayor a 0.");
-      return;
-    }
+    if (!formData.title.trim()) return showToast("Ingresa el nombre del evento.");
+    if (!formData.eventDate) return showToast("Selecciona la fecha del evento.");
+    if (!Number(formData.capacity) || Number(formData.capacity) <= 0) return showToast("El aforo debe ser mayor a 0.");
+    if (!formData.venue.trim()) return showToast("Ingresa la ubicación o sede.");
 
     setCreating(true);
     try {
-      const status: OrganizerEvent["status"] = asDraft
-        ? "draft"
-        : formData.isPublic
-          ? "published"
-          : "hidden";
-
+      const status: OrganizerEvent["status"] = asDraft ? "draft" : formData.isPublic ? "published" : "hidden";
       const createdEvent = await organizerService.createEvent({
         title: formData.title,
         category: formData.category,
-        capacity: formData.capacity,
+        categoryId: formData.categoryId ? Number(formData.categoryId) : undefined,
+        capacity: Number(formData.capacity),
         venue: formData.venue,
-        city: "Lima",
+        location: formData.venue,
+        city: formData.address || "",
         date: formData.eventDate,
         time: formData.showStart,
-        bannerUrl: formData.bannerDesktopUrl,
+        startTime: formData.showStart,
+        endTime: formData.salesClose || formData.showStart,
+        bannerUrl: formData.bannerDesktopUrl || undefined,
         status,
         active: true,
-        featured: false,
         description: formData.description,
       });
-
-      showToast(asDraft ? "¡Borrador creado con éxito!" : "¡Evento publicado con éxito!");
-
-      setTimeout(() => {
-        navigate(`/organizador/eventos/${createdEvent.id}/editar`);
-      }, 900);
-    } catch (error) {
-      showToast("Error al crear el evento. Intenta nuevamente.");
+      showToast(asDraft ? "Borrador creado." : "Evento creado.");
+      setTimeout(() => navigate(`/organizador/eventos/${createdEvent.id}/editar`), 700);
+    } catch (error: any) {
+      showToast(error?.response?.data?.message || "Error al crear el evento. Verifica los datos y tu sesión.");
     } finally {
       setCreating(false);
     }
   };
 
-  const previewEventData: OrganizerEvent = {
-    id: "NUEVO-BORRADOR",
-    code: "EVT-NUEVO",
-    title: formData.title || "Título del nuevo evento",
-    category: formData.category,
-    venue: formData.venue,
-    city: "Lima",
-    date: formData.eventDate,
-    time: formData.showStart,
-    bannerUrl: formData.bannerDesktopUrl,
-    status: formData.isPublic ? "published" : "draft",
-    active: true,
-    capacity: formData.capacity,
-    ticketsSold: 0,
-    totalRevenue: 0,
-  };
-
   return {
     formData,
     creating,
-    showPreviewModal,
-    setShowPreviewModal,
+    categories,
     toast,
-    previewEventData,
     handleFieldChange,
-    handleToggleVisibility,
     handleCreate,
-    showToast,
     hideToast,
   };
 }
