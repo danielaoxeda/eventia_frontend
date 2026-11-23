@@ -5,11 +5,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { validateCard } from "../services/cardValidation.service";
 import { useCartContext } from "../hooks/useCartContext";
 import { createPurchase } from "../services/purchase.service";
-import {
-  isPromoUser,
-  PROMO_DISCOUNT_PCT,
-} from "@/features/events/services/events.service";
-import { useAuth } from "@/context/AuthContext";
+import { useAuth } from "@/context/authContext.shared";
 
 const steps = [
   { label: "Selección de Entradas" },
@@ -65,9 +61,7 @@ function Stepper() {
       setProcessing(true);
       setPurchaseError(null);
       try {
-        const sessionName = `${user.firstName} ${user.lastName}`.trim();
-        const discountPct = isPromoUser(sessionName) ? PROMO_DISCOUNT_PCT : 0;
-        await createPurchase(items, user.id, discountPct);
+        await createPurchase(items);
         clearCart();
         navigate("/mis-tickets");
       } catch {

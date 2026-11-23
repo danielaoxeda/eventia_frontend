@@ -3,7 +3,12 @@ import type {
   Category,
   PriceRange
 } from "../types/event.types";
+import type { AxiosRequestConfig } from "axios";
 import api from "@/shared/services/api";
+
+interface PublicRequestConfig extends AxiosRequestConfig {
+  skipAuthRedirect: boolean;
+}
 // Respaldo local (db.json): se usa solo si el backend no responde.
 
 const MONTH_CODES = ["ENE", "FEB", "MAR", "ABR", "MAY", "JUN", "JUL", "AGO", "SET", "OCT", "NOV", "DIC"];
@@ -55,10 +60,11 @@ function mapBackendEvent(row: BackendEvent): CatalogEvent {
 export async function getEvents(): Promise<CatalogEvent[]> {
   try {
     // Pedimos hasta 100 eventos (o el número que consideres) para el filtrado en cliente
-    const { data } = await api.get<{ content: BackendEvent[] }>("/api/events", { 
+    const requestConfig: PublicRequestConfig = {
       params: { size: 100 },
-      skipAuthRedirect: true 
-    } as any);
+      skipAuthRedirect: true,
+    };
+    const { data } = await api.get<{ content: BackendEvent[] }>("/api/events", requestConfig);
     
     // Extraemos la propiedad 'content' donde está realmente el arreglo
     const eventsArray = data?.content ?? [];

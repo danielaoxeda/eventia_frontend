@@ -1,6 +1,10 @@
-import axios from "axios";
+import axios, { type AxiosRequestConfig } from "axios";
 import api from "@/shared/services/api";
 import type { EventDetailData, TicketTier } from "../types/event-detail.types";
+
+interface PublicRequestConfig extends AxiosRequestConfig {
+  skipAuthRedirect: boolean;
+}
 
 const MONTH_CODES = ["ENE", "FEB", "MAR", "ABR", "MAY", "JUN", "JUL", "AGO", "SET", "OCT", "NOV", "DIC"];
 const MONTH_NAMES = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Setiembre", "Octubre", "Noviembre", "Diciembre"];
@@ -52,7 +56,7 @@ function mapTier(ticket: ApiTicketType, index: number): TicketTier | null {
 
 export async function getEventDetail(eventId: string): Promise<EventDetailData | null> {
   try {
-    const publicOpts = { skipAuthRedirect: true } as any;
+    const publicOpts: PublicRequestConfig = { skipAuthRedirect: true };
     const [eventRes, ticketsRes] = await Promise.all([
       api.get<ApiEventDetail>(`/api/events/${eventId}`, publicOpts),
       api.get<ApiTicketType[]>(`/api/events/${eventId}/ticket-types`, publicOpts),

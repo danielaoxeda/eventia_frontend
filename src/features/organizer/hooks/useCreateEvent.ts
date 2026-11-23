@@ -4,7 +4,18 @@ import apiClient from "../../../shared/services/api";
 import { organizerService } from "../services/organizerService";
 import type { EventFormData, OrganizerEvent } from "../types/organizer.types";
 
-type CategoryOption = { id: number | string; name: string };
+type CategoryOption = { id: number | string; name: string; active?: boolean };
+
+/** Extrae `error.response.data.message` sin asumir la forma del valor lanzado. */
+function getErrorMessage(error: unknown, fallback: string): string {
+  if (typeof error !== "object" || error === null || !("response" in error)) return fallback;
+  const response: unknown = error.response;
+  if (typeof response !== "object" || response === null || !("data" in response)) return fallback;
+  const data: unknown = response.data;
+  if (typeof data !== "object" || data === null || !("message" in data)) return fallback;
+  const message: unknown = data.message;
+  return typeof message === "string" && message ? message : fallback;
+}
 
 export function useCreateEvent() {
   const navigate = useNavigate();
@@ -32,7 +43,7 @@ export function useCreateEvent() {
 
   useEffect(() => {
     apiClient.get<CategoryOption[]>("/api/categories").then((res) => {
-      const active = (res.data || []).filter((c: any) => c.active !== false);
+      const active = (res.data || []).filter((c: CategoryOption) => c.active !== false);
       setCategories(active);
       if (active[0]) setFormData((p) => ({ ...p, categoryId: active[0].id, category: active[0].name }));
     }).catch(() => setCategories([]));
@@ -79,8 +90,8 @@ export function useCreateEvent() {
       });
       showToast(asDraft ? "Borrador creado." : "Evento creado.");
       setTimeout(() => navigate(`/organizador/eventos/${createdEvent.id}/editar`), 700);
-    } catch (error: any) {
-      showToast(error?.response?.data?.message || "Error al crear el evento. Verifica los datos y tu sesión.");
+    } catch (error: unknown) {
+      showToast(getErrorMessage(error, "Error al crear el evento. Verifica los datos y tu sesión."));
     } finally {
       setCreating(false);
     }

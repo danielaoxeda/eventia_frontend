@@ -3,6 +3,17 @@ import { organizerService } from "../services/organizerService";
 import type { OrganizerEvent, EventFormData } from "../types/organizer.types";
 import { getStatusConfig } from "../utils/organizerFormatters";
 
+/** Extrae `error.response.data.message` sin asumir la forma del valor lanzado. */
+function getErrorMessage(error: unknown, fallback: string): string {
+  if (typeof error !== "object" || error === null || !("response" in error)) return fallback;
+  const response: unknown = error.response;
+  if (typeof response !== "object" || response === null || !("data" in response)) return fallback;
+  const data: unknown = response.data;
+  if (typeof data !== "object" || data === null || !("message" in data)) return fallback;
+  const message: unknown = data.message;
+  return typeof message === "string" && message ? message : fallback;
+}
+
 export function useEventEdit(id?: string) {
   const [event, setEvent] = useState<OrganizerEvent | null>(null);
   const [loading, setLoading] = useState(true);
@@ -34,7 +45,7 @@ export function useEventEdit(id?: string) {
       if (!id) return;
       setLoading(true);
       try {
-        const eventData = await organizerService.getEventById(id) as any;
+        const eventData = await organizerService.getEventById(id);
         if (eventData) {
           setEvent(eventData);
           setFormData({
@@ -81,11 +92,11 @@ export function useEventEdit(id?: string) {
         endTime: formData.salesClose || formData.showStart,
         bannerUrl: formData.bannerDesktopUrl,
         description: formData.description,
-      } as any);
+      });
       setEvent(updated);
       showToast("Cambios guardados.");
-    } catch (error: any) {
-      showToast(error?.response?.data?.message || "Error al guardar los cambios.");
+    } catch (error: unknown) {
+      showToast(getErrorMessage(error, "Error al guardar los cambios."));
     } finally {
       setSaving(false);
     }
@@ -99,8 +110,8 @@ export function useEventEdit(id?: string) {
       setEvent(updated);
       setShowDeactivateModal(false);
       showToast("Evento inactivado.");
-    } catch (error: any) {
-      showToast(error?.response?.data?.message || "Error al inactivar el evento.");
+    } catch (error: unknown) {
+      showToast(getErrorMessage(error, "Error al inactivar el evento."));
     } finally {
       setDeactivating(false);
     }
@@ -118,7 +129,7 @@ export function useEventEdit(id?: string) {
     showDeactivateModal,
     setShowDeactivateModal,
     showPreviewModal: false,
-    setShowPreviewModal: (_v: boolean) => {},
+    setShowPreviewModal: () => {},
     toast,
     statusConfig,
     handleFieldChange,

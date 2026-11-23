@@ -51,29 +51,41 @@ export function useEventTickets() {
     return events.find((e) => e.id === selectedEventId) || events[0] || null;
   }, [events, selectedEventId]);
 
+  // La petición no toca el estado: los resultados se aplican en callbacks.
+  const requestTickets = useCallback(() => {
+    return organizerService.getTicketsByEvent(selectedEventId);
+  }, [selectedEventId]);
+
+  const applyTickets = useCallback((list: TicketType[]) => {
+    setTickets(list);
+    setLoading(false);
+  }, []);
+
+  const handleTicketsError = useCallback((err?: unknown) => {
+    console.error("Error loading tickets:", err);
+    showToast("Error al cargar las tarifas.");
+    setLoading(false);
+  }, [showToast]);
+
   // Cargar tickets del evento seleccionado
   const loadTickets = useCallback(async () => {
     if (!selectedEventId) return;
-    setLoading(true);
     try {
-      const ticketsList = await organizerService.getTicketsByEvent(selectedEventId);
-      setTickets(ticketsList);
+      applyTickets(await requestTickets());
     } catch (err) {
-      console.error("Error loading tickets:", err);
-      showToast("Error al cargar las tarifas.");
-    } finally {
-      setLoading(false);
+      handleTicketsError(err);
     }
-  }, [selectedEventId, showToast]);
+  }, [selectedEventId, requestTickets, applyTickets, handleTicketsError]);
 
   useEffect(() => {
     if (selectedEventId) {
-      loadTickets();
+      requestTickets().then(applyTickets, handleTicketsError);
     }
-  }, [selectedEventId, loadTickets]);
+  }, [selectedEventId, requestTickets, applyTickets, handleTicketsError]);
 
   // Cambio de evento en el dropdown
   const handleSelectEvent = (eventId: string) => {
+    setLoading(true);
     setSelectedEventId(eventId);
     navigate(`/organizador/eventos/${eventId}/entradas`);
   };
@@ -110,8 +122,9 @@ export function useEventTickets() {
         showToast("¡Nueva tarifa creada con éxito!");
       }
       handleCloseModal();
+      setLoading(true);
       await loadTickets();
-    } catch (err) {
+    } catch {
       showToast("Error al guardar la tarifa.");
     } finally {
       setSaving(false);
@@ -129,8 +142,9 @@ export function useEventTickets() {
           ? `Venta reactivada para ${ticket.name}`
           : `Venta pausada para ${ticket.name}`
       );
+      setLoading(true);
       await loadTickets();
-    } catch (err) {
+    } catch {
       showToast("Error al cambiar estado de la tarifa.");
     }
   };
@@ -144,8 +158,9 @@ export function useEventTickets() {
     try {
       await organizerService.deleteTicketType(selectedEventId, ticket.id);
       showToast(`Tarifa "${ticket.name}" eliminada.`);
+      setLoading(true);
       await loadTickets();
-    } catch (err) {
+    } catch {
       showToast("Error al eliminar la tarifa.");
     }
   };

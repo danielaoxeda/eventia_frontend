@@ -124,7 +124,6 @@ export default function AppRouter() {
         <Route path="eventos/nuevo" element={<EventCreatePage />} />
         <Route path="eventos/:id/editar" element={<EventEditPage />} />
         <Route path="eventos/:id/entradas" element={<EventTicketsPage />} />
-        <Route path="eventos/entradas" element={<EventTicketsPage />} />
       </Route>
 
       {/* 403: sesión con rol insuficiente */}

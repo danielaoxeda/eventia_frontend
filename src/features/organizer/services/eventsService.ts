@@ -7,6 +7,7 @@ import {
   unwrapPage,
   type ApiEventDetail,
   type ApiEventSummary,
+  type OrganizerEventDetail,
 } from "./organizerMappers";
 
 async function resolveCategoryId(category?: string | number): Promise<number> {
@@ -33,7 +34,7 @@ export const eventsService = {
     return unwrapPage(response.data).map(mapApiEventToOrganizer);
   },
 
-  async getEventById(id: string): Promise<OrganizerEvent | null> {
+  async getEventById(id: string): Promise<OrganizerEventDetail | null> {
     const response = await apiClient.get<ApiEventDetail>(`/api/events/${id}`);
     return response.data ? mapApiEventToOrganizer(response.data) : null;
   },
@@ -47,7 +48,10 @@ export const eventsService = {
     return detail;
   },
 
-  async deactivateEvent(id: string, _reason: string): Promise<OrganizerEvent> {
+  async deactivateEvent(id: string, reason: string): Promise<OrganizerEvent> {
+    // El motivo se conserva en la firma por compatibilidad con los llamadores;
+    // el endpoint solo acepta el flag `active`.
+    void reason;
     await apiClient.patch(`/api/events/${id}/active`, null, { params: { active: false } });
     const detail = await this.getEventById(id);
     if (!detail) throw new Error("Evento no encontrado");
@@ -58,6 +62,7 @@ export const eventsService = {
     id: string,
     data: Partial<OrganizerEvent> & {
       categoryId?: number;
+      category?: string;
       description?: string;
       startTime?: string;
       endTime?: string;
@@ -66,15 +71,15 @@ export const eventsService = {
   ): Promise<OrganizerEvent> {
     const current = await apiClient.get<ApiEventDetail>(`/api/events/${id}`).then((r) => r.data);
     const categoryId =
-      data.categoryId ?? (await resolveCategoryId((data as any).category ?? current.categoryName));
+      data.categoryId ?? (await resolveCategoryId(data.category ?? current.categoryName ?? undefined));
     const payload = toApiEventRequest({
       title: data.title ?? current.title,
-      description: (data as any).description ?? current.description ?? "",
+      description: data.description ?? current.description ?? "",
       date: data.date ?? current.date,
-      startTime: (data as any).startTime ?? data.time ?? current.startTime ?? "09:00",
-      endTime: (data as any).endTime ?? current.endTime ?? "11:00",
+      startTime: data.startTime ?? data.time ?? current.startTime ?? "09:00",
+      endTime: data.endTime ?? current.endTime ?? "11:00",
       venue: data.venue ?? current.location ?? "",
-      location: (data as any).location ?? data.venue ?? current.location ?? "",
+      location: data.location ?? data.venue ?? current.location ?? "",
       capacity: data.capacity ?? current.capacity ?? 0,
       bannerUrl: data.bannerUrl ?? current.bannerUrl ?? undefined,
       status: data.status ?? mapApiEventToOrganizer(current).status,

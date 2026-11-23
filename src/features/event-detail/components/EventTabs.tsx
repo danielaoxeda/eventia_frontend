@@ -243,11 +243,11 @@ export default function EventTabs({
             </span>
             <div className="min-w-0">
               <h4 className="text-sm font-bold">
-                Validación QR dinámica en puerta
+                Acceso con entrada digital
               </h4>
               <p className="text-sm text-on-surface-variant wrap-break-word">
-                El QR se activa 3 horas antes de la apertura. No aceptes códigos
-                impresos de revendedores ni capturas estáticas.
+                Presenta tu entrada desde “Mis tickets”. La validación automática
+                con QR dinámico estará disponible próximamente.
               </p>
             </div>
           </div>

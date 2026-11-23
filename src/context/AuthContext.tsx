@@ -1,6 +1,5 @@
 import {
-  createContext,
-  useContext,
+  useCallback,
   useEffect,
   useRef,
   useState,
@@ -9,17 +8,7 @@ import {
 
 import { getCurrentUser } from "@/shared/services/authService";
 import type { AuthUser } from "@/shared/types/auth.types";
-
-interface AuthContextType {
-  isAuthenticated: boolean;
-  isLoading: boolean;
-  user: AuthUser | null;
-  login: (token: string, user?: AuthUser, expiresIn?: number) => Promise<void>;
-  logout: () => void;
-  updateUser: (updatedUser: AuthUser) => void;
-}
-
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
+import { AuthContext } from "./authContext.shared";
 
 function decodeJwtPayload(token: string): Record<string, unknown> | null {
   try {
@@ -48,22 +37,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(null);
   const logoutTimerRef = useRef<number | null>(null);
 
-  const clearLogoutTimer = () => {
+  const clearLogoutTimer = useCallback(() => {
     if (logoutTimerRef.current) {
       window.clearTimeout(logoutTimerRef.current);
       logoutTimerRef.current = null;
     }
-  };
+  }, []);
 
-  const clearSession = () => {
+  const clearSession = useCallback(() => {
     clearLogoutTimer();
     localStorage.removeItem("accessToken");
     localStorage.removeItem("authUser");
     setIsAuthenticated(false);
     setUser(null);
-  };
+  }, [clearLogoutTimer]);
 
-  const scheduleLogout = (token: string, expiresIn?: number) => {
+  const scheduleLogout = useCallback((token: string, expiresIn?: number) => {
     clearLogoutTimer();
     const expMs = expiresIn ? Date.now() + expiresIn * 1000 : getTokenExpirationMs(token);
     if (!expMs) return;
@@ -73,12 +62,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       clearSession();
       window.location.replace("/login");
     }, delay);
-  };
+  }, [clearLogoutTimer, clearSession]);
 
   useEffect(() => {
     const token = localStorage.getItem("accessToken");
     if (!token) {
-      setIsLoading(false);
+      // isLoading ya se inicializó en false cuando no hay token.
       return;
     }
 
@@ -96,7 +85,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       });
 
     return () => clearLogoutTimer();
-  }, []);
+  }, [clearLogoutTimer, clearSession, scheduleLogout]);
 
   const login = async (token: string, authenticatedUser?: AuthUser, expiresIn?: number) => {
     localStorage.setItem("accessToken", token);
@@ -140,12 +129,4 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       {children}
     </AuthContext.Provider>
   );
-}
-
-export function useAuth() {
-  const context = useContext(AuthContext);
-  if (!context) {
-    throw new Error("useAuth debe utilizarse dentro de un AuthProvider");
-  }
-  return context;
 }

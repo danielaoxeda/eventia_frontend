@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { ChevronDown, Clock, LogOut, Menu, Shield, Store, Ticket, User } from "lucide-react";
-import { useAuth } from "@/context/AuthContext";
+import { useAuth } from "@/context/authContext.shared";
 import { getLimaCurrentTime } from "../utils/adminFormatters";
 
 interface AdminTopbarProps {

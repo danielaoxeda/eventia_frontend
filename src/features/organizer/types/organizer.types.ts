@@ -88,15 +88,6 @@ export interface EventFormData {
   isPublic: boolean;
 }
 
-export interface AuditLogEntry {
-  id: string;
-  action: string;
-  timestamp: string;
-  user: string;
-  details: string;
-  metadata?: string;
-}
-
 export interface OrganizerLiveSaleNotification {
   organizerId: number;
   eventTitle: string;

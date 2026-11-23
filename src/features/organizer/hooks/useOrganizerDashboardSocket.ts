@@ -67,8 +67,10 @@ export function useOrganizerDashboardSocket({
 
     console.log(`[Eventia STOMP] 🔌 Conectando WebSocket nativo en: ${WS_URL} para organizador id=${organizerId}...`);
 
+    const token = localStorage.getItem("accessToken");
     const client = new Client({
       brokerURL: WS_URL,
+      connectHeaders: token ? { Authorization: `Bearer ${token}` } : {},
       reconnectDelay: 5000,
       heartbeatIncoming: 4000,
       heartbeatOutgoing: 4000,

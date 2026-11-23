@@ -1,3 +1,4 @@
+import { type AxiosRequestConfig } from "axios";
 import api from "@/shared/services/api";
 
 export interface BuyerTicket {
@@ -11,12 +12,39 @@ export interface BuyerTicket {
   orderId?: string | number;
 }
 
-function mapTicket(raw: any): BuyerTicket {
+interface RawTicket {
+  id: string | number;
+  eventTitle?: string;
+  event_title?: string;
+  event?: { title?: string; date?: string; location?: string };
+  ticketType?: string;
+  ticket_type?: string;
+  ticketTypeName?: string;
+  type?: { name?: string };
+  eventDate?: string;
+  event_date?: string;
+  eventDateTime?: string;
+  venue?: string;
+  location?: string;
+  status?: string;
+  code?: string;
+  qr_code?: string;
+  ticketCode?: string;
+  orderId?: string | number;
+  id_order?: string | number;
+  order?: { id?: string | number };
+}
+
+interface TicketsRequestConfig extends AxiosRequestConfig {
+  skipAuthRedirect: boolean;
+}
+
+function mapTicket(raw: RawTicket): BuyerTicket {
   return {
     id: raw.id,
     eventTitle: raw.eventTitle ?? raw.event_title ?? raw.event?.title ?? "Evento",
     ticketType: raw.ticketType ?? raw.ticket_type ?? raw.ticketTypeName ?? raw.type?.name ?? "Entrada",
-    eventDate: raw.eventDate ?? raw.event_date ?? raw.event?.date ?? "",
+    eventDate: raw.eventDate ?? raw.event_date ?? raw.eventDateTime ?? raw.event?.date ?? "",
     venue: raw.venue ?? raw.location ?? raw.event?.location ?? "",
     status: raw.status ?? "VIGENTE",
     code: raw.code ?? raw.qr_code ?? raw.ticketCode ?? undefined,
@@ -25,18 +53,7 @@ function mapTicket(raw: any): BuyerTicket {
 }
 
 export async function getMyTickets(): Promise<BuyerTicket[]> {
-  const attempts: Array<() => Promise<any[]>> = [
-    () => api.get<any[]>("/api/tickets/my", { skipAuthRedirect: false } as any).then((r) => r.data || []),
-    () => api.get<any[]>("/api/me/tickets", { skipAuthRedirect: false } as any).then((r) => r.data || []),
-    () => api.get<any[]>("/tickets", { skipAuthRedirect: false } as any).then((r) => r.data || []),
-  ];
-  for (const attempt of attempts) {
-    try {
-      const data = await attempt();
-      return data.map(mapTicket);
-    } catch (err: any) {
-      if (err?.response?.status && ![404, 405, 501].includes(err.response.status)) throw err;
-    }
-  }
-  return [];
+  const authRedirectOpts: TicketsRequestConfig = { skipAuthRedirect: false };
+  const { data } = await api.get<RawTicket[]>("/api/tickets/my", authRedirectOpts);
+  return (data ?? []).map(mapTicket);
 }

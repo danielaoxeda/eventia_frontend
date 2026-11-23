@@ -2,9 +2,9 @@
 
 > Plataforma web para la gestión y venta de entradas para eventos. Frontend desarrollado con React, TypeScript y Tailwind CSS e integrado con una API REST desarrollada en Spring Boot.
 
-![React](https://img.shields.io/badge/React-18-61DAFB?logo=react\&logoColor=white)
-![TypeScript](https://img.shields.io/badge/TypeScript-5-3178C6?logo=typescript\&logoColor=white)
-![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-3-06B6D4?logo=tailwindcss\&logoColor=white)
+![React](https://img.shields.io/badge/React-19-61DAFB?logo=react\&logoColor=white)
+![TypeScript](https://img.shields.io/badge/TypeScript-6-3178C6?logo=typescript\&logoColor=white)
+![Tailwind CSS](https://img.shields.io/badge/Tailwind_CSS-4-06B6D4?logo=tailwindcss\&logoColor=white)
 ![Axios](https://img.shields.io/badge/Axios-HTTP_Client-5A29E4?logo=axios\&logoColor=white)
 ![Recharts](https://img.shields.io/badge/Recharts-Data_Visualization-22B5BF)
 ![Vite](https://img.shields.io/badge/Vite-Frontend_Tool-646CFF?logo=vite\&logoColor=white)
@@ -145,8 +145,7 @@ npm install
 
 Copia `.env.example` como `.env` y ajusta los valores:
 
-- `VITE_API_URL`: URL base del backend.
-- `VITE_USE_MOCK_DATA`: usa datos mock cuando es `true`; usa `false` para consumir el backend real.
+- `VITE_API_URL`: URL base del backend. Es obligatoria en producción y debe usar HTTPS; en desarrollo por defecto es `http://localhost:8080`.
 
 ### Ejecutar en desarrollo
 

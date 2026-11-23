@@ -1,5 +1,4 @@
 import api from "@/shared/services/api";
-import { getCurrentUser } from "@/shared/services/authService";
 import type { AuthUser } from "@/shared/types/auth.types";
 
 export interface UpdateAccountData {
@@ -12,7 +11,44 @@ export interface UpdateAccountData {
   phoneNumber?: string;
 }
 
-function mapUser(raw: any): AuthUser {
+interface RawUser {
+  id?: string | number;
+  firstName?: string;
+  nombre?: string;
+  lastName?: string;
+  apellido?: string;
+  email?: string;
+  rol?: string;
+  role?: string;
+  documentType?: string;
+  tipoDocumento?: string;
+  documentNumber?: string;
+  numeroDocumento?: string;
+  dni?: string;
+  birthDate?: string;
+  fechaNacimiento?: string;
+  phoneNumber?: string;
+  telefono?: string;
+  cellphone?: string;
+}
+
+interface UpdateProfileResponse {
+  token: string;
+  user: RawUser;
+}
+
+interface HttpErrorLike {
+  response?: {
+    status?: number;
+    data?: { message?: string; error?: string };
+  };
+}
+
+function isHttpErrorLike(value: unknown): value is HttpErrorLike {
+  return typeof value === "object" && value !== null && "response" in value;
+}
+
+function mapUser(raw: RawUser): AuthUser {
   return {
     id: Number(raw.id),
     firstName: raw.firstName ?? raw.nombre ?? "",
@@ -26,6 +62,7 @@ function mapUser(raw: any): AuthUser {
   };
 }
 
+// El backend identifica al usuario por el JWT, por eso no se envía el id.
 export async function updateAccount(
   _userId: number,
   data: UpdateAccountData
@@ -36,42 +73,30 @@ export async function updateAccount(
   if (data.lastName) payload.lastName = data.lastName;
   if (data.cellphone || data.phoneNumber) payload.cellphone = data.cellphone ?? data.phoneNumber;
   if (data.password) {
-    payload.password = data.password;
     payload.newPassword = data.password;
     payload.currentPassword = data.currentPassword;
   }
 
-  const attempts: Array<[string, "put" | "patch" | "post"]> = [
-    ["/api/users/me", "put"],
-    ["/api/users/me", "patch"],
-    ["/api/auth/me", "patch"],
-    ["/api/auth/profile", "patch"],
-    ["/auth/me", "patch"],
-    ["/users/me", "put"],
-  ];
-
-  let lastErr: any;
-  for (const [path, method] of attempts) {
-    try {
-      const res = await (api as any)[method](path, payload);
-      const body = res?.data;
-      if (body && (body.id || body.email || body.user)) return mapUser(body.user ?? body);
-      return await getCurrentUser();
-    } catch (err: any) {
-      lastErr = err;
-      const status = err?.response?.status;
-      if (status === 400 || status === 409 || status === 422) {
-        const msg = String(err?.response?.data?.message || err?.response?.data?.error || "").toLowerCase();
-        if (msg.includes("contrase") && (msg.includes("actual") || msg.includes("incorrect") || msg.includes("invalid"))) throw new Error("INVALID_CURRENT_PASSWORD");
-        if (msg.includes("email") && (msg.includes("uso") || msg.includes("exist") || msg.includes("duplic"))) throw new Error("EMAIL_IN_USE");
-        throw new Error(err?.response?.data?.message || "VALIDATION_ERROR");
+  try {
+    const { data: body } = await api.patch<UpdateProfileResponse>("/auth/me", payload);
+    // El email forma parte del JWT: hay que reemplazarlo para no invalidar la sesión.
+    if (body.token) localStorage.setItem("accessToken", body.token);
+    return mapUser(body.user);
+  } catch (err: unknown) {
+    if (isHttpErrorLike(err)) {
+      const status = err.response?.status;
+      if (status && [400, 401, 409, 422].includes(status)) {
+        const msg = String(err.response?.data?.message ?? err.response?.data?.error ?? "");
+        const lower = msg.toLowerCase();
+        if (lower.includes("contrase") && (lower.includes("actual") || lower.includes("incorrect"))) {
+          throw new Error("INVALID_CURRENT_PASSWORD", { cause: err });
+        }
+        if (lower.includes("email") && (lower.includes("uso") || lower.includes("registrado") || lower.includes("existe"))) {
+          throw new Error("EMAIL_IN_USE", { cause: err });
+        }
+        throw new Error(msg || "VALIDATION_ERROR", { cause: err });
       }
-      if (status && ![404, 405, 501].includes(status)) throw err;
     }
+    throw new Error("No se pudo actualizar el perfil.", { cause: err });
   }
-  const status = lastErr?.response?.status;
-  if ([404, 405, 501].includes(status)) {
-    throw new Error("La actualización de perfil no está disponible en el backend todavía.");
-  }
-  throw new Error(lastErr?.response?.data?.message || "No se pudo actualizar el perfil.");
 }

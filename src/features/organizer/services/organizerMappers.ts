@@ -9,6 +9,14 @@ import type {
 
 export type ApiPage<T> = { content?: T[] } | T[];
 
+/** Evento del organizador con los campos extendidos que devuelve la API de detalle. */
+export type OrganizerEventDetail = OrganizerEvent & {
+  description?: string;
+  startTime?: string;
+  endTime?: string;
+  location?: string;
+};
+
 export interface ApiEventSummary {
   id: number | string;
   title: string;
@@ -114,7 +122,7 @@ export function toBackendEventStatus(status?: string | null): string {
   }
 }
 
-export function mapApiEventToOrganizer(event: ApiEventSummary | ApiEventDetail): OrganizerEvent & { description?: string; startTime?: string; endTime?: string; location?: string } {
+export function mapApiEventToOrganizer(event: ApiEventSummary | ApiEventDetail): OrganizerEventDetail {
   const id = String(event.id);
   const ticketsSold = Number(event.ticketsSold ?? 0);
   const capacity = Number(event.capacity ?? 0);
@@ -146,7 +154,7 @@ export function mapApiEventToOrganizer(event: ApiEventSummary | ApiEventDetail):
     startTime: (event.startTime || "").slice(0, 5) || undefined,
     endTime: (event.endTime || "").slice(0, 5) || undefined,
     location: event.location || undefined,
-  } as any;
+  };
 }
 
 export function toApiEventRequest(data: {
