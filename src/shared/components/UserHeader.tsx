@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { Link, NavLink, useNavigate } from "react-router-dom";
-import { useAuth } from "@/context/AuthContext";
+import { useAuth } from "@/context/authContext.shared";
 import eventiaLogo from "../../assets/Logo-Eventia.jpg";
 
 export default function UserHeader() {

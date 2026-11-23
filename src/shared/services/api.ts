@@ -1,9 +1,21 @@
-import axios from "axios";
+import axios, { type AxiosError, type InternalAxiosRequestConfig } from "axios";
 
-// URL del backend (configurable con VITE_API_URL).
-const API_URL = import.meta.env.VITE_API_URL || "http://64.236.240.204:8080";
+interface ApiErrorConfig extends InternalAxiosRequestConfig {
+  skipAuthRedirect?: boolean;
+}
 
-console.log(`[Eventia] 🌐 Frontend conectado al backend en: ${API_URL}`);
+type ApiError = AxiosError<unknown> & { config?: ApiErrorConfig };
+
+// URL del backend. En producción es obligatoria: nunca enviar el JWT por HTTP a una IP fija.
+const configuredApiUrl = import.meta.env.VITE_API_URL;
+if (!configuredApiUrl && import.meta.env.PROD) {
+  throw new Error("VITE_API_URL es obligatoria en producción y debe usar HTTPS");
+}
+const API_URL = configuredApiUrl || "http://localhost:8080";
+
+if (import.meta.env.DEV) {
+  console.log(`[Eventia] 🌐 Frontend conectado al backend en: ${API_URL}`);
+}
 
 const api = axios.create({
   baseURL: API_URL,
@@ -18,11 +30,9 @@ api.interceptors.request.use((config) => {
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
-  console.log(
-    `[Eventia] 📡 ${config.method?.toUpperCase()} ${config.baseURL}${config.url}${
-      token ? " (con JWT)" : " (sin JWT)"
-    }`
-  );
+  if (import.meta.env.DEV) {
+    console.log(`[Eventia] 📡 ${config.method?.toUpperCase()} ${config.baseURL}${config.url}`);
+  }
   return config;
 });
 
@@ -33,12 +43,12 @@ function clearAuthSession() {
 
 api.interceptors.response.use(
   (response) => {
-    console.log(
-      `[Eventia] ✅ ${response.config.method?.toUpperCase()} ${response.config.url} -> ${response.status}`
-    );
+    if (import.meta.env.DEV) {
+      console.log(`[Eventia] ✅ ${response.config.method?.toUpperCase()} ${response.config.url} -> ${response.status}`);
+    }
     return response;
   },
-  (error) => {
+  (error: ApiError) => {
     const status = error?.response?.status;
     const requestUrl = String(error?.config?.url ?? "");
     const url = error?.config?.url;
@@ -54,7 +64,7 @@ api.interceptors.response.use(
       console.error(`[Eventia] ❌ ${url} -> Error ${status}:`, error.response.data);
     }
 
-    const skipAuthRedirect = Boolean((error?.config as any)?.skipAuthRedirect);
+    const skipAuthRedirect = Boolean(error?.config?.skipAuthRedirect);
 
     if (status === 401) {
       if (!skipAuthRedirect && !isLoginRequest && !isOnLogin) {

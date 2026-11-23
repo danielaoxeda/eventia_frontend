@@ -9,17 +9,30 @@ interface ToastProps {
 
 export default function Toast({ message, visible, onClose, duration = 3500 }: ToastProps) {
   const [show, setShow] = useState(false);
+  const [prevVisible, setPrevVisible] = useState(visible);
+
+  // Sincroniza el estado con el prop durante el render (patrón recomendado por React
+  // para "ajustar estado cuando cambia una prop"), en lugar de hacerlo en un efecto.
+  if (visible !== prevVisible) {
+    setPrevVisible(visible);
+    if (!visible) setShow(false);
+  }
 
   useEffect(() => {
-    if (visible) {
-      setShow(true);
-      const timer = setTimeout(() => {
-        setShow(false);
-        setTimeout(onClose, 300);
-      }, duration);
-      return () => clearTimeout(timer);
-    }
-    setShow(false);
+    if (!visible) return;
+
+    // Diferimos el estado al siguiente frame para que el navegador pinte primero
+    // la posición oculta y la transición CSS de entrada se anime correctamente.
+    const frame = requestAnimationFrame(() => setShow(true));
+    const timer = setTimeout(() => {
+      setShow(false);
+      setTimeout(onClose, 300);
+    }, duration);
+
+    return () => {
+      cancelAnimationFrame(frame);
+      clearTimeout(timer);
+    };
   }, [visible, duration, onClose]);
 
   if (!visible && !show) return null;

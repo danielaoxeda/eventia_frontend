@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useRef } from "react";
-import { useAuth } from "@/context/AuthContext";
+import { useAuth } from "@/context/authContext.shared";
 import { organizerService } from "../services/organizerService";
 import type { OrganizerDashboardData, OrganizerLiveSaleNotification } from "../types/organizer.types";
 import { useOrganizerDashboardSocket } from "./useOrganizerDashboardSocket";
@@ -13,22 +13,37 @@ export function useOrganizerDashboard() {
   const [liveSaleToast, setLiveSaleToast] = useState<OrganizerLiveSaleNotification | null>(null);
   const autoDismissTimerRef = useRef<number | null>(null);
 
-  const loadData = useCallback(async () => {
-    try {
-      setRefreshing(true);
-      const res = await organizerService.getDashboardData();
-      setData(res);
-    } catch (err) {
-      console.error("Error loading organizer dashboard:", err);
-    } finally {
-      setLoading(false);
-      setRefreshing(false);
-    }
+  // La petición es pura; los cambios de estado ocurren en los callbacks de la promesa.
+  const requestDashboardData = useCallback(() => organizerService.getDashboardData(), []);
+
+  const applyDashboardData = useCallback((res: OrganizerDashboardData) => {
+    setData(res);
   }, []);
 
+  const handleDashboardError = useCallback((err: unknown) => {
+    console.error("Error loading organizer dashboard:", err);
+  }, []);
+
+  const finishLoading = useCallback(() => {
+    setLoading(false);
+    setRefreshing(false);
+  }, []);
+
+  // Acción manual (botón de actualizar): el indicador se activa aquí, fuera del efecto.
+  const loadData = useCallback(async () => {
+    setRefreshing(true);
+    try {
+      applyDashboardData(await requestDashboardData());
+    } catch (err) {
+      handleDashboardError(err);
+    } finally {
+      finishLoading();
+    }
+  }, [requestDashboardData, applyDashboardData, handleDashboardError, finishLoading]);
+
   useEffect(() => {
-    loadData();
-  }, [loadData]);
+    requestDashboardData().then(applyDashboardData, handleDashboardError).finally(finishLoading);
+  }, [requestDashboardData, applyDashboardData, handleDashboardError, finishLoading]);
 
   const clearLiveSaleToast = useCallback(() => {
     if (autoDismissTimerRef.current) {

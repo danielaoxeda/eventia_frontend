@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
-import { useAuth } from "../../../context/AuthContext";
+import { useAuth } from "../../../context/authContext.shared";
 import Footer from "../../../shared/layouts/Footer";
 import Breadcrumbs from "../components/Breadcrumbs";
 import CheckoutPanel from "../components/CheckoutPanel";

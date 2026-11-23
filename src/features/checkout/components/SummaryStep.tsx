@@ -1,4 +1,4 @@
-import { useAuth } from "@/context/AuthContext";
+import { useAuth } from "@/context/authContext.shared";
 import { useCartContext } from "../hooks/useCartContext";
 import { isPromoUser, PROMO_DISCOUNT_PCT } from "@/features/events/services/events.service";
 

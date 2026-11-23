@@ -44,12 +44,9 @@ export const adminCategoriesService = {
     return data;
   },
 
-  // Activa o desactiva una categoría
-  async toggleCategoryStatus(id: number, active: boolean): Promise<AdminCategory> {
+  // Activa o desactiva una categoría (el backend responde 204 sin cuerpo)
+  async toggleCategoryStatus(id: number, active: boolean): Promise<void> {
     console.log("[AdminCategories] Cambiando estado de categoria id:", id, "activo:", active);
-    const { data } = await api.patch<AdminCategory>(`/api/categories/${id}/status`, {
-      active,
-    });
-    return data;
+    await api.patch(`/api/categories/${id}/active`, null, { params: { active } });
   },
 };

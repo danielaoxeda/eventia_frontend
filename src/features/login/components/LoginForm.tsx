@@ -2,7 +2,7 @@ import { useState } from "react";
 import { Eye, EyeOff, Lock, Mail } from "lucide-react";
 import { login } from "../services/loginService";
 import type { LoginRequest } from "../types/login.types";
-import { useAuth } from "@/context/AuthContext";
+import { useAuth } from "@/context/authContext.shared";
 import { useNavigate } from "react-router-dom";
 
 export default function LoginForm() {

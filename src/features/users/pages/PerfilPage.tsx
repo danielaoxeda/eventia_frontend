@@ -1,4 +1,4 @@
-import { useAuth } from "@/context/AuthContext";
+import { useAuth } from "@/context/authContext.shared";
 import { updateAccount,type UpdateAccountData,} from "../services/updateAccountService";
 import ProfileHeader from "../components/profile/ProfileHeader";
 import ReadOnlyUserInfo from "../components/profile/ReadOnlyUserInfo";

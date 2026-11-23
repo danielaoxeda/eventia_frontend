@@ -1,7 +1,7 @@
 import { Outlet } from "react-router-dom";
 import PublicHeader from "@/shared/components/PublicHeader";
 import UserHeader from "@/shared/components/UserHeader";
-import { useAuth } from "@/context/AuthContext";
+import { useAuth } from "@/context/authContext.shared";
 
 export default function MainLayout() {
   const { isAuthenticated } = useAuth();

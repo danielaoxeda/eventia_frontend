@@ -29,8 +29,6 @@ export default function CatalogPage() {
 
   useEffect(() => {
     let active = true;
-    setLoading(true);
-    setError(null);
 
     getEvents()
       .then((data) => {

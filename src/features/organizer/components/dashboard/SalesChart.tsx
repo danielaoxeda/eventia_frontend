@@ -18,6 +18,47 @@ interface SalesChartProps {
   zoneDistribution: ZoneDistributionDataPoint[];
 }
 
+/** Recharts expone `payload` como `any`; validamos la forma antes de usarla. */
+function isDailySalesDataPoint(value: unknown): value is DailySalesDataPoint {
+  if (!value || typeof value !== "object") return false;
+  const point = value as Partial<DailySalesDataPoint>;
+  return (
+    typeof point.day === "string" &&
+    typeof point.date === "string" &&
+    typeof point.totalPEN === "number" &&
+    typeof point.ticketsSold === "number"
+  );
+}
+
+/** Tipo local preciso para las props que consume el tooltip (Recharts las inyecta). */
+interface CustomTooltipProps {
+  active?: boolean;
+  payload?: ReadonlyArray<{ payload?: unknown }>;
+}
+
+/** Declarado fuera del componente principal para que no se recrée en cada render. */
+function CustomTooltip({ active, payload }: CustomTooltipProps) {
+  const raw: unknown = payload?.[0]?.payload;
+  if (active && isDailySalesDataPoint(raw)) {
+    return (
+      <div className="bg-surface-container-lowest p-3 rounded-lg shadow-lg border border-outline-variant/30 text-xs flex flex-col gap-1.5">
+        <p className="font-bold text-on-surface">
+          {raw.day} ({raw.date})
+        </p>
+        <div className="flex items-center justify-between gap-4 text-primary font-bold">
+          <span>Recaudación:</span>
+          <span>{formatPEN(raw.totalPEN, false)}</span>
+        </div>
+        <div className="pt-1 border-t border-surface-container flex items-center justify-between gap-4 text-outline text-[11px]">
+          <span>Tickets vendidos:</span>
+          <span className="font-semibold text-on-surface">{formatNumber(raw.ticketsSold)}</span>
+        </div>
+      </div>
+    );
+  }
+  return null;
+}
+
 export default function SalesChart({
   dailySales,
   zoneDistribution,
@@ -27,29 +68,6 @@ export default function SalesChart({
 
   const totalPeriodRevenue = dailySales.reduce((acc, curr) => acc + curr.totalPEN, 0);
   const totalPeriodTickets = dailySales.reduce((acc, curr) => acc + curr.ticketsSold, 0);
-
-  // Formatter para tooltip interactivo
-  const CustomTooltip = ({ active, payload }: any) => {
-    if (active && payload && payload.length) {
-      const data: DailySalesDataPoint = payload[0].payload;
-      return (
-        <div className="bg-surface-container-lowest p-3 rounded-lg shadow-lg border border-outline-variant/30 text-xs flex flex-col gap-1.5">
-          <p className="font-bold text-on-surface">
-            {data.day} ({data.date})
-          </p>
-          <div className="flex items-center justify-between gap-4 text-primary font-bold">
-            <span>Recaudación:</span>
-            <span>{formatPEN(data.totalPEN, false)}</span>
-          </div>
-          <div className="pt-1 border-t border-surface-container flex items-center justify-between gap-4 text-outline text-[11px]">
-            <span>Tickets vendidos:</span>
-            <span className="font-semibold text-on-surface">{formatNumber(data.ticketsSold)}</span>
-          </div>
-        </div>
-      );
-    }
-    return null;
-  };
 
   return (
     <div className="grid grid-cols-1 xl:grid-cols-3 gap-6">

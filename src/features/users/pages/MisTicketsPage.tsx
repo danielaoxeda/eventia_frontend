@@ -1,8 +1,16 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { Ticket } from "lucide-react";
-import { useAuth } from "@/context/AuthContext";
+import { useAuth } from "@/context/authContext.shared";
 import { getMyTickets, type BuyerTicket } from "../services/tickets.service";
+
+interface HttpErrorLike {
+  response?: { data?: { message?: string } };
+}
+
+function isHttpErrorLike(value: unknown): value is HttpErrorLike {
+  return typeof value === "object" && value !== null && "response" in value;
+}
 
 function statusClass(status: string): string {
   const s = (status || "").toUpperCase();
@@ -29,9 +37,10 @@ export default function MisTicketsPage() {
     let cancelled = false;
     getMyTickets()
       .then((data) => { if (!cancelled) setTickets(data); })
-      .catch((err: any) => {
+      .catch((err: unknown) => {
         if (cancelled) return;
-        setError(err?.response?.data?.message || "No se pudieron cargar tus entradas. El módulo de tickets del comprador puede no estar disponible en el backend.");
+        const message = isHttpErrorLike(err) ? err.response?.data?.message : undefined;
+        setError(message || "No se pudieron cargar tus entradas. El módulo de tickets del comprador puede no estar disponible en el backend.");
       });
     return () => { cancelled = true; };
   }, [user, refresh]);
