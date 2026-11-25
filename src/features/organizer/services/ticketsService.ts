@@ -31,8 +31,6 @@ export const ticketsService = {
       zone: ticketData.zone ?? current.zone ?? undefined,
       pricePEN: ticketData.pricePEN ?? current.price ?? 0,
       capacity: ticketData.capacity ?? current.totalCapacity ?? 0,
-      maxPerPurchase: ticketData.maxPerPurchase ?? current.maxPerPurchase ?? undefined,
-      isPresale: ticketData.isPresale ?? current.isPresale ?? false,
       saleStartDate: ticketData.saleStartDate ?? current.saleStartDate ?? undefined,
       saleEndDate: ticketData.saleEndDate ?? current.saleEndDate ?? undefined,
     });
@@ -48,9 +46,7 @@ export const ticketsService = {
     const active = newStatus === "active";
     await apiClient.patch(`/api/ticket-types/${ticketId}/status`, null, { params: { active } });
     const updated = await apiClient.get<ApiTicketType>(`/api/ticket-types/${ticketId}`).then((r) => r.data);
-    const mapped = mapApiTicketToOrganizer(updated);
-    if (newStatus === "sold_out") mapped.status = "sold_out";
-    return mapped;
+    return mapApiTicketToOrganizer(updated);
   },
 
   async deleteTicketType(_eventId: string, ticketId: string): Promise<boolean> {
