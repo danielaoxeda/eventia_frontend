@@ -8,6 +8,7 @@ import AdminLayout from "../features/admin/components/AdminLayout";
 import AdminMonitoringPage from "../features/admin/pages/AdminMonitoringPage";
 import AdminCategoriesPage from "../features/admin/pages/AdminCategoriesPage";
 import AdminUsersPage from "../features/admin/pages/AdminUsersPage";
+import AdminRequestsPage from "../features/admin/pages/AdminRequestsPage";
 import MisTicketsPage from "@/features/users/pages/MisTicketsPage";
 import PerfilPage from "@/features/users/pages/PerfilPage";
 import CheckoutPage from "@/features/checkout/pages/CheckoutPage";
@@ -17,9 +18,7 @@ import ScrollToTop from "@/shared/components/ScrollToTop";
 import OrganizerLayout from "../features/organizer/components/layout/OrganizerLayout";
 import OrganizerDashboardPage from "../features/organizer/pages/OrganizerDashboardPage";
 import OrganizerEventsPage from "../features/organizer/pages/OrganizerEventsPage";
-import EventEditPage from "../features/organizer/pages/EventEditPage";
-import EventCreatePage from "../features/organizer/pages/EventCreatePage";
-import EventTicketsPage from "../features/organizer/pages/EventTicketsPage";
+import OrganizerEventDetailPage from "../features/organizer/pages/OrganizerEventDetailPage";
 import { RequireAuth, RequireRole, RedirectIfAuth } from "./RequireAuth";
 import ForbiddenPage from "./ForbiddenPage";
 
@@ -100,6 +99,7 @@ export default function AppRouter() {
       >
         <Route index element={<Navigate to="monitoreo" replace />} />
         <Route path="monitoreo" element={<AdminMonitoringPage />} />
+        <Route path="solicitudes" element={<AdminRequestsPage />} />
         <Route path="usuarios" element={<AdminUsersPage />} />
         <Route path="categorias" element={<AdminCategoriesPage />} />
       </Route>
@@ -121,9 +121,8 @@ export default function AppRouter() {
         <Route index element={<Navigate to="dashboard" replace />} />
         <Route path="dashboard" element={<OrganizerDashboardPage />} />
         <Route path="eventos" element={<OrganizerEventsPage />} />
-        <Route path="eventos/nuevo" element={<EventCreatePage />} />
-        <Route path="eventos/:id/editar" element={<EventEditPage />} />
-        <Route path="eventos/:id/entradas" element={<EventTicketsPage />} />
+        <Route path="eventos/:id" element={<OrganizerEventDetailPage />} />
+        <Route path="eventos/*" element={<Navigate to="/organizador/eventos" replace />} />
       </Route>
 
       {/* 403: sesión con rol insuficiente */}
