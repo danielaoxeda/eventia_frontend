@@ -1,5 +1,6 @@
 import {
   Activity,
+  ClipboardList,
   FolderTree,
   LogOut,
   ShieldCheck,
@@ -28,6 +29,11 @@ export default function AdminSidebar({
       path: "/admin/monitoreo",
       label: "Panel de Monitoreo",
       icon: Activity,
+    },
+    {
+      path: "/admin/solicitudes",
+      label: "Solicitudes",
+      icon: ClipboardList,
     },
     {
       path: "/admin/usuarios",
