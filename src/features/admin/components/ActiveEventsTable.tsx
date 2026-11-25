@@ -32,20 +32,6 @@ export default function ActiveEventsTable({ events }: ActiveEventsTableProps) {
             Pendiente
           </span>
         );
-      case "DRAFT":
-        return (
-          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-surface-container-high text-on-surface-variant border border-outline-variant/40">
-            <span className="w-1.5 h-1.5 rounded-full bg-outline" />
-            Borrador
-          </span>
-        );
-      case "HIDDEN":
-        return (
-          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-surface-container text-on-surface-variant border border-outline-variant/40">
-            <span className="w-1.5 h-1.5 rounded-full bg-outline" />
-            Oculto
-          </span>
-        );
       case "CANCELLED":
         return (
           <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-red-50 text-red-700 border border-red-200">
