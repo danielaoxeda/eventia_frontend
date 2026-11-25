@@ -36,18 +36,6 @@ export function calculatePercentage(current: number, total: number): number {
   return Math.min(100, Math.round((current / total) * 100));
 }
 
-export function getLimaCurrentTime(): string {
-  const options: Intl.DateTimeFormatOptions = {
-    timeZone: "America/Lima",
-    hour12: false,
-    hour: "2-digit",
-    minute: "2-digit",
-    second: "2-digit",
-  };
-  const timeString = new Intl.DateTimeFormat("es-PE", options).format(new Date());
-  return `${timeString} (PET - UTC-5)`;
-}
-
 export function getInitials(firstName: string, lastName: string): string {
   const first = firstName.trim().charAt(0);
   const last = lastName.trim().charAt(0);
