@@ -21,6 +21,7 @@
     "react-router-dom": "^7.18.4",
     "recharts": "^3.10.1",
     "sockjs-client": "^1.6.1",
+    "sweetalert2": "^11.26.26",
     "tailwindcss": "^4.3.3"
   },
   "devDependencies": {
