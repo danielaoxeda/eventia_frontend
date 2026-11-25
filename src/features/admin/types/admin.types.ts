@@ -91,13 +91,32 @@ export interface TicketFlowResponse {
   redeemedTickets: number;
 }
 
-export type EventStatus =
-  | "PENDING"
-  | "DRAFT"
-  | "PUBLISHED"
-  | "HIDDEN"
-  | "CANCELLED"
-  | "FINISHED";
+export type EventStatus = "PENDING" | "PUBLISHED" | "CANCELLED" | "FINISHED";
+
+export interface AdminEventSummary {
+  id: number;
+  title: string;
+  description: string | null;
+  date: string;
+  startTime: string | null;
+  endTime: string | null;
+  location: string;
+  capacity: number;
+  bannerUrl: string | null;
+  categoryName: string | null;
+  status: EventStatus;
+  active: boolean;
+}
+
+export interface EventRequestNotification {
+  eventId: number;
+  title: string;
+  organizerName: string;
+  categoryName: string | null;
+  status: EventStatus;
+  message: string;
+  timestamp: string;
+}
 
 export interface ActiveEventResponse {
   id: number;
