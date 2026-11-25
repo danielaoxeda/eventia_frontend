@@ -1,19 +1,31 @@
-import { Outlet } from "react-router-dom";
-import OrganizerSidebar from "./OrganizerSidebar";
-import OrganizerTopbar from "./OrganizerTopbar";
+import { Activity, CalendarDays } from "lucide-react";
+import { useAuth } from "@/context/authContext.shared";
+import BackofficeLayout from "@/shared/components/backoffice/BackofficeLayout";
+import type { BackofficeNavItem } from "@/shared/components/backoffice/BackofficeSidebar";
+
+const organizerNavItems: BackofficeNavItem[] = [
+  {
+    path: "/organizador/dashboard",
+    label: "Dashboard & Métricas",
+    icon: Activity,
+  },
+  {
+    path: "/organizador/eventos",
+    label: "Eventos",
+    icon: CalendarDays,
+  },
+];
 
 export default function OrganizerLayout() {
+  const { user, logout } = useAuth();
+
   return (
-    <div className="min-h-screen bg-surface text-on-surface antialiased flex">
-      <OrganizerSidebar />
-
-      <div className="flex-1 pl-64 flex flex-col min-h-screen">
-        <OrganizerTopbar />
-
-        <main className="flex-1 pt-16 px-6 lg:px-8 pb-12">
-          <Outlet />
-        </main>
-      </div>
-    </div>
+    <BackofficeLayout
+      roleLabel="Organizador"
+      navSection="MÓDULO ORGANIZADOR"
+      navItems={organizerNavItems}
+      user={user}
+      onLogout={logout}
+    />
   );
 }
