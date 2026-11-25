@@ -13,18 +13,8 @@ export default function OrganizerSidebar() {
     {
       to: "/organizador/eventos",
       icon: "calendar_month",
-      label: "Mis Eventos",
+      label: "Eventos",
       end: true,
-    },
-    {
-      to: "/organizador/eventos/nuevo",
-      icon: "add_circle",
-      label: "Crear Evento",
-    },
-    {
-      to: "/organizador/eventos/entradas",
-      icon: "confirmation_number",
-      label: "Entradas / Tarifas",
     },
   ];
 
