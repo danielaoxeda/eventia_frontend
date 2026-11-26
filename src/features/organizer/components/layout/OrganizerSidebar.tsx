@@ -1,121 +1,135 @@
-import { useState } from "react";
-import { Link, NavLink } from "react-router-dom";
+import { Activity, CalendarDays, LogOut, Ticket, X } from "lucide-react";
+import { useLocation, useNavigate } from "react-router-dom";
+import { useAuth } from "@/context/authContext.shared";
 
-export default function OrganizerSidebar() {
-  const [collapsed, setCollapsed] = useState(false);
+interface OrganizerSidebarProps {
+  mobileOpen: boolean;
+  onCloseMobile: () => void;
+}
+
+export default function OrganizerSidebar({
+  mobileOpen,
+  onCloseMobile,
+}: OrganizerSidebarProps) {
+  const navigate = useNavigate();
+  const location = useLocation();
+  const { logout } = useAuth();
 
   const navItems = [
     {
-      to: "/organizador/dashboard",
-      icon: "monitoring",
+      path: "/organizador/dashboard",
       label: "Dashboard & Métricas",
+      icon: Activity,
     },
     {
-      to: "/organizador/eventos",
-      icon: "calendar_month",
+      path: "/organizador/eventos",
       label: "Eventos",
-      end: true,
+      icon: CalendarDays,
     },
   ];
 
-  return (
-    <aside
-      className={`fixed left-0 top-0 h-full bg-surface-container-low shadow-[0_1px_8px_rgba(0,0,0,0.04)] z-50 flex flex-col justify-between p-4 transition-all duration-300 border-r border-outline-variant/20 ${collapsed ? "w-20" : "w-64"
-        }`}
-    >
-      <div className="flex flex-col gap-5">
-        {/* Brand Header */}
-        <Link
-          to="/"
-          title="Ir al catálogo"
-          className="flex items-center gap-3 px-1 py-1"
-        >
-          <div className="w-9 h-9 rounded-lg bg-primary flex items-center justify-center text-on-primary font-display font-extrabold text-lg shadow-sm flex-shrink-0">
-            E
-          </div>
-          {!collapsed && (
-            <div className="flex flex-col">
-              <span className="font-display text-base font-bold tracking-tight text-on-surface leading-tight">
+  const handleLogout = () => {
+    logout();
+    navigate("/login");
+  };
+
+  const sidebarContent = (
+    <div className="h-full flex flex-col justify-between p-4 bg-surface-container-lowest border-r border-outline-variant/30 select-none">
+      {/* Zona superior: Marca y Menú */}
+      <div>
+        {/* Marca Eventia Organizador */}
+        <div className="flex items-center justify-between px-2 py-3 mb-6">
+          <div className="flex items-center gap-2.5">
+            <div className="w-10 h-10 rounded-xl bg-primary text-on-primary flex items-center justify-center shadow-xs">
+              <Ticket className="w-5 h-5" />
+            </div>
+            <div>
+              <span className="font-display font-black text-xl text-primary tracking-tight block leading-none">
                 Eventia
               </span>
-              <span className="text-[0.6875rem] font-bold text-primary tracking-wider uppercase leading-none mt-0.5">
-                Backoffice Perú
+              <span className="text-[10px] font-extrabold tracking-widest text-on-surface-variant uppercase mt-1 block">
+                ORGANIZADOR
               </span>
             </div>
-          )}
-        </Link>
-
-        {/* Current Role Badge */}
-        {!collapsed && (
-          <div className="bg-surface-container px-3 py-2.5 rounded-lg flex items-center justify-between border border-outline-variant/20">
-            <div className="flex flex-col">
-              <span className="text-[0.6875rem] font-bold text-outline uppercase tracking-wider">
-                ROL
-              </span>
-              <span className="text-xs font-bold text-on-surface">
-                Organizador
-              </span>
-            </div>
-            <span className="material-symbols-outlined text-primary text-[20px]">
-              verified_user
-            </span>
           </div>
-        )}
 
-        {/* Nav Links */}
-        <nav className="flex flex-col gap-1">
-          {!collapsed && (
-            <span className="text-[0.6875rem] font-bold text-outline px-3 uppercase tracking-wider mb-1">
-              Módulo Organizador
-            </span>
-          )}
-          {navItems.map((item) => (
-            <NavLink
-              key={item.to}
-              to={item.to}
-              end={item.end}
-              title={collapsed ? item.label : undefined}
-              className={({ isActive }) =>
-                `flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all text-xs ${isActive
-                  ? "bg-primary-container text-on-primary-container font-bold shadow-xs"
-                  : "text-on-surface-variant hover:bg-surface-container-high hover:text-on-surface font-medium"
-                } ${collapsed ? "justify-center" : ""}`
-              }
-            >
-              <span className="material-symbols-outlined text-[20px] flex-shrink-0">
-                {item.icon}
-              </span>
-              {!collapsed && (
-                <div className="flex flex-col flex-1 leading-tight">
+          {/* Botón cerrar para móvil */}
+          <button
+            type="button"
+            onClick={onCloseMobile}
+            className="lg:hidden p-1.5 rounded-lg text-on-surface-variant hover:bg-surface-container"
+            aria-label="Cerrar barra lateral"
+          >
+            <X className="w-5 h-5" />
+          </button>
+        </div>
+
+        {/* Sección de Navegación */}
+        <div className="space-y-1">
+          <div className="px-3 text-[11px] font-bold uppercase tracking-wider text-outline mb-2 font-display">
+            GESTIÓN
+          </div>
+
+          {navItems.map((item) => {
+            const Icon = item.icon;
+            const isActive = location.pathname.startsWith(item.path);
+            return (
+              <button
+                key={item.path}
+                type="button"
+                onClick={() => {
+                  navigate(item.path);
+                  onCloseMobile();
+                }}
+                className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-sm font-semibold transition-all duration-150 text-left ${
+                  isActive
+                    ? "bg-primary text-on-primary shadow-xs font-bold"
+                    : "text-on-surface-variant hover:bg-surface-container-high/60 hover:text-on-surface"
+                }`}
+              >
+                <div className="flex items-center gap-3">
+                  <Icon className={`w-4 h-4 ${isActive ? "text-on-primary" : "text-on-surface-variant"}`} />
                   <span>{item.label}</span>
                 </div>
-              )}
-            </NavLink>
-          ))}
-        </nav>
+              </button>
+            );
+          })}
+        </div>
       </div>
 
-      {/* Bottom info & Collapse Toggle */}
-      <div className="flex flex-col gap-2.5 pt-4 border-t border-surface-container">
-
+      {/* Zona inferior: Botón Cerrar Sesión */}
+      <div className="pt-4 border-t border-outline-variant/20">
         <button
           type="button"
-          onClick={() => setCollapsed(!collapsed)}
-          className="flex items-center justify-between w-full px-3 py-2 rounded-lg text-on-surface-variant hover:bg-surface-container hover:text-on-surface transition-colors text-xs font-medium"
+          onClick={handleLogout}
+          className="w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl text-sm font-semibold text-on-surface-variant hover:bg-error-container/30 hover:text-error transition-colors"
         >
-          <div className="flex items-center gap-2">
-            <span className="material-symbols-outlined text-[18px]">
-              {collapsed ? "menu" : "menu_open"}
-            </span>
-            {!collapsed && <span>Contraer Menú</span>}
-          </div>
-          {!collapsed && (
-            <span className="text-[10px] font-mono bg-surface-container px-1.5 py-0.5 rounded text-outline">
-              Ctrl+[
-            </span>
-          )}
+          <LogOut className="w-4 h-4 text-inherit" />
+          <span>Cerrar Sesión</span>
         </button>
       </div>
-    </aside>
+    </div>
+  );
+
+  return (
+    <>
+      {/* Sidebar fijo en Desktop */}
+      <aside className="hidden lg:block fixed left-0 top-0 bottom-0 w-64 z-30">
+        {sidebarContent}
+      </aside>
+
+      {/* Drawer móvil con overlay */}
+      {mobileOpen && (
+        <div className="lg:hidden fixed inset-0 z-40 flex">
+          <div
+            className="fixed inset-0 bg-black/40 backdrop-blur-xs transition-opacity"
+            onClick={onCloseMobile}
+          />
+          <div className="relative w-72 max-w-[85vw] h-full shadow-2xl z-50">
+            {sidebarContent}
+          </div>
+        </div>
+      )}
+    </>
   );
 }
