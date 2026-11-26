@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom";
 import LoginForm from "../components/LoginForm";
 
 export default function LoginPage() {
@@ -47,12 +48,12 @@ export default function LoginPage() {
             {/* Registro */}
             <p className="mt-6 text-center text-sm text-slate-500">
               ¿Aún no tienes una cuenta?{" "}
-              <a
-                href="/register"
+              <Link
+                to="/registro"
                 className="font-bold text-indigo-600 hover:underline"
               >
                 Regístrate
-              </a>
+              </Link>
             </p>
 
           </div>
