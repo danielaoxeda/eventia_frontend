@@ -95,12 +95,14 @@ export default function OrganizerEventDetailPage() {
           <span className="material-symbols-outlined text-[16px]">arrow_back</span> Volver a Eventos
         </Link>
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-          <div className="flex flex-col gap-1">
-            <div className="flex items-center gap-2">
-              <h1 className="font-display text-2xl lg:text-3xl font-bold text-on-surface tracking-tight">
+          <div className="flex min-w-0 flex-col gap-1">
+            <div className="flex min-w-0 items-center gap-2">
+              <h1 className="min-w-0 wrap-break-word font-display text-2xl lg:text-3xl font-bold text-on-surface tracking-tight">
                 {event.title}
               </h1>
-              <EventStatusBadge status={event.status} active={event.active} />
+              <span className="shrink-0">
+                <EventStatusBadge status={event.status} active={event.active} />
+              </span>
             </div>
             <p className="text-xs text-on-surface-variant">
               {event.category} · {event.code}
@@ -152,7 +154,13 @@ export default function OrganizerEventDetailPage() {
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 space-y-6">
           <div className="rounded-xl border border-outline-variant/20 bg-surface-container-lowest overflow-hidden shadow-sm">
-            <img src={event.bannerUrl} alt={event.title} className="w-full h-56 object-cover" />
+            {event.bannerUrl ? (
+              <img src={event.bannerUrl} alt={event.title} className="w-full h-56 object-cover" />
+            ) : (
+              <div className="w-full h-56 bg-surface-container-high flex items-center justify-center">
+                <span className="material-symbols-outlined text-5xl text-outline">image</span>
+              </div>
+            )}
             <div className="p-5 grid grid-cols-1 sm:grid-cols-2 gap-4 text-sm">
               <Info label="Categoría" value={event.category} />
               <Info label="Fecha" value={formatDate(event.date)} />
