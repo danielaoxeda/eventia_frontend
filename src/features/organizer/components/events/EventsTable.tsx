@@ -28,7 +28,7 @@ export default function EventsTable({
   return (
     <div className="bg-surface-container-lowest rounded-xl border border-outline-variant/20 shadow-sm overflow-hidden">
       <div className="overflow-x-auto">
-        <table className="w-full text-left border-collapse">
+        <table className="w-full min-w-[900px] text-left border-collapse">
           <thead>
             <tr className="bg-surface-container-low text-[0.6875rem] uppercase tracking-wider text-outline border-b border-surface-container font-bold">
               <th className="py-3 px-4">Evento</th>
