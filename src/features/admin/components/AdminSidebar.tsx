@@ -3,7 +3,6 @@ import {
   ClipboardList,
   FolderTree,
   LogOut,
-  ShieldCheck,
   Ticket,
   Users,
   X,
@@ -116,9 +115,8 @@ export default function AdminSidebar({
         </div>
       </div>
 
-      {/* Zona inferior: Botón Cerrar Sesión y Card Institucional */}
-      <div className="pt-4 border-t border-outline-variant/20 space-y-3">
-        {/* Botón Cerrar Sesión */}
+      {/* Zona inferior: Botón Cerrar Sesión */}
+      <div className="pt-4 border-t border-outline-variant/20">
         <button
           type="button"
           onClick={handleLogout}
@@ -127,17 +125,6 @@ export default function AdminSidebar({
           <LogOut className="w-4 h-4 text-inherit" />
           <span>Cerrar Sesión</span>
         </button>
-
-        {/* Card institucional Eventia */}
-        <div className="bg-surface-container-low/70 rounded-xl p-3 border border-outline-variant/30 flex items-center gap-3">
-          <div className="w-8 h-8 rounded-lg bg-surface-container-high flex items-center justify-center shrink-0 text-primary">
-            <ShieldCheck className="w-4 h-4" />
-          </div>
-          <div className="min-w-0">
-            <div className="text-xs font-bold text-on-surface truncate">Eventia S.A.C.</div>
-            <div className="text-[11px] text-on-surface-variant truncate">Sede Lima, Perú</div>
-          </div>
-        </div>
       </div>
     </div>
   );
