@@ -143,7 +143,7 @@ export default function UsersTable({ page, onPageChange, onToggleStatus, onEdit 
           de <span className="font-bold">{page.totalElements}</span> usuarios
         </span>
 
-        <div className="flex items-center gap-2">
+        <div className="flex w-full flex-wrap items-center justify-center gap-2 sm:w-auto">
           <button
             type="button"
             onClick={() => onPageChange(page.number - 1)}
