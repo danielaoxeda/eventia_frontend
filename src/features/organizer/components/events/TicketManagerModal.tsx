@@ -24,6 +24,7 @@ export default function TicketManagerModal({
   const [saving, setSaving] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState(emptyForm);
+  const [errors, setErrors] = useState<Record<string, string>>({});
 
   const loadTickets = async () => {
     setLoading(true);
@@ -55,15 +56,37 @@ export default function TicketManagerModal({
   const resetForm = () => {
     setEditingId(null);
     setForm(emptyForm);
+    setErrors({});
+  };
+
+  const clearError = (field: "name" | "price" | "capacity") => {
+    setErrors((previous) => {
+      if (!previous[field]) return previous;
+      return { ...previous, [field]: "" };
+    });
   };
 
   const handleSubmit = async () => {
     const price = Number(form.price);
     const capacity = Number(form.capacity);
-    if (!form.name.trim() || Number.isNaN(price) || price < 0 || !capacity || capacity <= 0) {
-      await Swal.fire({ icon: "warning", text: "Completa nombre, precio y cupo válidos." });
+    const nextErrors: Record<string, string> = {};
+
+    if (!form.name.trim()) nextErrors.name = "Ingresa el nombre de la tarifa.";
+    if (!form.price.trim() || Number.isNaN(price) || price < 0) {
+      nextErrors.price = "Ingresa un precio válido.";
+    }
+    if (!form.capacity.trim() || capacity <= 0) {
+      nextErrors.capacity = "Ingresa un cupo mayor a 0.";
+    }
+
+    setErrors(nextErrors);
+    if (Object.keys(nextErrors).length > 0) {
+      if (nextErrors.name) document.getElementById("ticket-name")?.focus();
+      else if (nextErrors.price) document.getElementById("ticket-price")?.focus();
+      else document.getElementById("ticket-capacity")?.focus();
       return;
     }
+
     setSaving(true);
     try {
       if (editingId) {
@@ -96,6 +119,7 @@ export default function TicketManagerModal({
 
   const handleEdit = (ticket: TicketType) => {
     setEditingId(ticket.id);
+    setErrors({});
     setForm({
       name: ticket.name,
       zone: ticket.zone,
@@ -148,15 +172,25 @@ export default function TicketManagerModal({
           </button>
         </div>
 
-        <div className="p-5 border-b border-surface-container grid grid-cols-1 sm:grid-cols-4 gap-2 items-end">
+        <div className="p-5 border-b border-surface-container grid grid-cols-1 sm:grid-cols-4 gap-2 items-start">
           <div className="sm:col-span-1">
             <label className="block text-[11px] font-semibold text-on-surface-variant mb-1">Nombre</label>
             <input
+              id="ticket-name"
               value={form.name}
-              onChange={(e) => setForm({ ...form, name: e.target.value })}
-              className="w-full px-3 py-2 rounded-lg bg-surface-container-low text-sm"
+              onChange={(e) => {
+                setForm({ ...form, name: e.target.value });
+                clearError("name");
+              }}
+              aria-invalid={Boolean(errors.name)}
+              className={`w-full px-3 py-2 rounded-lg bg-surface-container-low text-sm ${
+                errors.name ? "border border-red-400 ring-2 ring-red-100" : ""
+              }`}
               placeholder="General"
             />
+            {errors.name && (
+              <p className="text-[11px] font-semibold text-red-600 mt-1">{errors.name}</p>
+            )}
           </div>
           <div>
             <label className="block text-[11px] font-semibold text-on-surface-variant mb-1">Zona</label>
@@ -169,22 +203,42 @@ export default function TicketManagerModal({
           <div>
             <label className="block text-[11px] font-semibold text-on-surface-variant mb-1">Precio</label>
             <input
+              id="ticket-price"
               type="number"
               min="0"
               value={form.price}
-              onChange={(e) => setForm({ ...form, price: e.target.value })}
-              className="w-full px-3 py-2 rounded-lg bg-surface-container-low text-sm"
+              onChange={(e) => {
+                setForm({ ...form, price: e.target.value });
+                clearError("price");
+              }}
+              aria-invalid={Boolean(errors.price)}
+              className={`w-full px-3 py-2 rounded-lg bg-surface-container-low text-sm ${
+                errors.price ? "border border-red-400 ring-2 ring-red-100" : ""
+              }`}
             />
+            {errors.price && (
+              <p className="text-[11px] font-semibold text-red-600 mt-1">{errors.price}</p>
+            )}
           </div>
           <div>
             <label className="block text-[11px] font-semibold text-on-surface-variant mb-1">Cupo</label>
             <input
+              id="ticket-capacity"
               type="number"
               min="1"
               value={form.capacity}
-              onChange={(e) => setForm({ ...form, capacity: e.target.value })}
-              className="w-full px-3 py-2 rounded-lg bg-surface-container-low text-sm"
+              onChange={(e) => {
+                setForm({ ...form, capacity: e.target.value });
+                clearError("capacity");
+              }}
+              aria-invalid={Boolean(errors.capacity)}
+              className={`w-full px-3 py-2 rounded-lg bg-surface-container-low text-sm ${
+                errors.capacity ? "border border-red-400 ring-2 ring-red-100" : ""
+              }`}
             />
+            {errors.capacity && (
+              <p className="text-[11px] font-semibold text-red-600 mt-1">{errors.capacity}</p>
+            )}
           </div>
           <div className="sm:col-span-4 flex items-center gap-2 justify-end">
             {editingId && (
