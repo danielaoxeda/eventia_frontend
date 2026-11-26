@@ -15,6 +15,7 @@ export type OrganizerEventDetail = OrganizerEvent & {
   startTime?: string;
   endTime?: string;
   location?: string;
+  categoryId?: number;
 };
 
 export interface ApiEventSummary {
@@ -55,8 +56,6 @@ export interface ApiTicketType {
   soldCount?: number | null;
   status?: string | null;
   active?: boolean | null;
-  maxPerPurchase?: number | null;
-  isPresale?: boolean | null;
   saleStartDate?: string | null;
   saleEndDate?: string | null;
 }
@@ -88,37 +87,31 @@ export function unwrapPage<T>(data: ApiPage<T>): T[] {
   return [];
 }
 
-export function mapBackendEventStatus(status?: string | null, active = true): EventStatus {
-  if (!active) return "inactive";
+export function mapBackendEventStatus(status?: string | null): EventStatus {
   switch ((status || "").toUpperCase()) {
     case "PUBLISHED":
       return "published";
-    case "HIDDEN":
-      return "hidden";
-    case "DRAFT":
-      return "draft";
     case "CANCELLED":
+      return "cancelled";
     case "FINISHED":
-      return "inactive";
+      return "finished";
     case "PENDING":
     default:
-      return "draft";
+      return "pending";
   }
 }
 
 export function toBackendEventStatus(status?: string | null): string {
   switch (status) {
     case "published":
-    case "almost_sold_out":
-    case "sold_out":
       return "PUBLISHED";
-    case "hidden":
-      return "HIDDEN";
-    case "inactive":
+    case "cancelled":
       return "CANCELLED";
-    case "draft":
+    case "finished":
+      return "FINISHED";
+    case "pending":
     default:
-      return "DRAFT";
+      return "PENDING";
   }
 }
 
@@ -126,12 +119,7 @@ export function mapApiEventToOrganizer(event: ApiEventSummary | ApiEventDetail):
   const id = String(event.id);
   const ticketsSold = Number(event.ticketsSold ?? 0);
   const capacity = Number(event.capacity ?? 0);
-  const occupancy = capacity > 0 ? ticketsSold / capacity : 0;
-  let status = mapBackendEventStatus(event.status, event.active !== false);
-  if (event.active !== false && status === "published") {
-    if (occupancy >= 1) status = "sold_out";
-    else if (occupancy >= 0.9) status = "almost_sold_out";
-  }
+  const status = mapBackendEventStatus(event.status);
   const venue = event.location || "";
   return {
     id,
@@ -154,6 +142,7 @@ export function mapApiEventToOrganizer(event: ApiEventSummary | ApiEventDetail):
     startTime: (event.startTime || "").slice(0, 5) || undefined,
     endTime: (event.endTime || "").slice(0, 5) || undefined,
     location: event.location || undefined,
+    categoryId: (event as ApiEventDetail).categoryId ?? undefined,
   };
 }
 
@@ -197,9 +186,10 @@ export function mapApiTicketToOrganizer(ticket: ApiTicketType): TicketType {
   const total = Number(ticket.totalCapacity ?? 0);
   const sold = Number(ticket.soldCount ?? Math.max(0, total - Number(ticket.availableCapacity ?? total)));
   const backendStatus = (ticket.status || "").toUpperCase();
-  let status: TicketType["status"] = "active";
-  if (ticket.active === false || backendStatus === "PAUSED" || backendStatus === "INACTIVE") status = "paused";
-  if (backendStatus === "SOLD_OUT" || (total > 0 && sold >= total)) status = "sold_out";
+  const status: TicketType["status"] =
+    ticket.active === false || backendStatus === "PAUSED" || backendStatus === "INACTIVE"
+      ? "paused"
+      : "active";
   return {
     id: String(ticket.id),
     eventId: String(ticket.eventId ?? ""),
@@ -211,8 +201,6 @@ export function mapApiTicketToOrganizer(ticket: ApiTicketType): TicketType {
     status,
     saleStartDate: ticket.saleStartDate || undefined,
     saleEndDate: ticket.saleEndDate || undefined,
-    isPresale: !!ticket.isPresale,
-    maxPerPurchase: ticket.maxPerPurchase ?? undefined,
   };
 }
 
@@ -222,8 +210,6 @@ export function toApiTicketRequest(ticket: Partial<TicketType> & { name?: string
     zone: ticket.zone,
     price: ticket.pricePEN,
     totalCapacity: ticket.capacity,
-    maxPerPurchase: ticket.maxPerPurchase ?? null,
-    isPresale: ticket.isPresale ?? false,
     saleStartDate: ticket.saleStartDate || null,
     saleEndDate: ticket.saleEndDate || null,
   };

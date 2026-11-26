@@ -1,5 +1,5 @@
 import apiClient from "../../../shared/services/api";
-import type { OrganizerEvent } from "../types/organizer.types";
+import type { OrganizerEvent, PageResponse } from "../types/organizer.types";
 import {
   mapApiEventToOrganizer,
   toApiEventRequest,
@@ -32,6 +32,23 @@ export const eventsService = {
       { params: { includeInactive: true, size: 100 } }
     );
     return unwrapPage(response.data).map(mapApiEventToOrganizer);
+  },
+
+  async getEventsPage(page: number, size = 10): Promise<PageResponse<OrganizerEvent>> {
+    const response = await apiClient.get<PageResponse<ApiEventSummary>>(
+      "/api/events/organizer",
+      { params: { includeInactive: true, page, size, sort: "date,DESC" } }
+    );
+    const data = response.data;
+    return {
+      content: (data.content || []).map(mapApiEventToOrganizer),
+      totalElements: data.totalElements ?? 0,
+      totalPages: data.totalPages ?? 0,
+      number: data.number ?? 0,
+      size: data.size ?? size,
+      first: data.first ?? true,
+      last: data.last ?? true,
+    };
   },
 
   async getEventById(id: string): Promise<OrganizerEventDetail | null> {

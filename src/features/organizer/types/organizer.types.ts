@@ -1,4 +1,4 @@
-export type EventStatus = "draft" | "published" | "hidden" | "almost_sold_out" | "sold_out" | "inactive";
+export type EventStatus = "pending" | "published" | "cancelled" | "finished";
 
 export interface OrganizerEvent {
   id: string;
@@ -64,11 +64,29 @@ export interface TicketType {
   pricePEN: number;
   capacity: number;
   soldCount: number;
-  status: "active" | "paused" | "sold_out";
+  status: "active" | "paused";
   saleStartDate?: string;
   saleEndDate?: string;
-  isPresale?: boolean;
-  maxPerPurchase?: number;
+}
+
+export interface EventNotification {
+  eventId: number | string;
+  title: string;
+  organizerName: string;
+  categoryName?: string | null;
+  status: string;
+  message: string;
+  timestamp: string;
+}
+
+export interface PageResponse<T> {
+  content: T[];
+  totalElements: number;
+  totalPages: number;
+  number: number;
+  size: number;
+  first: boolean;
+  last: boolean;
 }
 
 export interface EventFormData {
@@ -86,18 +104,5 @@ export interface EventFormData {
   bannerDesktopUrl: string;
   bannerMobileUrl: string;
   isPublic: boolean;
-}
-
-export interface OrganizerLiveSaleNotification {
-  organizerId: number;
-  eventTitle: string;
-  ticketTypeName: string;
-  quantity: number;
-  unitPrice: number;
-  subtotal: number;
-  buyerName: string;
-  message: string;
-  timestamp: string;
-  updatedDashboard?: OrganizerDashboardData;
 }
 

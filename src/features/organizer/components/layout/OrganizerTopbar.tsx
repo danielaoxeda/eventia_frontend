@@ -1,10 +1,14 @@
 import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
-import { LogOut } from "lucide-react";
+import { LogOut, Menu, ShieldCheck } from "lucide-react";
 import { useAuth } from "@/context/authContext.shared";
 import { useNavigate } from "react-router-dom";
 
-export default function OrganizerTopbar() {
+interface OrganizerTopbarProps {
+  onToggleMobileSidebar?: () => void;
+}
+
+export default function OrganizerTopbar({ onToggleMobileSidebar }: OrganizerTopbarProps) {
   const { user, logout } = useAuth();
   const navigate = useNavigate();
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -38,7 +42,23 @@ export default function OrganizerTopbar() {
     : "?";
 
   return (
-    <header className="fixed top-0 left-64 right-0 h-16 bg-surface/90 backdrop-blur-xl shadow-[0_1px_8px_rgba(0,0,0,0.04)] z-40 flex items-center justify-end px-6 lg:px-8 border-b border-outline-variant/20 transition-all">
+    <header className="w-full flex items-center justify-between py-3 px-4 sm:px-8 bg-surface-container-lowest/80 backdrop-blur-md border-b border-outline-variant/20 sticky top-0 z-20">
+      <div className="flex items-center gap-3">
+        <button
+          type="button"
+          onClick={onToggleMobileSidebar}
+          className="lg:hidden p-2 rounded-xl text-on-surface hover:bg-surface-container transition-colors"
+          aria-label="Abrir menú"
+        >
+          <Menu className="w-5 h-5" />
+        </button>
+
+        <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg bg-primary-fixed/40 border border-primary-fixed/50 text-xs font-bold text-primary font-display">
+          <ShieldCheck className="w-3.5 h-3.5 text-primary" />
+          <span>Rol: Organizador</span>
+        </div>
+      </div>
+
       <div className="flex items-center gap-3.5">
         {/* Perfil con menú desplegable */}
         <div className="relative" ref={menuRef}>

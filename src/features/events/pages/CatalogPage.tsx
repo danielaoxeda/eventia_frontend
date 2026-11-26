@@ -173,7 +173,7 @@ export default function CatalogPage() {
 
   return (
     <div className="min-h-screen bg-surface overflow-x-hidden">
-      <div className="w-full pt-16 min-h-screen min-w-0">
+      <div className="w-full min-h-screen min-w-0">
         <section className="max-w-7xl w-full mx-auto px-4 sm:px-6 py-6 min-w-0 flex flex-col gap-4 sm:gap-6">
           <CatalogFilterBar
             search={search}

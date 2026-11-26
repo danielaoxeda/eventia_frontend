@@ -100,7 +100,7 @@ export default function CategoriesTable({
         </div>
 
         <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse">
+          <table className="w-full min-w-[900px] text-left border-collapse">
             <thead>
               <tr className="border-b border-outline-variant/20 text-[11px] font-bold text-on-surface-variant uppercase tracking-wider bg-surface-container/20">
                 <th className="py-3.5 px-5">ID</th>
@@ -207,7 +207,7 @@ export default function CategoriesTable({
         </span>
 
         {totalPages > 1 && (
-          <div className="flex items-center gap-2">
+          <div className="flex w-full flex-wrap items-center justify-center gap-2 sm:w-auto">
             <button
               type="button"
               onClick={() => onPageChange(page.number - 1)}

@@ -48,9 +48,9 @@ export function formatPercentageChange(value: number): {
 }
 
 export function getStatusConfig(status: EventStatus, active = true) {
-  if (!active || status === "inactive") {
+  if (!active) {
     return {
-      label: "Inactivo (RN04)",
+      label: "Inactivo",
       badgeClass: "bg-surface-container text-outline border border-outline-variant/30",
       dotClass: "bg-outline",
     };
@@ -59,34 +59,28 @@ export function getStatusConfig(status: EventStatus, active = true) {
   switch (status) {
     case "published":
       return {
-        label: "Activo / En Venta",
+        label: "Publicado",
         badgeClass: "bg-primary-fixed text-on-primary-fixed font-semibold",
-        dotClass: "bg-primary animate-pulse",
+        dotClass: "bg-primary",
       };
-    case "almost_sold_out":
+    case "cancelled":
       return {
-        label: "Casi Agotado",
-        badgeClass: "bg-secondary-fixed text-on-secondary-fixed font-semibold",
-        dotClass: "bg-secondary",
-      };
-    case "sold_out":
-      return {
-        label: "Agotado",
+        label: "Cancelado",
         badgeClass: "bg-error-container text-on-error-container font-semibold",
         dotClass: "bg-error",
       };
-    case "hidden":
+    case "finished":
       return {
-        label: "Oculto",
+        label: "Finalizado",
         badgeClass: "bg-surface-container-high text-on-surface-variant font-medium",
         dotClass: "bg-outline",
       };
-    case "draft":
+    case "pending":
     default:
       return {
-        label: "Borrador",
-        badgeClass: "bg-surface-container text-on-surface-variant font-medium",
-        dotClass: "bg-outline",
+        label: "En revisión",
+        badgeClass: "bg-amber-100 text-amber-800 font-semibold",
+        dotClass: "bg-amber-500",
       };
   }
 }

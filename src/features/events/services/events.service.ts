@@ -32,7 +32,7 @@ interface BackendEvent {
   status: string;
   category: string;
   categoryName?: string;
-  price: number;
+  minPrice?: number;
   soldPct: number;
   city?: string;
   bannerUrl?: string;
@@ -50,7 +50,7 @@ function mapBackendEvent(row: BackendEvent): CatalogEvent {
     dateOrder: date.getTime(),
     venue: row.location,
     city: row.city || row.location,
-    price: Number(row.price ?? 0),
+    price: Number(row.minPrice ?? 0),
     soldPct: Number(row.soldPct ?? 0),
     image: row.bannerUrl || "",
     tag: TAG_BY_CATEGORY[categoryName] ?? categoryName,
