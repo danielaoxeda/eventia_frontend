@@ -193,7 +193,7 @@ export default function EventDetailPage() {
 
   return (
     <div className="min-h-screen bg-surface overflow-x-hidden">
-      <main className="w-full pt-16 min-h-screen min-w-0">
+      <main className="w-full min-h-screen min-w-0">
         <div className="max-w-7xl mx-auto w-full px-4 sm:px-6 py-6 min-w-0">
           <Breadcrumbs title={detail.title} />
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 sm:gap-6 items-start min-w-0">
