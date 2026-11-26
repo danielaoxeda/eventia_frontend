@@ -35,29 +35,43 @@ interface OpenEventFormOptions {
   event?: OrganizerEventDetail;
 }
 
+type FieldElement = HTMLInputElement | HTMLSelectElement | HTMLTextAreaElement;
+
 const inputClass =
   "w-full px-3 py-2 rounded-lg border border-outline-variant/40 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30";
 
+const errorClass =
+  "event-form-error hidden text-[11px] font-semibold text-red-600 mt-1";
+
+function fieldErrorHtml(field: string): string {
+  return `<p data-error-for="${field}" class="${errorClass}"></p>`;
+}
+
 function ticketRowHtml(): string {
   return `
-    <div class="ticket-row grid grid-cols-12 gap-2 items-end mb-2">
+    <div class="ticket-row grid grid-cols-12 gap-2 items-start mb-2">
       <div class="col-span-4">
         <label class="block text-[11px] font-semibold text-gray-600 mb-1">Nombre</label>
         <input data-field="name" class="${inputClass}" placeholder="General" />
+        ${fieldErrorHtml("name")}
       </div>
       <div class="col-span-2">
         <label class="block text-[11px] font-semibold text-gray-600 mb-1">Zona</label>
         <input data-field="zone" class="${inputClass}" placeholder="General" />
+        ${fieldErrorHtml("zone")}
       </div>
       <div class="col-span-2">
         <label class="block text-[11px] font-semibold text-gray-600 mb-1">Precio</label>
         <input data-field="price" type="number" min="0" step="0.5" class="${inputClass}" placeholder="0.00" />
+        ${fieldErrorHtml("price")}
       </div>
       <div class="col-span-2">
         <label class="block text-[11px] font-semibold text-gray-600 mb-1">Cupo</label>
         <input data-field="capacity" type="number" min="1" class="${inputClass}" placeholder="100" />
+        ${fieldErrorHtml("capacity")}
       </div>
       <div class="col-span-2">
+        <label class="block text-[11px] font-semibold text-gray-600 mb-1 invisible">Acción</label>
         <button type="button" class="remove-ticket w-full py-2 rounded-lg bg-red-50 text-red-600 text-xs font-semibold hover:bg-red-100">
           Quitar
         </button>
@@ -72,6 +86,51 @@ function getErrorMessage(error: unknown): string {
     if (response?.data?.message) return response.data.message;
   }
   return "Revisa los datos e inténtalo nuevamente.";
+}
+
+function getErrorElement(input: FieldElement): HTMLElement | null {
+  const key =
+    input.getAttribute("data-error-for") ??
+    input.getAttribute("data-field") ??
+    input.getAttribute("name");
+  if (!key) return null;
+  return input
+    .closest("div")
+    ?.querySelector<HTMLElement>(`[data-error-for="${key}"]`) ?? null;
+}
+
+function setFieldError(input: FieldElement, message: string) {
+  input.setAttribute("aria-invalid", "true");
+  input.style.borderColor = "#ba1a1a";
+  input.style.boxShadow = "0 0 0 2px rgba(186, 26, 26, 0.15)";
+
+  const error = getErrorElement(input);
+  if (error) {
+    error.textContent = message;
+    error.classList.remove("hidden");
+  }
+}
+
+function clearFieldError(input: FieldElement) {
+  input.removeAttribute("aria-invalid");
+  input.style.borderColor = "";
+  input.style.boxShadow = "";
+
+  const error = getErrorElement(input);
+  if (error) {
+    error.textContent = "";
+    error.classList.add("hidden");
+  }
+}
+
+function clearAllErrors(form: HTMLFormElement) {
+  form.querySelectorAll<FieldElement>("[aria-invalid='true']").forEach((input) => {
+    clearFieldError(input);
+  });
+  form.querySelectorAll<HTMLElement>(".event-form-error").forEach((error) => {
+    error.textContent = "";
+    error.classList.add("hidden");
+  });
 }
 
 export async function openEventFormSwal({
@@ -101,42 +160,51 @@ export async function openEventFormSwal({
         <div>
           <label class="block text-[11px] font-semibold text-gray-600 mb-1">Nombre del evento *</label>
           <input name="title" class="${inputClass}" value="${event?.title ?? ""}" placeholder="Festival de Verano" />
+          ${fieldErrorHtml("title")}
         </div>
         <div class="grid grid-cols-2 gap-3">
           <div>
             <label class="block text-[11px] font-semibold text-gray-600 mb-1">Categoría *</label>
             <select name="categoryId" class="${inputClass}">${categoryOptions}</select>
+            ${fieldErrorHtml("categoryId")}
           </div>
           <div>
             <label class="block text-[11px] font-semibold text-gray-600 mb-1">Aforo total *</label>
             <input name="capacity" type="number" min="1" class="${inputClass}" value="${event?.capacity ?? ""}" placeholder="500" />
+            ${fieldErrorHtml("capacity")}
           </div>
         </div>
         <div>
           <label class="block text-[11px] font-semibold text-gray-600 mb-1">Lugar / Sede *</label>
           <input name="location" class="${inputClass}" value="${event?.venue ?? ""}" placeholder="Arena 1, San Miguel" />
+          ${fieldErrorHtml("location")}
         </div>
         <div class="grid grid-cols-3 gap-3">
           <div>
             <label class="block text-[11px] font-semibold text-gray-600 mb-1">Fecha *</label>
             <input name="date" type="date" class="${inputClass}" value="${event?.date ?? ""}" />
+            ${fieldErrorHtml("date")}
           </div>
           <div>
             <label class="block text-[11px] font-semibold text-gray-600 mb-1">Hora inicio *</label>
             <input name="startTime" type="time" class="${inputClass}" value="${event?.startTime ?? ""}" />
+            ${fieldErrorHtml("startTime")}
           </div>
           <div>
             <label class="block text-[11px] font-semibold text-gray-600 mb-1">Hora fin *</label>
             <input name="endTime" type="time" class="${inputClass}" value="${event?.endTime ?? ""}" />
+            ${fieldErrorHtml("endTime")}
           </div>
         </div>
         <div>
           <label class="block text-[11px] font-semibold text-gray-600 mb-1">Descripción</label>
           <textarea name="description" rows="2" class="${inputClass}">${event?.description ?? ""}</textarea>
+          ${fieldErrorHtml("description")}
         </div>
         <div>
           <label class="block text-[11px] font-semibold text-gray-600 mb-1">URL del banner</label>
           <input name="bannerUrl" class="${inputClass}" value="${event?.bannerUrl ?? ""}" placeholder="https://..." />
+          ${fieldErrorHtml("bannerUrl")}
         </div>
         ${
           isEdit
@@ -150,12 +218,14 @@ export async function openEventFormSwal({
               </button>
             </div>
             <div id="ticket-rows">${ticketRowHtml()}</div>
+            ${fieldErrorHtml("tickets")}
           </div>
         `
         }
       </form>
     `,
     didOpen: () => {
+      const form = document.getElementById("event-form") as HTMLFormElement | null;
       const rows = document.getElementById("ticket-rows");
       document.getElementById("add-ticket")?.addEventListener("click", () => {
         rows?.insertAdjacentHTML("beforeend", ticketRowHtml());
@@ -166,12 +236,35 @@ export async function openEventFormSwal({
           target.closest(".ticket-row")?.remove();
         }
       });
+      form?.addEventListener("input", (e) => {
+        const target = e.target;
+        if (target instanceof HTMLElement && target.matches("input, select, textarea")) {
+          clearFieldError(target as FieldElement);
+        }
+      });
+      form?.addEventListener("change", (e) => {
+        const target = e.target;
+        if (target instanceof HTMLElement && target.matches("input, select, textarea")) {
+          clearFieldError(target as FieldElement);
+        }
+      });
     },
     preConfirm: () => {
       const form = document.getElementById("event-form") as HTMLFormElement | null;
       if (!form) return false;
       const value = (name: string) =>
         (form.querySelector(`[name="${name}"]`) as HTMLInputElement | null)?.value.trim() ?? "";
+      const input = (name: string) =>
+        form.querySelector<FieldElement>(`[name="${name}"]`);
+
+      clearAllErrors(form);
+
+      let firstInvalid: HTMLElement | null = null;
+      const mark = (element: FieldElement | null, message: string) => {
+        if (!element) return;
+        setFieldError(element, message);
+        if (!firstInvalid) firstInvalid = element;
+      };
 
       const title = value("title");
       const date = value("date");
@@ -181,12 +274,13 @@ export async function openEventFormSwal({
       const capacity = Number(value("capacity"));
       const categoryId = Number(value("categoryId"));
 
-      if (!title) return Swal.showValidationMessage("Ingresa el nombre del evento.");
-      if (!date) return Swal.showValidationMessage("Selecciona la fecha.");
-      if (!startTime || !endTime) return Swal.showValidationMessage("Ingresa las horas de inicio y fin.");
-      if (!location) return Swal.showValidationMessage("Ingresa el lugar.");
-      if (!capacity || capacity <= 0) return Swal.showValidationMessage("El aforo debe ser mayor a 0.");
-      if (!categoryId) return Swal.showValidationMessage("Selecciona una categoría.");
+      if (!title) mark(input("title"), "Ingresa el nombre del evento.");
+      if (!date) mark(input("date"), "Selecciona la fecha.");
+      if (!startTime) mark(input("startTime"), "Ingresa la hora de inicio.");
+      if (!endTime) mark(input("endTime"), "Ingresa la hora de fin.");
+      if (!location) mark(input("location"), "Ingresa el lugar.");
+      if (!capacity || capacity <= 0) mark(input("capacity"), "El aforo debe ser mayor a 0.");
+      if (!categoryId) mark(input("categoryId"), "Selecciona una categoría.");
 
       const tickets: TicketInput[] = [];
       if (!isEdit) {
@@ -195,13 +289,19 @@ export async function openEventFormSwal({
           const field = (name: string) =>
             (row.querySelector(`[data-field="${name}"]`) as HTMLInputElement | null)?.value.trim() ?? "";
           const name = field("name");
-          const price = Number(field("price"));
-          const ticketCapacity = Number(field("capacity"));
-          if (!name) return Swal.showValidationMessage("Cada tarifa necesita un nombre.");
-          if (Number.isNaN(price) || price < 0)
-            return Swal.showValidationMessage("Cada tarifa necesita un precio válido.");
-          if (!ticketCapacity || ticketCapacity <= 0)
-            return Swal.showValidationMessage("Cada tarifa necesita un cupo mayor a 0.");
+          const rawPrice = field("price");
+          const price = Number(rawPrice);
+          const rawCapacity = field("capacity");
+          const ticketCapacity = Number(rawCapacity);
+
+          if (!name) mark(row.querySelector('[data-field="name"]'), "Ingresa el nombre de la tarifa.");
+          if (!rawPrice || Number.isNaN(price) || price < 0) {
+            mark(row.querySelector('[data-field="price"]'), "Ingresa un precio válido.");
+          }
+          if (!rawCapacity || ticketCapacity <= 0) {
+            mark(row.querySelector('[data-field="capacity"]'), "Ingresa un cupo mayor a 0.");
+          }
+
           tickets.push({
             name,
             zone: field("zone") || "General",
@@ -209,7 +309,22 @@ export async function openEventFormSwal({
             capacity: ticketCapacity,
           });
         }
-        if (tickets.length === 0) return Swal.showValidationMessage("Agrega al menos una tarifa.");
+        if (tickets.length === 0) {
+          const ticketError = form.querySelector<HTMLElement>('[data-error-for="tickets"]');
+          if (ticketError) {
+            ticketError.textContent = "Agrega al menos una tarifa.";
+            ticketError.classList.remove("hidden");
+          }
+          if (!firstInvalid) {
+            firstInvalid = document.getElementById("add-ticket");
+          }
+        }
+      }
+
+      if (firstInvalid) {
+        firstInvalid.focus();
+        firstInvalid.scrollIntoView({ block: "nearest", behavior: "smooth" });
+        return false;
       }
 
       return {
