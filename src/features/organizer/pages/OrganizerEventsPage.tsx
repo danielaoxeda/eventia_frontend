@@ -10,7 +10,16 @@ import { organizerService } from "../services/organizerService";
 import type { OrganizerEvent } from "../types/organizer.types";
 
 export default function OrganizerEventsPage() {
-  const { events, pageData, setPageIndex, loading, reload, deactivateEvent } = useOrganizerEvents();
+  const {
+    events,
+    pageData,
+    setPageIndex,
+    includeInactive,
+    setIncludeInactive,
+    loading,
+    reload,
+    deactivateEvent,
+  } = useOrganizerEvents();
   const [categories, setCategories] = useState<CategoryOption[]>([]);
   const [ticketEvent, setTicketEvent] = useState<OrganizerEvent | null>(null);
   const { isConnected } = useOrganizerEventsSocket(() => reload());
@@ -103,6 +112,23 @@ export default function OrganizerEventsPage() {
           <span className="material-symbols-outlined text-[18px]">add_circle</span>
           <span>Crear evento</span>
         </button>
+      </div>
+
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-surface-container-low/60 p-3 rounded-xl border border-outline-variant/20">
+        <label className="flex items-center gap-2.5 cursor-pointer select-none">
+          <input
+            type="checkbox"
+            checked={includeInactive}
+            onChange={(e) => setIncludeInactive(e.target.checked)}
+            className="w-4 h-4 rounded text-primary focus:ring-primary border-outline-variant cursor-pointer"
+          />
+          <span className="text-xs font-semibold text-on-surface">
+            Mostrar eventos inactivos y cancelados
+          </span>
+        </label>
+        <span className="text-[11px] text-outline">
+          {includeInactive ? "Mostrando todos los eventos (activos e inactivos)" : "Mostrando solo eventos activos"}
+        </span>
       </div>
 
       <EventsTable

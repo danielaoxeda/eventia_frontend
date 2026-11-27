@@ -15,13 +15,14 @@ const EMPTY_PAGE: PageResponse<OrganizerEvent> = {
 export function useOrganizerEvents() {
   const [pageData, setPageData] = useState<PageResponse<OrganizerEvent>>(EMPTY_PAGE);
   const [pageIndex, setPageIndex] = useState(0);
+  const [includeInactive, setIncludeInactive] = useState(false);
   const [loading, setLoading] = useState(true);
   const [reloadKey, setReloadKey] = useState(0);
 
   useEffect(() => {
     let active = true;
     organizerService
-      .getEventsPage(pageIndex)
+      .getEventsPage(pageIndex, 10, includeInactive)
       .then((data) => {
         if (!active) return;
         setPageData(data);
@@ -35,7 +36,7 @@ export function useOrganizerEvents() {
     return () => {
       active = false;
     };
-  }, [pageIndex, reloadKey]);
+  }, [pageIndex, reloadKey, includeInactive]);
 
   const reload = useCallback(() => {
     setLoading(true);
@@ -45,6 +46,12 @@ export function useOrganizerEvents() {
   const changePage = useCallback((page: number) => {
     setLoading(true);
     setPageIndex(page);
+  }, []);
+
+  const toggleIncludeInactive = useCallback((value: boolean) => {
+    setLoading(true);
+    setPageIndex(0);
+    setIncludeInactive(value);
   }, []);
 
   const deactivateEvent = useCallback(
@@ -60,6 +67,8 @@ export function useOrganizerEvents() {
     pageData,
     pageIndex,
     setPageIndex: changePage,
+    includeInactive,
+    setIncludeInactive: toggleIncludeInactive,
     loading,
     reload,
     deactivateEvent,

@@ -34,10 +34,10 @@ export const eventsService = {
     return unwrapPage(response.data).map(mapApiEventToOrganizer);
   },
 
-  async getEventsPage(page: number, size = 10): Promise<PageResponse<OrganizerEvent>> {
+  async getEventsPage(page: number, size = 10, includeInactive = false): Promise<PageResponse<OrganizerEvent>> {
     const response = await apiClient.get<PageResponse<ApiEventSummary>>(
       "/api/events/organizer",
-      { params: { includeInactive: true, page, size, sort: "date,DESC" } }
+      { params: { includeInactive, page, size, sort: "date,DESC" } }
     );
     const data = response.data;
     return {
