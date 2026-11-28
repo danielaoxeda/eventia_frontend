@@ -203,13 +203,14 @@ export default function EventDetailPage() {
                 venue={detail.venue}
                 month={detail.month}
                 day={detail.day}
+                image={detail.image}
               />
               <EventTabs
                 activeTab={activeTab}
                 onTabChange={setActiveTab}
                 onSelectTier={(tierId) => updateQuantity(tierId, 1)}
                 tiers={detail.tiers}
-                eventDescription={`${detail.title}: ${detail.dateLabel} en ${detail.venue}.`}
+                eventDescription={detail.description || `${detail.title}: ${detail.dateLabel} en ${detail.venue}.`}
               />
               <OrganizerCard />
             </div>
