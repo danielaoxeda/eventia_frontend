@@ -16,6 +16,7 @@ export interface TicketTier {
 export interface EventDetailData {
   id: number;
   title: string;
+  description?: string;
   venue: string;
   city: string;
   /* Fecha legible */
@@ -25,6 +26,7 @@ export interface EventDetailData {
   day: string;
   /* ISO local para emitir la entrada (ej. "2025-11-22T20:00:00") */
   eventDate: string;
+  image?: string;
   tiers: TicketTier[];
 }
 

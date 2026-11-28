@@ -1,16 +1,34 @@
+import { useState } from "react";
+
 interface EventHeroProps {
   title: string;
   venue: string;
   month: string;
   day: string;
+  image?: string;
 }
 
-/** Portada del evento con datos de db.json: foto, título y recinto. */
-export default function EventHero({ title, venue, month, day }: EventHeroProps) {
+/** Portada del evento con banner/foto, título y recinto. */
+export default function EventHero({ title, venue, month, day, image }: EventHeroProps) {
+  const [imgError, setImgError] = useState(false);
+  const showImage = Boolean(image && !imgError);
+
   return (
     <div className="relative rounded-xl overflow-hidden shadow-sm bg-surface-container-lowest min-w-0">
-      <div className="relative h-52 sm:h-64 w-full overflow-hidden bg-surface-container-high">
-        <div className="absolute inset-0 bg-linear-to-t from-black/80 via-black/30 to-transparent pointer-events-none"></div>
+      <div className="relative h-56 sm:h-72 w-full overflow-hidden bg-surface-container-high">
+        {showImage ? (
+          <img
+            src={image}
+            alt={title}
+            onError={() => setImgError(true)}
+            className="w-full h-full object-cover"
+          />
+        ) : (
+          <div className="w-full h-full bg-linear-to-br from-indigo-900 via-primary to-slate-900 flex items-center justify-center">
+            <span className="material-symbols-outlined text-6xl text-white/30">event</span>
+          </div>
+        )}
+        <div className="absolute inset-0 bg-linear-to-t from-black/85 via-black/40 to-transparent pointer-events-none"></div>
 
         <div className="absolute bottom-4 right-4 bg-white/95 rounded-lg p-3 text-center shadow-md shrink-0">
           <span className="block text-[11px] font-bold uppercase text-secondary tracking-widest">

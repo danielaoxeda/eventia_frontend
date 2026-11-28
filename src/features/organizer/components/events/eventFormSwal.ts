@@ -1,6 +1,7 @@
 import Swal from "sweetalert2";
 import { organizerService } from "../../services/organizerService";
 import type { OrganizerEventDetail } from "../../services/organizerMappers";
+import { uploadService } from "../../../../shared/services/uploadService";
 
 export interface CategoryOption {
   id: number | string;
@@ -202,8 +203,21 @@ export async function openEventFormSwal({
           ${fieldErrorHtml("description")}
         </div>
         <div>
-          <label class="block text-[11px] font-semibold text-gray-600 mb-1">URL del banner</label>
-          <input name="bannerUrl" class="${inputClass}" value="${event?.bannerUrl ?? ""}" placeholder="https://..." />
+          <label class="block text-[11px] font-semibold text-gray-600 mb-1">Banner del evento</label>
+          <div class="flex gap-2 items-center mb-1.5">
+            <input name="bannerUrl" id="event-banner-url" class="${inputClass} flex-1" value="${event?.bannerUrl ?? ""}" placeholder="https://res.cloudinary.com/..." />
+            <input type="file" id="cloudinary-file-input" accept="image/png,image/jpeg,image/webp,image/gif" class="hidden" />
+            <button type="button" id="cloudinary-upload-btn" class="shrink-0 px-3 py-2 rounded-lg bg-primary text-white text-xs font-semibold hover:bg-primary/90 flex items-center gap-1.5 transition-colors shadow-sm">
+              <svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12" />
+              </svg>
+              <span>Subir imagen</span>
+            </button>
+          </div>
+          <p id="upload-status" class="text-[11px] hidden mb-1.5"></p>
+          <div id="banner-preview-container" class="${event?.bannerUrl ? "" : "hidden"} rounded-lg overflow-hidden border border-gray-200 bg-gray-50 max-h-36 flex items-center justify-center relative">
+            <img id="banner-preview-img" src="${event?.bannerUrl ?? ""}" alt="Vista previa del banner" class="w-full h-36 object-cover" />
+          </div>
           ${fieldErrorHtml("bannerUrl")}
         </div>
         ${
@@ -246,6 +260,80 @@ export async function openEventFormSwal({
         const target = e.target;
         if (target instanceof HTMLElement && target.matches("input, select, textarea")) {
           clearFieldError(target as FieldElement);
+        }
+      });
+
+      const fileInput = document.getElementById("cloudinary-file-input") as HTMLInputElement | null;
+      const uploadBtn = document.getElementById("cloudinary-upload-btn") as HTMLButtonElement | null;
+      const bannerUrlInput = document.getElementById("event-banner-url") as HTMLInputElement | null;
+      const uploadStatus = document.getElementById("upload-status") as HTMLParagraphElement | null;
+      const previewContainer = document.getElementById("banner-preview-container") as HTMLDivElement | null;
+      const previewImg = document.getElementById("banner-preview-img") as HTMLImageElement | null;
+
+      uploadBtn?.addEventListener("click", () => {
+        fileInput?.click();
+      });
+
+      fileInput?.addEventListener("change", async () => {
+        const file = fileInput.files?.[0];
+        if (!file) return;
+
+        if (file.size > 10 * 1024 * 1024) {
+          if (uploadStatus) {
+            uploadStatus.textContent = "El archivo excede el límite de 10MB.";
+            uploadStatus.className = "text-[11px] text-red-600 block mb-1.5";
+          }
+          return;
+        }
+
+        try {
+          if (uploadBtn) {
+            uploadBtn.disabled = true;
+            uploadBtn.classList.add("opacity-50", "cursor-not-allowed");
+          }
+          if (uploadStatus) {
+            uploadStatus.textContent = "Subiendo imagen a Cloudinary...";
+            uploadStatus.className = "text-[11px] text-primary font-medium block mb-1.5 animate-pulse";
+          }
+
+          const result = await uploadService.uploadImage(file, "eventia/banners");
+
+          if (bannerUrlInput) {
+            bannerUrlInput.value = result.url;
+            bannerUrlInput.dispatchEvent(new Event("input", { bubbles: true }));
+          }
+
+          if (previewImg && previewContainer) {
+            previewImg.src = result.url;
+            previewContainer.classList.remove("hidden");
+          }
+
+          if (uploadStatus) {
+            uploadStatus.textContent = "Imagen subida exitosamente a Cloudinary.";
+            uploadStatus.className = "text-[11px] text-emerald-600 font-medium block mb-1.5";
+          }
+        } catch (err: any) {
+          const msg = err?.response?.data?.message || err?.message || "Error al subir imagen a Cloudinary";
+          if (uploadStatus) {
+            uploadStatus.textContent = `Error: ${msg}`;
+            uploadStatus.className = "text-[11px] text-red-600 block mb-1.5";
+          }
+        } finally {
+          if (uploadBtn) {
+            uploadBtn.disabled = false;
+            uploadBtn.classList.remove("opacity-50", "cursor-not-allowed");
+          }
+          fileInput.value = "";
+        }
+      });
+
+      bannerUrlInput?.addEventListener("input", () => {
+        const url = bannerUrlInput.value.trim();
+        if (url && previewImg && previewContainer) {
+          previewImg.src = url;
+          previewContainer.classList.remove("hidden");
+        } else if (!url && previewContainer) {
+          previewContainer.classList.add("hidden");
         }
       });
     },

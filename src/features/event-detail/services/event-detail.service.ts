@@ -74,12 +74,14 @@ export async function getEventDetail(eventId: string): Promise<EventDetailData |
     return {
       id: Number(row.id),
       title: row.title,
+      description: row.description || "",
       venue: row.location,
       city: row.city || row.location || "",
       dateLabel: `${day} ${MONTH_NAMES[date.getMonth()] ?? ""} ${date.getFullYear()}`,
       month: MONTH_CODES[date.getMonth()] ?? "",
       day,
       eventDate: `${row.date}T${startTime}:00`,
+      image: row.bannerUrl || "",
       tiers: (ticketsRes.data || []).map(mapTier).filter((t): t is TicketTier => !!t),
     };
   } catch (error) {
